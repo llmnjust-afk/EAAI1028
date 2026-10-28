@@ -6,7 +6,8 @@ from .schema import (
     CHALLENGE_2019_STATIC,
     CHALLENGE_2019_VARIABLES,
 )
-from .splits import Split, four_way, purge, stratified_by_site
+from .splits import (Split, four_way, purge, stratified_by_site,
+                     subject_four_way, subject_split_audit)
 from .synthetic import make_scores, scores_to_matrix
 
 __all__ = [
@@ -18,6 +19,8 @@ __all__ = [
     "four_way",
     "purge",
     "stratified_by_site",
+    "subject_four_way",
+    "subject_split_audit",
     "make_scores",
     "scores_to_matrix",
     "CHALLENGE_2012_VARIABLES",

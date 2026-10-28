@@ -1,7 +1,8 @@
-"""Patient-disjoint partitions and an optional outcome-dependent exclusion.
+"""Subject-disjoint partitions and an optional outcome-dependent exclusion.
 
-Patient separation prevents within-patient leakage. ``purge`` is NOT necessary
-for this property and changes the population; use only as a reported sensitivity
+The 2019 release stores one PSV file per subject. Subject separation prevents
+within-subject leakage when a loader exposes repeated rows or admissions.
+``purge`` is NOT necessary for this property and changes the population; use only as a reported sensitivity
 analysis, not as a routine preprocessing or a claim to eliminate censoring bias.
 """
 
@@ -26,7 +27,7 @@ class Split:
 
 def four_way(n: int, ratios: tuple[float, float, float, float] = (0.60, 0.15, 0.10, 0.15),
              seed: int = 0) -> Split:
-    """Partition patient indices into train/validation/calibration/test."""
+    """Partition row indices into train/validation/calibration/test."""
     if (not isinstance(n, (int, np.integer)) or n <= 0 or len(ratios) != 4 or
             not np.isfinite(ratios).all() or np.any(np.asarray(ratios) < 0) or
             not np.isclose(sum(ratios), 1.0)):
@@ -35,6 +36,61 @@ def four_way(n: int, ratios: tuple[float, float, float, float] = (0.60, 0.15, 0.
     order = rng.permutation(n)
     cuts = np.floor(np.cumsum(ratios[:-1]) * n).astype(int)
     return Split(*np.split(order, cuts))
+
+
+def subject_four_way(subject_ids, ratios: tuple[float, float, float, float] = (0.60, 0.15, 0.10, 0.15),
+                     seed: int = 0) -> Split:
+    """Split rows by unique subject identifier, never by row position alone.
+
+    The 2019 release stores one subject per PSV file, but making the grouping
+    explicit prevents a future loader with repeated admissions from leaking the
+    same subject across train, calibration and test. If an identifier repeats,
+    all of its rows are assigned to the same partition.
+    """
+    ids = np.asarray(subject_ids)
+    if ids.ndim != 1 or not ids.size:
+        raise ValueError("subject identifiers must be a nonempty one-dimensional array")
+    unique, inverse = np.unique(ids, return_inverse=True)
+    grouped = four_way(unique.size, ratios=ratios, seed=seed)
+    rows: list[np.ndarray] = []
+    for group_index in grouped.as_dict().values():
+        selected = np.flatnonzero(np.isin(inverse, group_index))
+        rows.append(np.sort(selected))
+    return Split(*rows)
+
+
+def subject_split_audit(subject_ids, split: Split) -> dict:
+    """Report whether any subject identifier crosses a partition boundary."""
+    ids = np.asarray(subject_ids)
+    if ids.ndim != 1 or not ids.size:
+        raise ValueError("subject identifiers must be a nonempty one-dimensional array")
+    parts = split.as_dict()
+    seen: dict[object, str] = {}
+    crossings: list[dict] = []
+    for name, index in parts.items():
+        index = np.asarray(index, dtype=int)
+        if index.size and (index.min() < 0 or index.max() >= ids.size):
+            raise ValueError(f"{name} contains an out-of-range row index")
+        for subject in np.unique(ids[index]):
+            previous = seen.get(subject)
+            if previous is not None and previous != name:
+                crossings.append({"subject": str(subject),
+                                  "partitions": [previous, name]})
+            else:
+                seen[subject] = name
+    return {
+        "unit": "subject",
+        "rows": int(ids.size),
+        "subjects": int(np.unique(ids).size),
+        "duplicate_rows": int(ids.size - np.unique(ids).size),
+        "cross_partition_subjects": int(len(crossings)),
+        "crossings": crossings,
+        "partitions": {
+            name: {"rows": int(np.asarray(index).size),
+                   "subjects": int(np.unique(ids[np.asarray(index, dtype=int)]).size)}
+            for name, index in parts.items()
+        },
+    }
 
 
 def purge(index: np.ndarray, onset: np.ndarray, lengths: np.ndarray,

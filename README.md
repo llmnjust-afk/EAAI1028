@@ -23,7 +23,7 @@ main.tex                 single-column elsarticle manuscript
 sections/                manuscript sections; method split into reviewable parts
 refs.bib                 bibliography
 code/eaai/policy/         causal stateful alarm and upper-confidence selectors
-code/eaai/data/           official-format readers, masks, clocks and patient splits
+code/eaai/data/           official-format readers, masks, clocks and subject splits
 code/eaai/scores/         prefix logistic/LightGBM and causal masked GRU references
 code/eaai/eval/           diagnostic and inferential metrics
 code/eaai/experiments/    synthetic E0, generic training/cache, budget-sweep drivers
@@ -103,12 +103,12 @@ caches remain outside the repository.
   The masked GRU reaches 0.684 at A and 0.375 at B at 1/day over three seeds,
   with a higher B alarm rate (0.328 versus 0.276); it is a secondary check, not
   a demonstrated improvement.
-- **E2 target diagnostic.** An oracle target-site split of B (7,412 calibration
+- **E2 target diagnostic.** An oracle-style target-site split of B (7,412 calibration
   and 7,412 test patients) raises B sensitivity at 1/day from 0.294 to 0.497
   but also raises the realised rate from 0.270 to 0.616. Target labels are used
-  for threshold selection, so this is an upper bound, not a deployable label-free
+  for threshold selection, so this is an oracle-style reference estimate, not a deployable label-free
   procedure. The GRU target diagnostic is seed 0 only.
-- **Limits.** These are retrospective, record-disjoint experiments on one public
+- **Limits.** These are retrospective, subject-disjoint experiments on one public
   challenge cohort with a fixed scorer grid. They are not clinical validation,
   do not establish alert fatigue reduction, and do not include label-free
   target adaptation, subgroup/sparsification analyses or the official 2019
@@ -144,7 +144,7 @@ variable is consumed by the implementation.
   Source units are retained; 2012 Lactate is documented in mmol/L whereas the
   2019 release documents mg/dL. Unit conversion, a shared static feature schema,
   and task-specific labels are required before direct external model transfer.
-- Patient/record-disjoint splits prevent within-record leakage. The optional
+- Subject-disjoint splits prevent within-subject leakage; the 2019 release stores one PSV file per subject. The optional
   `purge` function is an outcome-dependent eligibility restriction and can cause
   selection bias; it is not a necessary leakage guard or proof against censoring.
   Public record identifiers cannot establish that repeated admissions belong to
@@ -155,8 +155,8 @@ variable is consumed by the implementation.
 
 ## Baselines, cache compatibility and scope limits
 
-The package provides prefix logistic regression (optional LightGBM) and a
-**causal unidirectional** masked GRU. Perturbing future observations is tested
+The package provides prefix logistic regression, a LightGBM gradient-boosted
+tree baseline and a **causal unidirectional** masked GRU. Perturbing future observations is tested
 not to change past scores; patient prediction batches limit forward-pass memory.
 Static missingness is median-imputed in the prefix learner and zero-imputed in
 the GRU reference. Neither implementation is an external paper's complete model.

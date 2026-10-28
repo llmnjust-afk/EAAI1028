@@ -3,7 +3,8 @@ import pandas as pd
 import pytest
 
 from eaai.data.harmonize import harmonise, pad_records
-from eaai.data.splits import four_way, purge
+from eaai.data.splits import (four_way, purge, subject_four_way,
+                              subject_split_audit)
 from eaai.data.synthetic import make_scores
 
 
@@ -58,6 +59,29 @@ def test_four_way_split_is_disjoint_and_complete():
     assert np.unique(stacked).size == 1000
 
 
+def test_subject_four_way_matches_row_split_for_unique_sorted_ids():
+    ids = np.array([f"p{i:06d}" for i in range(1000)])
+    row_split = four_way(ids.size, seed=7).as_dict()
+    subject_split = subject_four_way(ids, seed=7).as_dict()
+    for name in row_split:
+        assert set(row_split[name]) == set(subject_split[name])
+
+
+def test_subject_four_way_keeps_repeated_subject_together():
+    ids = np.array([f"p{i:02d}" for i in range(20) for _ in range(2)])
+    split = subject_four_way(ids, seed=4)
+    parts = split.as_dict()
+    stacked = np.concatenate([parts[k] for k in parts])
+    assert np.unique(stacked).size == ids.size
+    for name, index in parts.items():
+        assert np.unique(ids[index]).size * 2 == index.size, name
+    audit = subject_split_audit(ids, split)
+    assert audit["rows"] == 40
+    assert audit["subjects"] == 20
+    assert audit["duplicate_rows"] == 20
+    assert audit["cross_partition_subjects"] == 0
+
+
 def test_purge_drops_events_too_close_to_record_end():
     onset = np.array([-1, 100, 5])
     lengths = np.array([50, 105, 60])
@@ -108,6 +132,42 @@ def test_build_2019_tensors_from_psv_files(tmp_path):
     assert batch["lengths"].tolist() == [3, 4]
     assert batch["onset"].tolist() == [2, -1]
     assert batch["mask"][1, :, 0].tolist() == [True, False, False, True]
+
+
+def test_clinical_score_batch_expands_clock_and_keeps_onset(tmp_path):
+    from eaai.data.cohort import clinical_score_batch
+
+    folder = tmp_path / "training_setA"
+    folder.mkdir()
+    (folder / "p001.psv").write_text(
+        "ICULOS|HR|Resp|O2Sat|Temp|SBP|SepsisLabel\n"
+        "1|80|18|98|37.0|120|0\n2|85|18|98|37.0|118|0\n"
+        "5|90|22|94|38.2|100|1\n")
+    batch = clinical_score_batch(tmp_path, subset="A", instrument="news")
+    assert batch["scores"].shape[0] == 1
+    assert batch["lengths"].tolist() == [5]
+    assert batch["onset"].tolist() == [10]
+    assert np.isfinite(batch["scores"][0, :5]).all()
+    assert np.isnan(batch["scores"][0, 5:]).all()
+
+
+def test_clinical_score_batch_multi_shares_one_pass(tmp_path):
+    from eaai.data.cohort import clinical_score_batch_multi
+
+    folder = tmp_path / "training_setA"
+    folder.mkdir()
+    (folder / "p001.psv").write_text(
+        "ICULOS|HR|Resp|O2Sat|Temp|SBP|WBC|SepsisLabel\n"
+        "1|80|18|98|37.0|120|9|0\n2|85|18|98|37.0|118|9|0\n"
+        "5|90|22|94|38.2|100|13|1\n")
+    batch = clinical_score_batch_multi(
+        tmp_path, subset="A", instruments=("news", "sirs", "qsofa"))
+    assert set(batch) == {"news", "sirs", "qsofa"}
+    for instrument in batch:
+        assert batch[instrument]["scores"].shape[0] == 1
+        assert batch[instrument]["lengths"].tolist() == [5]
+        assert np.isfinite(batch[instrument]["scores"][0, :5]).all()
+        assert np.isnan(batch[instrument]["scores"][0, 5:]).all()
 
 
 def test_load_challenge2012_parses_the_header(tmp_path):

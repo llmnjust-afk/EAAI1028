@@ -22,7 +22,7 @@ Lactate observed (\%) & 3.4 & 1.9 \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:discrimination} reports three-seed score discrimination. The prefix logistic model reaches an A-test AUROC of $0.736\pm0.013$ and AUPRC of $0.034\pm0.006$; the masked GRU reaches $0.743\pm0.011$ and $0.043\pm0.005$. These AUPRC values must be read against the 1.27\% positive-timestep prevalence: both models rank positive steps several times better than chance, but the absolute positive predictive signal remains modest. On site B the logistic model falls to $0.676\pm0.005$ AUROC and $0.017\pm0.000$ AUPRC, while the GRU reaches $0.683\pm0.004$ and $0.018\pm0.002$. Ten-bin ECE is small in absolute terms (0.0011 and 0.0017 at A; 0.0014 and 0.0018 at B), but it is descriptive and should not be read as evidence of clinical calibration under shift. The drop is consistent with multisite sepsis-model evaluations that report degraded transport across hospitals \citep{valan2025evaluating,ostermayer2024external}, and it is larger in AUPRC than in AUROC because prevalence also changes.
+Table~\ref{tab:discrimination} reports three-seed score discrimination. The prefix logistic model reaches an A-test AUROC of $0.736\pm0.013$ and AUPRC of $0.034\pm0.006$; the masked GRU reaches $0.743\pm0.011$ and $0.043\pm0.005$, and LightGBM reaches $0.763\pm0.009$ and $0.042\pm0.004$. These AUPRC values must be read against the 1.27\% positive-timestep prevalence: both models rank positive steps several times better than chance, but the absolute positive predictive signal remains modest. On site B the logistic model falls to $0.676\pm0.005$ AUROC and $0.017\pm0.000$ AUPRC, while the GRU reaches $0.683\pm0.004$ and $0.018\pm0.002$, and LightGBM reaches $0.713\pm0.003$ and $0.025\pm0.001$. Ten-bin ECE is small in absolute terms (0.0011 and 0.0017 at A; 0.0014 and 0.0018 at B), but it is descriptive and should not be read as evidence of clinical calibration under shift. The drop is consistent with multisite sepsis-model evaluations that report degraded transport across hospitals \citep{valan2025evaluating,ostermayer2024external}, and it is larger in AUPRC than in AUROC because prevalence also changes.
 
 \begin{table}[tb]
 \centering
@@ -37,6 +37,7 @@ Model & AUROC & AUPRC & AUROC & AUPRC \\
 \midrule
 Prefix logistic & $0.736\pm0.013$ & $0.034\pm0.006$ & $0.676\pm0.005$ & $0.0172\pm0.0002$ \\
 Masked GRU & $0.743\pm0.011$ & $0.043\pm0.005$ & $0.683\pm0.004$ & $0.0183\pm0.0016$ \\
+LightGBM & $0.763\pm0.009$ & $0.042\pm0.004$ & $0.713\pm0.003$ & $0.0250\pm0.0010$ \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -1,0 +1,24 @@
+\subsection{Backbone Comparison at a Fixed Alarm Budget}
+\label{sec:models}
+
+A budget curve is only as useful as the scores it ranks. Table~\ref{tab:model-comparison} therefore compares the three backbones at the 1-per-patient-day operating point, holding the policy family, support bound and threshold grid fixed. At site A the GRU has the highest mean sensitivity ($0.684\pm0.006$), followed by LightGBM ($0.661\pm0.042$) and the prefix logistic model ($0.585\pm0.020$). At site B the ordering changes: LightGBM reaches $0.540\pm0.071$, the GRU $0.375\pm0.078$, and the logistic model $0.315\pm0.062$. The LightGBM advantage is not a free lunch, because its B alarm rate is also higher ($0.410\pm0.156$ versus $0.276\pm0.063$ for logistic and $0.328\pm0.164$ for the GRU), but all three policies remain below the requested B budget of 1 per day. A stronger tabular scorer therefore narrows the transport gap without eliminating it.
+
+\begin{table}[tb]
+\centering
+\caption{Backbone comparison at the 1-per-patient-day operating point, mean $\pm$ sample standard deviation over three seeds. The threshold is calibrated on site A and applied unchanged to site B. Rates are realised alarms per patient-day; the requested budget is 1.0. LightGBM is a stronger tabular baseline, not a tuned state-of-the-art model.}
+\label{tab:model-comparison}
+\small
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{Site A} & \multicolumn{2}{c}{Site B} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Model & Sens. & Rate & Sens. & Rate \\
+\midrule
+Prefix logistic & $0.585\pm0.020$ & $0.651\pm0.022$ & $0.315\pm0.062$ & $0.276\pm0.063$ \\
+Masked GRU & $0.684\pm0.006$ & $0.635\pm0.121$ & $0.375\pm0.078$ & $0.328\pm0.164$ \\
+LightGBM & $0.661\pm0.042$ & $0.655\pm0.147$ & $0.540\pm0.071$ & $0.410\pm0.156$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The seed-0 patient-block bootstrap makes the LightGBM--logistic contrast concrete without turning it into a universal ranking. At site B and 1 per day, the paired LightGBM-minus-logistic sensitivity difference is $0.081$ with 95\% interval $[0.027,0.133]$ and Holm-adjusted $p=0.066$; the alarm-rate difference is $-0.087$ with interval $[-0.105,-0.069]$ and adjusted $p=0.036$, because LightGBM selects a lower threshold and alarms less often on the shifted distribution. On site A the same contrast is not significant after correction, so the external comparison is the relevant one. The sensitivity advantage is consistent but not decisive after correction, while the lower alarm rate is clearer. The result supports a modest claim: backbone quality matters for transport, but it changes the level of the frontier rather than removing the need for target calibration. A hospital still cannot infer its realised alarm load from an A-calibrated threshold alone.

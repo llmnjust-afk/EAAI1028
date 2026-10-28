@@ -80,9 +80,9 @@ so model choice is not a substitute for target-site calibration.
 
 ## Target-site calibration diagnostic
 
-B is split 50/50 into patient-disjoint calibration and test halves. The
+B is split 50/50 into subject-disjoint calibration and test halves. The
 threshold is selected on B calibration labels and evaluated on B test labels;
-this is an oracle upper bound, not a deployable label-free method.
+this is an oracle-style reference estimate, not a deployable label-free method.
 
 | Budget | No-recal B sensitivity | Recal B sensitivity | No-recal B rate | Recal B rate |
 |---:|---:|---:|---:|---:|
@@ -124,3 +124,55 @@ python3 scripts/run_e2_target_calibration.py \
 
 The GRU run uses the same E1 driver with `--model gru --device cuda --epochs 20`.
 It is a reference masked GRU, not a GRU-D reproduction.
+
+## Added baselines and label-budget results
+
+LightGBM was installed on the Lab machine (4.7.0) and trained with the same
+prefix features and three subject-disjoint seeds. Its A-test AUROC/AUPRC is
+$0.763\pm0.009$ / $0.042\pm0.004$; B external is $0.713\pm0.003$ /
+$0.025\pm0.001$. At the 1-per-day E2 operating point it reaches A sensitivity
+$0.661\pm0.042$ at $0.655\pm0.147$ alarms/day and B sensitivity
+$0.540\pm0.071$ at $0.410\pm0.156$.
+
+The target label-budget curve fixes the B test half and recalibrates on nested
+subsets of the remaining half. At 1/day, 5% of eligible B subjects (741
+patients, about 34 events) reaches sensitivity $0.443\pm0.106$; 10% (1,482
+patients) reaches the full-pool $0.497\pm0.022$. At 0.5/day the corresponding
+values are $0.254\pm0.066$ at 5% and $0.358\pm0.031$ at 50%.
+
+Partial NEWS/SIRS/qSOFA baselines at 1/day on B: NEWS sensitivity 0.449 at
+0.586 alarms/day, SIRS 0.424 at 0.493, qSOFA 0.240 at 0.327. These are
+research-only partial instruments with coarse integer grids, not certified
+clinical implementations.
+
+Patient-block bootstrap files use 2,000 resamples at seed 0:
+`bootstrap_all_s0.json`, `bootstrap_lightgbm_s0.json`,
+`bootstrap_clinical_s0.json`.
+
+Label-budget and baseline drivers:
+
+```bash
+python3 scripts/run_e2_target_budget.py \
+  --cache-root /data/lab/EAAI1028-data/cache \
+  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --model prefix_lr --seed 0 \
+  --out /data/lab/EAAI1028-data/results/e2_target_budget
+
+python3 scripts/cache_clinical_scores.py \
+  --data-root /data/lab/EAAI1028-data/physionet2019 \
+  --cache-root /data/lab/EAAI1028-data/cache \
+  --subsets A B --instruments news sirs qsofa \
+  --out /data/lab/EAAI1028-data/results/clinical_cache.json
+
+python3 scripts/run_clinical_baselines.py \
+  --cache-root /data/lab/EAAI1028-data/cache \
+  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --out /data/lab/EAAI1028-data/results/clinical_baselines_s0.json
+
+python3 scripts/bootstrap_policy.py \
+  --cache-root /data/lab/EAAI1028-data/cache \
+  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --models prefix_lr masked_gru lightgbm --clinical none \
+  --budgets 0.25 0.5 1.0 2.0 --n-boot 2000 \
+  --out /data/lab/EAAI1028-data/results/bootstrap_all_s0.json
+```

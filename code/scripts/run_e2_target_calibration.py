@@ -2,11 +2,11 @@
 
 The primary manuscript experiment applies a source-calibrated threshold to the
 target hospital without target labels.  This script adds a deliberately
-optimistic diagnostic: split the target hospital into patient-disjoint
+optimistic diagnostic: split the target hospital into subject-disjoint
 calibration and test partitions, recalibrate the same policy family on target
-calibration labels, and evaluate on target test patients.  It is an oracle
-upper bound for what target-site calibration could recover, not a deployable
-label-free procedure and not a clinical validation.
+calibration labels, and evaluate on target test patients.  It is an oracle-style
+reference estimate for what target-site calibration could recover, not a
+deployable label-free procedure and not a clinical validation.
 """
 from __future__ import annotations
 

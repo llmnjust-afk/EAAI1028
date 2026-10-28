@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from ..data.cohort import prepare_2019, split_summary, subset_batch
-from ..data.splits import four_way
+from ..data.splits import subject_four_way, subject_split_audit
 from ..scores.api import ScoreCache
 from ..scores.baselines import MaskedGRU, PrefixFeatureModel
 from .e1_train import evaluate_scores
@@ -54,7 +54,9 @@ def run(root: str | Path, subset: str = "A", limit: int | None = None,
     """Fit on the training partition, evaluate held-out patients and cache scores."""
     batch, labels = prepare_2019(root, subset=subset, limit=limit,
                                  label_lead_hours=label_lead_hours, horizon=horizon)
-    split = four_way(len(labels), seed=seed)
+    if "ids" not in batch or len(batch["ids"]) != len(labels):
+        raise ValueError("2019 cohort must expose one subject identifier per record")
+    split = subject_four_way(batch["ids"], seed=seed)
     train = subset_batch(batch, split.train)
     model = make_model(model_name, seed, **model_kwargs)
     model.fit(train, labels[split.train])
@@ -101,6 +103,7 @@ def run(root: str | Path, subset: str = "A", limit: int | None = None,
                              if k not in ("pipeline", "module")}},
         "split": {name: split_summary(batch, labels, index)
                   for name, index in split.as_dict().items()},
+        "split_audit": subject_split_audit(batch["ids"], split),
         "partitions": reports,
         "cache": cache_report,
         "external": external,

@@ -77,3 +77,14 @@ def test_timestep_comparator_is_labelled_and_bounded():
     assert row["procedure"] == "timestep"
     assert 0.0 <= row["patient_violation"] <= 1.0
     assert row["status"] in ("grid_feasible", "no_alarm_fallback")
+
+
+def test_global_threshold_uses_only_point_estimate():
+    cohort, calibration, test = _fixture()
+    row = evaluate_at_budget(cohort["scores"], cohort["onset"], cohort["lengths"],
+                             calibration, test, budget=1.0,
+                             thresholds=np.linspace(0.05, 0.95, 40),
+                             procedure="global")
+    assert row["procedure"] == "global"
+    assert row["status"] in ("grid_feasible", "no_alarm_fallback")
+    assert row["certified_risk"] <= 1.0 + 1e-9

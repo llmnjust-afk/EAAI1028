@@ -91,6 +91,35 @@ def alarm_loss_matrix(scores, lengths, thresholds, refractory: int = 4,
     return per_day
 
 
+def patient_policy_outcomes(scores, onset, lengths, threshold: float,
+                           refractory: int = 4, escalation: int = 0,
+                           lead_window_hours: float = 12.0,
+                           step_hours: float = 1.0) -> dict:
+    """Per-patient alarm rate, event detection and lead time at one threshold.
+
+    Event detection is defined only for subjects with an onset inside observed
+    follow-up; the remaining entries are NaN and are excluded from sensitivity.
+    """
+    sequences, onset, lengths = _validate_sequences(scores, onset, lengths,
+                                                    step_hours=step_hours)
+    horizon = int(np.floor(lead_window_hours / step_hours))
+    rates = np.empty(len(sequences), dtype=float)
+    detected = np.full(len(sequences), np.nan, dtype=float)
+    leads = np.full(len(sequences), np.nan, dtype=float)
+    for i, seq in enumerate(sequences):
+        fired = run_policy(seq[:lengths[i]], AlarmPolicy(threshold, refractory, escalation))
+        rates[i] = float(np.count_nonzero(fired)) * HOURS_PER_DAY / (lengths[i] * step_hours)
+        t_event = int(onset[i])
+        if t_event <= 0 or t_event >= lengths[i]:
+            continue
+        start = max(t_event - horizon, 0)
+        hit = np.flatnonzero(fired[start:t_event])
+        detected[i] = float(hit.size > 0)
+        if hit.size:
+            leads[i] = float((t_event - (start + hit[0])) * step_hours)
+    return {"alarm_rate": rates, "detected": detected, "lead_time": leads,
+            "event": np.isfinite(detected)}
+
 def _policy_outcomes(scores: list[np.ndarray], onset: np.ndarray,
                      lengths: np.ndarray, threshold: float,
                      refractory: int, escalation: int,
@@ -163,8 +192,29 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
         calibrator = BlockedConformalCalibrator(budget=budget, alpha=alpha, slack=slack)
         calibrator.fit(per_day[calibration], thresholds, l_max)
         feasible = calibrator.feasible_
+    elif procedure == "global":
+        calibrator = BlockedConformalCalibrator(budget=budget, alpha=alpha, slack=slack)
+        empirical = per_day[calibration].mean(axis=0)
+        admissible = np.flatnonzero(empirical <= budget)
+        index = int(admissible[0]) if admissible.size else -1
+        calibrator.threshold_ = float(thresholds[index]) if admissible.size else float("inf")
+        calibrator.feasible_ = bool(admissible.size)
+        calibrator.diagnostics_ = {
+            "index": index,
+            "empirical_risk": float(empirical[index]) if admissible.size else 0.0,
+            "certified_risk": float(empirical[index]) if admissible.size else 0.0,
+            "status": "grid_feasible" if admissible.size else "no_alarm_fallback",
+            "n_patients": int(calibration.size),
+            "n_feasible": int(admissible.size),
+            "feasible": bool(admissible.size),
+            "budget": float(budget),
+            "alpha": float(alpha),
+            "l_max": float(l_max),
+            "slack_kind": "none",
+        }
+        feasible = calibrator.feasible_
     else:
-        raise ValueError("procedure must be 'blocked' or 'timestep'")
+        raise ValueError("procedure must be 'blocked', 'global' or 'timestep'")
     raw_threshold = calibrator.threshold_
     if raw_threshold is None:
         raise RuntimeError("calibrator did not produce a threshold")

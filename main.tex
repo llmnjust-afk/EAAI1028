@@ -20,13 +20,6 @@
 
 \biboptions{numbers,sort&compress}
 \setlength{\emergencystretch}{2em}
-\makeatletter
-\def\ps@pprintTitle{%
-  \let\@oddhead\@empty\let\@evenhead\@empty
-  \def\@oddfoot{\hfil Draft manuscript --- not submitted\hfil}%
-  \let\@evenfoot\@oddfoot}
-\makeatother
-
 \journal{Engineering Applications of Artificial Intelligence}
 
 \begin{document}
@@ -56,6 +49,9 @@ Clinical early warning \sep Alarm budgets \sep Stateful policies \sep Risk calib
 \FloatBarrier
 \input{sections/discussion}
 \input{sections/conclusion}
+
+\FloatBarrier
+\input{sections/availability}
 
 \FloatBarrier
 \bibliographystyle{elsarticle-num}

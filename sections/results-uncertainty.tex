@@ -1,0 +1,28 @@
+\subsection{Patient-Block Uncertainty}
+\label{sec:uncertainty}
+
+Seed-to-seed standard deviations describe calibration variability, not sampling uncertainty on the target population. We therefore resample whole B subjects with replacement 2{,}000 times at the 1-per-day operating point and recompute sensitivity, realised rate and patient-violation fraction on each replicate. Resampling subjects rather than hours preserves the within-patient dependence that the calibration argument is built on. Table~\ref{tab:bootstrap} reports the seed-0 intervals and paired differences against the blocked prefix-logistic policy; Holm adjustment covers the six model--procedure rows and three metrics.
+
+\begin{table}[tb]
+\centering
+\caption{Patient-block bootstrap at the 1-per-patient-day operating point on site B, seed 0, 2{,}000 resamples. Intervals are 95\% percentile intervals. $\Delta$Sens is the paired difference against the blocked prefix-logistic policy; $p_{\mathrm{Holm}}$ is adjusted across the reported rows and metrics. The global rows use a point-estimate threshold and are workload comparators, not certified policies.}
+\label{tab:bootstrap}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+Policy & Sens. [95\% CI] & Rate [95\% CI] & $\Delta$Sens [95\% CI] & $p_{\mathrm{Holm}}$ \\
+\midrule
+Prefix logistic, blocked & $0.382$ [0.348, 0.417] & $0.348$ [0.333, 0.362] & -- & -- \\
+Prefix logistic, global & $0.482$ [0.443, 0.519] & $0.549$ [0.531, 0.568] & $+0.100$ [0.049, 0.152] & 0.040 \\
+Masked GRU, blocked & $0.326$ [0.291, 0.359] & $0.209$ [0.198, 0.219] & $-0.056$ [-0.106, -0.009] & 0.288 \\
+Masked GRU, global & $0.408$ [0.370, 0.445] & $0.343$ [0.329, 0.357] & $+0.026$ [-0.029, 0.076] & 1.000 \\
+LightGBM, blocked & $0.463$ [0.427, 0.499] & $0.260$ [0.250, 0.272] & $+0.081$ [0.027, 0.133] & 0.066 \\
+LightGBM, global & $0.537$ [0.501, 0.574] & $0.400$ [0.387, 0.413] & $+0.155$ [0.103, 0.208] & 0.033 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three patterns survive the intervals. First, the blocked prefix policy is conservative on this target: its mean rate is $0.348$ with interval $[0.333,0.361]$, well below the requested 1 per day, and its sensitivity interval is $[0.348,0.417]$. Second, the global point-estimate threshold raises sensitivity by $0.100$ but also raises the realised rate by $0.201$ alarms per patient-day and the patient-violation fraction from $0.122$ to $0.190$; the gain is a change of operating point, not a free improvement in ranking. Third, LightGBM's blocked policy reaches $0.463$ sensitivity at $0.260$ alarms per day, a paired gain of $0.081$ over the blocked logistic policy with interval $[0.027,0.133]$; the Holm-adjusted $p=0.066$ is not significant at the 0.05 level, so this is a consistent but not decisive advantage. The GRU difference is negative at this operating point and is also not significant after Holm adjustment, which is why the GRU is presented as a secondary check rather than a demonstrated improvement.
+
+These intervals are conditional on one target split and one seed; they quantify target sampling noise, not source-seed or hospital-level variability. They also do not cover the oracle target-calibration analysis, which uses target labels and is reported separately. The practical reading is therefore limited but useful: at a fixed 1-per-day request, the choice of backbone and threshold procedure can move B sensitivity by roughly ten percentage points, while the realised rate remains below the request for every certified row in the table.

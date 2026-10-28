@@ -30,8 +30,8 @@ Across seeds 0--2, prefix logistic gives A-test AUROC $0.7356\pm0.0133$ and
 AUPRC $0.0343\pm0.0058$; on B it gives $0.6761\pm0.0052$ and
 $0.0172\pm0.0002$. The masked GRU gives A-test $0.7434\pm0.0108$ and
 $0.0428\pm0.0048$; on B it gives $0.6829\pm0.0042$ and $0.0183\pm0.0016$.
-The GRU E2 sweep was run only for seed 0, so its operational numbers are a
-secondary check rather than a three-seed estimate.
+The E2 GRU sweep is now reported for all three seeds; the target-site GRU
+diagnostic remains seed 0 only.
 
 Patient-level bootstrap (400 resamples, same patients for both models):
 the GRU-minus-logistic A-test AUROC difference is 0.0039 with 95% interval
@@ -66,17 +66,34 @@ is $0.081\pm0.026$ / $0.179\pm0.063$ / $0.315\pm0.062$ / $0.557\pm0.051$.
 The internal alarm rates are stable, but sensitivity varies materially at the
 tightest budget and the cross-site loss is consistent.
 
-The deliberately invalid timestep comparator at budget 0.25 selects a lower
-threshold than the blocked procedure (0.0445 vs 0.0543), raises A alarm rate
-from 0.117 to 0.183 and patient-violation fraction from 0.074 to 0.115. At
-budget 0.50 it raises alarm rate from 0.328 to 0.450 and violation fraction from
-0.161 to 0.214. At budgets at or above 1.0 the grid selects the same threshold
-for both procedures on this split. These are single-split diagnostics, not a
-coverage-rate claim.
+Across the three-seed timestep comparator, budget 0.25 raises mean A alarm
+rate from 0.108 to 0.180 and sensitivity from 0.185 to 0.283, with violation
+0.113 vs 0.073; budget 0.50 raises rate from 0.312 to 0.425 and sensitivity from
+0.397 to 0.470, with violation 0.196 vs 0.151. At 1/day the comparator remains
+more active (0.744 vs 0.651), and at 2/day the grid collapses both procedures to
+the same policy. These are range-specific diagnostics, not a coverage-rate claim.
 
-The GRU at 1 alarm/day has A sensitivity 0.685 and B sensitivity 0.326, versus
-0.607 and 0.382 for logistic. The ordering therefore changes across sites; model
-choice is not a substitute for target-site calibration.
+The three-seed GRU at 1 alarm/day has A sensitivity 0.684 (SD 0.006) and B
+sensitivity 0.375 (SD 0.078), versus 0.585 and 0.315 for logistic; its B alarm
+rate is also higher (0.328 vs 0.276). The ordering changes with operating point,
+so model choice is not a substitute for target-site calibration.
+
+## Target-site calibration diagnostic
+
+B is split 50/50 into patient-disjoint calibration and test halves. The
+threshold is selected on B calibration labels and evaluated on B test labels;
+this is an oracle upper bound, not a deployable label-free method.
+
+| Budget | No-recal B sensitivity | Recal B sensitivity | No-recal B rate | Recal B rate |
+|---:|---:|---:|---:|---:|
+| 0.25 | 0.073 +/- 0.026 | 0.218 +/- 0.036 | 0.039 +/- 0.014 | 0.159 +/- 0.009 |
+| 0.50 | 0.173 +/- 0.074 | 0.358 +/- 0.031 | 0.118 +/- 0.043 | 0.360 +/- 0.019 |
+| 1.00 | 0.294 +/- 0.082 | 0.497 +/- 0.022 | 0.270 +/- 0.065 | 0.616 +/- 0.058 |
+| 2.00 | 0.544 +/- 0.072 | 0.724 +/- 0.056 | 0.744 +/- 0.165 | 1.466 +/- 0.260 |
+
+Means and sample SD over three logistic seeds. The target split retains 7,412
+test patients and about 337 test events per seed. At 2/day the target selector
+hits the threshold grid floor, so sensitivity saturates and the rate rises.
 
 ## Commands
 
@@ -92,6 +109,17 @@ python3 scripts/run_e2.py --cache-root /data/lab/EAAI1028-data/cache \
   --external-cohort B_lead6 --min-stay 24 --thresholds 200 \
   --budgets 0.25 0.5 1.0 2.0 4.0 8.0 --include-timestep \
   --out /data/lab/EAAI1028-data/results/e2
+
+python3 scripts/run_e2_reuse.py --cache-root /data/lab/EAAI1028-data/cache \
+  --model prefix_lr --seed 0 --cohort A_lead6 \
+  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --external-cohort B_lead6 --include-timestep \
+  --out /data/lab/EAAI1028-data/results/e2
+
+python3 scripts/run_e2_target_calibration.py \
+  --cache-root /data/lab/EAAI1028-data/cache --model prefix_lr --seed 0 \
+  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --out /data/lab/EAAI1028-data/results/e2_target
 ```
 
 The GRU run uses the same E1 driver with `--model gru --device cuda --epochs 20`.

@@ -55,7 +55,8 @@ def main() -> int:
             if not path.exists():
                 continue
             data = json.loads(path.read_text())
-            for scope in ("internal", "external"):
+            for scope in ("internal", "external",
+                          "internal_timestep", "external_timestep"):
                 if scope not in data:
                     continue
                 table = out["e2"][model].setdefault(scope, {})

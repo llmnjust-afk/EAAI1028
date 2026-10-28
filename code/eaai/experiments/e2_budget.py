@@ -66,13 +66,28 @@ def alarm_loss_matrix(scores, lengths, thresholds, refractory: int = 4,
         raise ValueError("threshold grid must be nonempty, finite and strictly increasing")
     sequences, _, lengths = _validate_sequences(scores, np.zeros(len(scores)), lengths,
                                                 step_hours=step_hours)
-    per_day = np.zeros((len(sequences), thresholds.size))
+    n = len(sequences)
+    width = max((seq.size for seq in sequences), default=0)
+    padded = np.full((n, width), np.nan)
+    for i, seq in enumerate(sequences):
+        padded[i, :seq.size] = seq
+    per_day = np.zeros((n, thresholds.size))
     for k, threshold in enumerate(thresholds):
-        policy = AlarmPolicy(float(threshold), refractory, escalation)
-        for i, seq in enumerate(sequences):
-            fired = run_policy(seq, policy)
-            per_day[i, k] = float(np.count_nonzero(fired)) * HOURS_PER_DAY / (
-                lengths[i] * step_hours)
+        exceeded = np.isfinite(padded) & (padded >= float(threshold))
+        fired = np.zeros_like(exceeded, dtype=bool)
+        refractory_left = np.zeros(n, dtype=int)
+        streak = np.zeros(n, dtype=int)
+        for t in range(width):
+            hit = exceeded[:, t]
+            streak = np.where(hit, streak + 1, 0)
+            override = (escalation > 0) & (streak >= escalation)
+            fire = hit & ((refractory_left == 0) | override)
+            fired[:, t] = fire
+            refractory_left = np.where(fire, refractory,
+                                       np.maximum(refractory_left - 1, 0))
+            streak = np.where(fire, 0, streak)
+        per_day[:, k] = (fired.sum(axis=1) * HOURS_PER_DAY /
+                         (lengths * step_hours))
     return per_day
 
 

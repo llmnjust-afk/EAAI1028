@@ -1,7 +1,7 @@
 # Alert-Budgeted Clinical Early Warning
 
 Manuscript and reference implementation for **Alert-Budgeted Clinical
-Early Warning: Conformal Risk Control for Stateful Deterioration Alarm Policies**,
+Early Warning: Patient-Blocked Risk Calibration for Stateful Deterioration Alarm Policies**,
 with *Engineering Applications of Artificial Intelligence* as the intended venue.
 This is **not a submitted paper or a clinical validation**. The real-data
 comparative experiments and manuscript are complete for the documented scope;
@@ -47,6 +47,8 @@ python3 -m pip install -r requirements.txt
 python3 -m pytest tests -q
 python3 scripts/run_e0.py --patients 4000 --splits 200 --seed 0
 python3 scripts/audit_official2012.py  # optional network QC, all 4000 set-A records
+python3 scripts/run_e2_reuse.py --help  # one loss matrix for all E2 partitions
+python3 scripts/run_e2_target_calibration.py --help  # oracle target diagnostic
 ```
 
 The GRU needs optional PyTorch; its tests skip when PyTorch is absent. The
@@ -98,13 +100,19 @@ caches remain outside the repository.
   0.585 (three-seed mean) but B sensitivity 0.315; the A-derived threshold is
   therefore not transportable without target calibration. At the tightest
   budget (0.25/day), mean A sensitivity is 0.185 and B sensitivity 0.081.
-  The deliberately invalid timestep comparator is less conservative at tight
-  budgets but is not a coverage-rate study.
+  The masked GRU reaches 0.684 at A and 0.375 at B at 1/day over three seeds,
+  with a higher B alarm rate (0.328 versus 0.276); it is a secondary check, not
+  a demonstrated improvement.
+- **E2 target diagnostic.** An oracle target-site split of B (7,412 calibration
+  and 7,412 test patients) raises B sensitivity at 1/day from 0.294 to 0.497
+  but also raises the realised rate from 0.270 to 0.616. Target labels are used
+  for threshold selection, so this is an upper bound, not a deployable label-free
+  procedure. The GRU target diagnostic is seed 0 only.
 - **Limits.** These are retrospective, record-disjoint experiments on one public
   challenge cohort with a fixed scorer grid. They are not clinical validation,
-  do not establish alert fatigue reduction, and do not include target-site
-  recalibration, subgroup/sparsification analyses or the official 2019 utility
-  scorer. The GRU E2 sweep is seed 0 only.
+  do not establish alert fatigue reduction, and do not include label-free
+  target adaptation, subgroup/sparsification analyses or the official 2019
+  utility scorer.
 
 ## Data conventions and limits
 
@@ -165,9 +173,11 @@ caches and downstream results**; changing the code cannot repair scores already
 computed using future information. Cache format version 2 validates shapes,
 lengths, onset metadata and finite valid scores.
 
-Not implemented: target-site recalibration, external architecture adapters,
+Not implemented: label-free target adaptation, external architecture adapters,
 the official 2019 challenge utility scorer, 2012 same-task transfer,
 observation-sparsification and subgroup study drivers, and MIMIC processing.
+The oracle target-site diagnostic in `experiment_results/target_summary.json`
+is reported separately and is not a deployment method.
 The E2 A→B experiment is complete for the reference scorers, but it is not an
 A→C study and does not establish clinical superiority. No measured 45-GPU-hour
 result, deployment claim or submission status is claimed.

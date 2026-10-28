@@ -9,7 +9,7 @@ def synthetic_losses(n=600, k=40, seed=0):
     lambdas = np.linspace(0.05, 0.95, k)
     base = np.exp(-3.0 * lambdas) * 6.0
     noise = rng.gamma(shape=0.6, scale=1.0, size=(n, k))
-    return np.clip(base[None, :] * noise, 0.0, 24.0), lambdas
+    return np.clip(base[None, :] * noise, 0.0, 5.0), lambdas
 
 
 def test_threshold_is_on_the_grid():
@@ -26,15 +26,18 @@ def test_certified_risk_does_not_exceed_budget_when_feasible():
         assert diag["certified_risk"] <= 2.0 + 1e-9
 
 
-def test_infeasible_budget_falls_back_to_most_conservative_threshold():
+def test_infeasible_budget_falls_back_to_no_alarm_policy():
     losses, lambdas = synthetic_losses()
     cal = BlockedConformalCalibrator(budget=0.0, alpha=0.05).fit(losses, lambdas, l_max=5.0)
     assert cal.diagnostics_["n_feasible"] == 0
-    assert cal.threshold_ == pytest.approx(lambdas.max())
+    assert cal.threshold_ == float("inf")
+    assert cal.diagnostics_["index"] == -1
+    assert cal.diagnostics_["certified_risk"] == 0
 
 
-def test_hoeffding_slack_is_wider_than_bernstein():
-    losses, lambdas = synthetic_losses()
+def test_bernstein_is_tighter_for_large_low_variance_samples():
+    lambdas = np.linspace(0.05, 0.95, 40)
+    losses = np.full((600, 40), 0.2)
     bern = BlockedConformalCalibrator(budget=1.0, alpha=0.1, slack="bernstein").fit(losses, lambdas, 5.0)
     hoef = BlockedConformalCalibrator(budget=1.0, alpha=0.1, slack="hoeffding").fit(losses, lambdas, 5.0)
     assert hoef.diagnostics_["slack"] >= bern.diagnostics_["slack"]
@@ -72,7 +75,7 @@ def test_timestep_calibrator_returns_a_grid_point():
     assert round(cal.threshold_, 12) in set(np.round(lambdas, 12))
 
 
-def test_clipping_is_recorded_rather_than_silent():
+def test_out_of_bound_losses_are_rejected_not_clipped():
     losses, lambdas = synthetic_losses()
-    cal = BlockedConformalCalibrator(budget=1.0).fit(losses, lambdas, 1.0)
-    assert cal.diagnostics_["n_clipped"] > 0
+    with pytest.raises(ValueError, match="clipping"):
+        BlockedConformalCalibrator(budget=1.0).fit(losses, lambdas, 1.0)

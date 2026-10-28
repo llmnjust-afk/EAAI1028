@@ -9,10 +9,19 @@ from scipy import stats
 from sklearn.metrics import average_precision_score, roc_auc_score
 
 
+def _binary_inputs(y_true, y_score, probabilities=False):
+    y = np.asarray(y_true, dtype=float).ravel()
+    s = np.asarray(y_score, dtype=float).ravel()
+    if not y.size or y.shape != s.shape or not np.isin(y, [0, 1]).all():
+        raise ValueError("nonempty matched binary targets and scores required")
+    if not np.isfinite(s).all() or (probabilities and np.any((s < 0) | (s > 1))):
+        raise ValueError("scores must be finite; probabilities must lie in [0,1]")
+    return y.astype(int), s
+
+
 def discrimination(y_true: np.ndarray, y_score: np.ndarray) -> dict:
     """AUROC and AUPRC, guarded against single-class inputs."""
-    y_true = np.asarray(y_true).astype(int).ravel()
-    y_score = np.asarray(y_score, dtype=float).ravel()
+    y_true, y_score = _binary_inputs(y_true, y_score)
     if y_true.min() == y_true.max():
         return {"auroc": float("nan"), "auprc": float("nan")}
     return {
@@ -24,8 +33,9 @@ def discrimination(y_true: np.ndarray, y_score: np.ndarray) -> dict:
 def expected_calibration_error(y_true: np.ndarray, y_prob: np.ndarray,
                                n_bins: int = 15) -> float:
     """Equal-width expected calibration error."""
-    y_true = np.asarray(y_true, dtype=float).ravel()
-    y_prob = np.asarray(y_prob, dtype=float).ravel()
+    y_true, y_prob = _binary_inputs(y_true, y_prob, probabilities=True)
+    if not isinstance(n_bins, (int, np.integer)) or n_bins <= 0:
+        raise ValueError("n_bins must be a positive integer")
     edges = np.linspace(0.0, 1.0, n_bins + 1)
     index = np.clip(np.digitize(y_prob, edges[1:-1], right=True), 0, n_bins - 1)
     total = 0.0
@@ -48,8 +58,7 @@ def calibration_slope(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     """
     from sklearn.linear_model import LogisticRegression
 
-    y_true = np.asarray(y_true).astype(int).ravel()
-    y_prob = np.asarray(y_prob, dtype=float).ravel()
+    y_true, y_prob = _binary_inputs(y_true, y_prob, probabilities=True)
     if np.unique(y_true).size < 2:
         return float("nan")
 
@@ -68,9 +77,13 @@ def lead_time_hours(scores: Sequence[float], onset_index: int | None,
     """Hours between the first alarm and onset, or ``nan`` if not detected earlier."""
     from ..policy.alarm import AlarmPolicy, run_policy
 
+    if not np.isfinite(step_hours) or step_hours <= 0:
+        raise ValueError("step_hours must be finite and positive")
     if onset_index is None or onset_index <= 0:
         return float("nan")
     seq = np.asarray(scores, dtype=float).ravel()
+    if onset_index >= seq.size:
+        return float("nan")
     fired = run_policy(seq[:onset_index], AlarmPolicy(threshold, refractory, escalation))
     hits = np.flatnonzero(fired)
     if hits.size == 0:
@@ -80,8 +93,7 @@ def lead_time_hours(scores: Sequence[float], onset_index: int | None,
 
 def net_benefit(y_true: np.ndarray, y_prob: np.ndarray, threshold: float) -> float:
     """Net benefit of treating at ``threshold`` (decision curve analysis)."""
-    y_true = np.asarray(y_true).astype(int).ravel()
-    y_prob = np.asarray(y_prob, dtype=float).ravel()
+    y_true, y_prob = _binary_inputs(y_true, y_prob, probabilities=True)
     if not 0.0 < threshold < 1.0:
         raise ValueError("threshold must lie strictly between zero and one")
     n = y_true.size
@@ -103,7 +115,7 @@ def net_benefit_curve(y_true: np.ndarray, y_prob: np.ndarray,
 def risk_coverage(confidence: np.ndarray, correct: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Risk-coverage curve built by sorting on confidence descending."""
     confidence = np.asarray(confidence, dtype=float).ravel()
-    correct = np.asarray(correct).astype(float).ravel()
+    correct, confidence = _binary_inputs(correct, confidence)
     order = np.argsort(-confidence)
     errors = 1.0 - correct[order]
     coverage = np.arange(1, errors.size + 1) / errors.size
@@ -120,13 +132,19 @@ def bootstrap_ci(values: np.ndarray, statistic: Callable[[np.ndarray], float] = 
     which is the correct unit for patient-level clustering.
     """
     values = np.asarray(values, dtype=float)
+    if (values.ndim != 1 or not values.size or not np.isfinite(values).all() or
+            not isinstance(n_resamples, (int, np.integer)) or n_resamples <= 0 or
+            not 0 < alpha < 1):
+        raise ValueError("finite nonempty 1-D values, positive resamples and alpha in (0,1) required")
     rng = np.random.default_rng(seed)
 
     if groups is None:
-        draws = rng.integers(0, values.size, size=(n_resamples, values.size))
-        stats_ = np.array([statistic(values[d]) for d in draws])
+        stats_ = np.array([statistic(values[rng.integers(0, values.size, size=values.size)])
+                           for _ in range(n_resamples)])
     else:
         groups = np.asarray(groups)
+        if groups.shape != values.shape or pd_is_missing(groups):
+            raise ValueError("groups must match values and contain no missing labels")
         unique = np.unique(groups)
         buckets = [values[groups == g] for g in unique]
         stats_ = np.empty(n_resamples)
@@ -163,16 +181,15 @@ def delong_test(y_true: np.ndarray, scores_a: np.ndarray,
     Returns both areas, the difference, its standard error, the z statistic and
     a two-sided p-value.
     """
-    y_true = np.asarray(y_true).astype(int).ravel()
-    a = np.asarray(scores_a, dtype=float).ravel()
-    b = np.asarray(scores_b, dtype=float).ravel()
+    y_true, a = _binary_inputs(y_true, scores_a)
+    _, b = _binary_inputs(y_true, scores_b)
 
     positive = y_true == 1
     m, n = int(positive.sum()), int((~positive).sum())
-    if m == 0 or n == 0:
-        raise ValueError("both classes are required")
+    if m < 2 or n < 2:
+        raise ValueError("at least two observations per class are required for variance")
 
-    def placement(scores: np.ndarray) -> np.ndarray:
+    def placement(scores: np.ndarray) -> tuple:
         x, y = scores[positive], scores[~positive]
         tx, ty, tz = _midrank(x), _midrank(y), _midrank(np.concatenate([x, y]))
         tz = tz.reshape(-1)
@@ -201,15 +218,24 @@ def paired_wilcoxon(a: np.ndarray, b: np.ndarray) -> dict:
     """Paired Wilcoxon signed-rank test with the matched-pairs rank-biserial effect size."""
     a = np.asarray(a, dtype=float).ravel()
     b = np.asarray(b, dtype=float).ravel()
-    if a.size != b.size:
-        raise ValueError("paired samples must have equal length")
+    if not a.size or a.size != b.size or not np.isfinite(a).all() or not np.isfinite(b).all():
+        raise ValueError("paired samples must be nonempty, finite and have equal length")
     diff = a - b
-    if np.allclose(diff, 0.0):
+    if np.all(diff == 0.0):
         return {"statistic": 0.0, "p_value": 1.0, "effect_size": 0.0}
-    res = stats.wilcoxon(a, b)
+    # Match SciPy's default zero_method='wilcox': discard zero differences
+    # before computing both ranks and the rank-biserial denominator.
+    diff = diff[diff != 0]
+    res = stats.wilcoxon(diff, zero_method="wilcox")
     ranks = stats.rankdata(np.abs(diff))
     positive = ranks[diff > 0].sum()
     negative = ranks[diff < 0].sum()
     effect = float((positive - negative) / ranks.sum())
     return {"statistic": float(res.statistic), "p_value": float(res.pvalue),
             "effect_size": effect}
+
+
+def pd_is_missing(groups):
+    """Support numeric and string group identifiers without casting them."""
+    import pandas as pd
+    return bool(pd.isna(groups).any())

@@ -22,7 +22,7 @@ CHALLENGE_2019_DYNAMIC: tuple[str, ...] = tuple(
 
 CHALLENGE_2012_VARIABLES: tuple[str, ...] = (
     "HR", "SBP", "Temp", "Resp", "WBC", "Creatinine", "Glucose", "Lactate",
-    "Hct", "Platelets", "Age", "Gender", "Unit1", "Unit2", "HospAdmTime", "ICULOS",
+    "Hct", "Platelets",
 )
 
 HOURS_PER_DAY = 24.0

@@ -36,7 +36,7 @@ def main() -> int:
 
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
-        args.json_out.write_text(json.dumps(result, indent=2))
+        args.json_out.write_text(json.dumps(result, indent=2, allow_nan=False))
         print(f"\nwrote {args.json_out}")
     return 0
 

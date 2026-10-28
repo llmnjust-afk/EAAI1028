@@ -1,0 +1,35 @@
+\subsection{Problem Setting and Notation}
+
+Let patient $i$ contribute observations $\mathcal{O}_i=\{(t_{ij},m_{ij},v_{ij})\}_{j=1}^{n_i}$, with observation times $t_{ij}$, variable indices $m_{ij}$, and values $v_{ij}$. The number and spacing of observations may differ across patients and variables. Decisions are made on a prespecified regular grid with sampling interval $\Delta$ hours, using only observations available at each decision time. A causal score function maps this history to $s_{it}=f_\theta(\mathcal{O}_{i,\le t})\in[0,1]$; any preprocessing, including imputation, must satisfy the same restriction.
+
+An observed event has time $t_i^\star$, and a useful early alarm falls in $[t_i^\star-W,t_i^\star)$, where $W=12$ hours is a design choice for the proposed evaluation. Records without an observed event are represented separately from records whose event time is outside observed follow-up. Clinical event time and the boundary of a shifted prediction label are not interchangeable. The data protocol in \cref{sec:setup} therefore requires an explicit onset convention and does not evaluate lead time against an unobserved or left-censored clinical onset.
+
+\subsection{Stateful Alarm Policies}
+
+The policy $\pi_\lambda=(\lambda,\tau,\kappa)$ comprises a threshold, an integer refractory duration, and an integer escalation duration. Here $\tau\ge0$ is the number of subsequent decision steps suppressed after an alarm; $\kappa=0$ disables escalation, while $\kappa>0$ permits an override after $\kappa$ consecutive above-threshold steps following the last alarm. Let $z_{it}$ be the number of refractory steps remaining at the start of step $t$, and let $c_{it}$ include the current exceedance and the consecutive suppressed exceedances immediately preceding it. With initial state zero, the emission and update are
+\begin{equation}
+\label{eq:policy}
+\begin{aligned}
+a_{it}&=\mathbf{1}\!\left[s_{it}\text{ finite},\ s_{it}\ge\lambda,\
+ z_{it}=0\ \vee\ (\kappa>0\ \wedge\ c_{it}\ge\kappa)\right],
+\\
+z_{i,t+1}&=\begin{cases}
+\tau, & a_{it}=1,\\
+\max(0,z_{it}-1), & a_{it}=0.
+\end{cases}
+\end{aligned}
+\end{equation}
+The exceedance counter resets after an alarm or a non-exceedance, including a missing score. The refractory duration counts decision steps, not observations in the irregular raw record. Setting $\tau=0$ gives the memoryless threshold policy, whereas $\lambda=+\infty$ gives an exact no-alarm policy. The latter is an explicit safe fallback and is distinct from the largest finite grid threshold, which can still emit alarms.
+
+The scorer and structural parameters are selected using training and validation patients and are then fixed before risk calibration. Every candidate threshold is evaluated by replaying the entire causal policy, with state reset at each patient's admission. Within-patient alarm indicators are dependent, so counting them as independent calibration units is not justified. Dependence within a patient does not itself prevent calibration over independently sampled patient trajectories.
+
+\subsection{Risk Estimand and the Timestep Shortcut}
+
+For $n_i$ decision steps, define exposure $D_i=n_i\Delta/24$ days and alarm count $A_i(\lambda)=\sum_t a_{it}(\lambda)$. The target is the patient-average daily alarm rate
+\begin{equation}
+\label{eq:risk}
+R(\lambda)=\mathbb{E}\!\left[A_i(\lambda)/D_i\right].
+\end{equation}
+This estimand weights each patient equally and is not the pooled ward rate $\mathbb{E}[A_i]/\mathbb{E}[D_i]$, which weights patients by exposure. Both may be clinically relevant, but their identification requires different loss definitions. The present certificate concerns only \cref{eq:risk}; it does not guarantee a fixed maximum count for every patient or a fixed realised total for a ward.
+
+The synthetic comparison includes a deliberately invalid effective-sample-size shortcut. It uses the same empirical patient-average losses as the blocked selector, but substitutes the number of calibration timesteps for the number of calibration patients in the confidence radius. This isolates the consequence of inflating the unit of information without changing the point estimator. It is not an implementation of a particular published timestep-conformal algorithm, nor does the comparison establish that every alternative time-series calibration method is invalid.

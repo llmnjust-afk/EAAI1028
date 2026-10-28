@@ -116,15 +116,20 @@ def test_load_challenge2012_parses_the_header(tmp_path):
     folder = tmp_path / "set-a"
     folder.mkdir()
     (folder / "132539.txt").write_text(
-        "RecordID,SAPS-I,SOFA,Length_of_stay,Survival,In-hospital_death,"
-        "HR,SBP,Temp,Resp,WBC,Creatinine,Glucose,Lactate,Hct,Platelets,"
-        "Age,Gender,Unit1,Unit2,HospAdmTime,ICULOS\n"
-        "132539,6,1,5,-1,0,80,120,36.5,18,9,1.2,120,1.1,40,250,"
-        "60,1,0,0,-1,1\n"
-        "132539,6,1,5,-1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,"
-        "-1,-1,-1,-1,-1,2\n")
+        "Time,Parameter,Value\n00:00,RecordID,132539\n00:00,Age,54\n"
+        "00:00,Gender,0\n00:00,Height,-1\n00:00,ICUType,4\n"
+        "00:07,HR,73\n00:37,HR,80\n00:07,NISysABP,147\n"
+        "00:07,RespRate,19\n02:12,HCT,40\n47:37,HR,90\n")
+    (tmp_path / "Outcomes-a.txt").write_text(
+        "RecordID,SAPS-I,SOFA,Length_of_stay,Survival,In-hospital_death\n"
+        "132539,6,1,5,-1,0\n")
     batch = build_2012_tensors(tmp_path, subset="a")
-    assert batch["lengths"].tolist() == [2]
+    assert batch["lengths"].tolist() == [49]
     assert batch["onset"].tolist() == [-1]
     assert batch["mortality"].tolist() == [0.0]
-    assert batch["mask"][0, 1, 0] == False
+    assert not batch["mask"][0, 0, 0]  # 00:07 must not leak into admission time.
+    assert batch["values"][0, 1, 0] == 80  # last available HR in hour one.
+    assert batch["values"][0, 1, 1] == 147  # mapped NISysABP -> SBP.
+    assert batch["values"][0, 3, 8] == 40  # HCT -> Hct, not available at hour two.
+    assert batch["static"].shape == (1, 4)
+    assert batch["values"][0, 48, 0] == 90

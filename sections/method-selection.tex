@@ -1,0 +1,28 @@
+\subsection{Operating Points and Lead-Time Evaluation}
+
+The reference selector deploys the smallest finite threshold whose raw risk upper bound meets the requested budget. This is a deterministic operating-point convention rather than a guarantee of optimal detection. A separate utility objective could select among the uniformly certified candidates without invalidating the risk bound, but such an optimiser is not implemented here. Neither a lower threshold nor a higher budget is assumed to improve every operational metric of a stateful policy.
+
+For an event observed during follow-up, define the detection window $\mathcal W_i=[\max(0,t_i^\star-W),t_i^\star)$. An event is detected if at least one alarm falls in that window, and its lead time is
+\begin{equation}
+\label{eq:lead}
+\ell_i(\lambda)=t_i^\star-\min\{t\in\mathcal W_i:a_{it}(\lambda)=1\}.
+\end{equation}
+Lead time is undefined for undetected events and is represented as missing rather than zero. The reported median therefore describes detected events only and must always be accompanied by sensitivity and the number of eligible events. Events at admission, outside observed follow-up, or without an identifiable onset cannot supply an observed pre-onset lead time. A retrospective top-$k$ selection over a complete trajectory is noncausal and may serve only as a labelled oracle comparator, not as a deployable early-warning policy.
+
+Budget sweeps compare methods under the same requested upper-risk constraint, not necessarily at identical realised alarm rates. The plotted frontier uses realised alarm rate and conditional median lead time, retaining only nondominated pairs. At equal alarm rates only the largest lead time is retained; at larger rates a point remains only when its lead time strictly improves. Because conditional lead time can improve by missing difficult cases, sensitivity must be reported alongside the frontier before any clinical interpretation.
+
+\begin{algorithm}[tb]
+\caption{Patient-blocked upper-confidence calibration of an alarm policy}
+\label{alg:calibration}
+\begin{algorithmic}[1]
+\Require independent calibration patients; fixed scorer, grid $\Lambda$, structural parameters, valid $L_{\max}$; budget $B$; level $\alpha$
+\For{$\lambda\in\Lambda$}
+  \State replay the causal policy on each patient's observed follow-up
+  \State compute $L_i(\lambda)$ and reject any loss outside $[0,L_{\max}]$
+  \State compute raw $\widehat R_n(\lambda)$ and Hoeffding or empirical-Bernstein radius
+\EndFor
+\State $\mathcal F\leftarrow\{\lambda\in\Lambda:\widehat R_n(\lambda)+\epsilon(\lambda)\le B\}$
+\State $\widehat\lambda\leftarrow\min\mathcal F$ if nonempty; otherwise $+\infty$
+\State \Return threshold, raw certificate, and explicit fallback status
+\end{algorithmic}
+\end{algorithm}

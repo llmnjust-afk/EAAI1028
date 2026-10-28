@@ -1,0 +1,52 @@
+\subsection{Patient-Blocked Uniform Risk Bounds}
+
+Define the patient loss as the observed daily alarm rate,
+\begin{equation}
+\label{eq:blockloss}
+L_i(\lambda)=A_i(\lambda)/D_i\in[0,L_{\max}].
+\end{equation}
+The upper bound must hold over the deployment population's support, not merely over the observed calibration sample. If eligible records have at least $H_{\min}$ hours of exposure, let $n_{\min}=\lceil H_{\min}/\Delta\rceil$ and $g=\tau+1$ without escalation, or $g=\min(\tau+1,\kappa)$ when escalation is enabled. The minimum firing separation is $g$, so the exact discrete-support upper bound is
+\begin{equation}
+\label{eq:lmax}
+L_{\max}=\sup_{n\in\mathbb{N},\ n\ge n_{\min}}
+ \frac{24}{n\Delta}\left(1+\left\lfloor\frac{n-1}{g}\right\rfloor\right).
+\end{equation}
+The rate decreases between firing-count increments, and its peaks at $n=1+qg$ decrease as $q$ increases; hence checking $n_{\min}$ and the next such peak is sufficient. For hourly sampling, $\tau=4$, no escalation and $H_{\min}=24$, a 26-hour stay yields $L_{\max}=144/26$, exceeding the five alarms per day possible over exactly 24 hours. Escalation can increase this bound and must not be omitted from its calculation. Losses outside the declared interval are rejected, not clipped, because clipping would certify a different estimand.
+
+Condition on independently obtained training and validation data. The scorer, structural parameters, finite threshold grid $\Lambda$, and support bound are fixed under this conditioning. Calibration trajectories are independent and identically distributed draws from the same population as future deployment trajectories, although each trajectory may have arbitrary internal dependence. Exchangeability alone is not sufficient for the independent-sample concentration argument used here.
+
+\begin{proposition}[Budget validity]
+\label{prop:validity}
+Let $\widehat R_n(\lambda)=n^{-1}\sum_{i=1}^nL_i(\lambda)$ and $\alpha\in(0,1)$. Under the conditions above, select
+\begin{equation}
+\label{eq:lambda}
+\widehat\lambda=\min\left\{\lambda\in\Lambda:
+\widehat R_n(\lambda)+L_{\max}\sqrt{\frac{\log(|\Lambda|/\alpha)}{2n}}\le B\right\}
+\end{equation}
+when the set is nonempty, and select the exact no-alarm policy $\widehat\lambda=+\infty$ otherwise. For a finite nonnegative budget $B$, the selected policy satisfies
+\begin{equation}
+\label{eq:bound}
+\Pr\{R(\widehat\lambda)>B\}\le\alpha.
+\end{equation}
+The probability is over calibration samples; $R$ is a population expectation conditional on the fixed scorer and policy family.
+\end{proposition}
+
+\begin{proof}
+For each fixed $\lambda$, the relevant one-sided Hoeffding inequality is
+\begin{equation*}
+\Pr\{R(\lambda)-\widehat R_n(\lambda)>\epsilon\}
+ \le\exp(-2n\epsilon^2/L_{\max}^2).
+\end{equation*}
+Setting $\epsilon=L_{\max}\sqrt{\log(|\Lambda|/\alpha)/(2n)}$ and applying a union bound gives simultaneous upper bounds $R(\lambda)\le\widehat R_n(\lambda)+\epsilon$ for all grid policies with probability at least $1-\alpha$. On that event, any policy selected from the feasible set satisfies $R(\widehat\lambda)\le B$. If the feasible set is empty, the fallback has identically zero loss and hence satisfies the budget without a concentration argument. Thus a budget violation can occur only on the failure event of the simultaneous upper bounds, which has probability at most $\alpha$.
+\end{proof}
+
+For $n\ge2$, the implementation also permits the empirical-Bernstein radius\footnote{The finite-class empirical-Bernstein bound and its constants are given by Maurer and Pontil, \emph{Empirical Bernstein Bounds and Sample Variance Penalization}, \url{https://arxiv.org/abs/0907.3740}.}
+\begin{equation}
+\label{eq:bernstein}
+\epsilon_{\mathrm{EB}}(\lambda)=\widehat\sigma(\lambda)
+ \sqrt{\frac{2\log(2|\Lambda|/\alpha)}{n}}
+ +\frac{7L_{\max}\log(2|\Lambda|/\alpha)}{3(n-1)},
+\end{equation}
+where $\widehat\sigma$ is the sample standard deviation with denominator $n-1$. This bound can improve on Hoeffding when variance is small and the sample is sufficiently large, but it is not uniformly tighter. Both variants are finite-grid upper-confidence risk procedures; patient blocking does not turn either into the standard expected-risk conformal construction. The manuscript's conformal terminology denotes this broader calibration motivation, not a claim that the proof requires only conformal exchangeability.
+
+The certificate always uses the raw empirical loss at the deployed threshold. Stateful alarm counts are not assumed to be monotone in the threshold, so isotonic regression is optional descriptive output and never substitutes for that loss in the upper bound. A finite test-cohort mean can exceed the budget even when its population expectation does not, so its exceedance frequency is an empirical diagnostic rather than the exact probability in \cref{eq:bound}. Likewise, calibration transferred across distributions is not covered without the same-population assumption.

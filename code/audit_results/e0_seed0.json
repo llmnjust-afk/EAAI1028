@@ -1,0 +1,455 @@
+{
+  "summary": {
+    "blocked_bernstein|n=100|alpha=0.05": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 100,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.0,
+      "mean_test_rate": 0.0,
+      "rate_ratio": 0.0,
+      "median_threshold": null,
+      "fallback_fraction": 1.0,
+      "median_slack": 0.0
+    },
+    "blocked_hoeffding|n=100|alpha=0.05": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 100,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.0,
+      "mean_test_rate": 0.0,
+      "rate_ratio": 0.0,
+      "median_threshold": null,
+      "fallback_fraction": 1.0,
+      "median_slack": 0.0
+    },
+    "timestep_naive|n=100|alpha=0.05": {
+      "procedure": "timestep_naive",
+      "calibration_size": 100,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.095,
+      "mean_rate_ci": [
+        0.06166261364986359,
+        0.14360265114397636
+      ],
+      "patient_violation": 0.3375935897435898,
+      "mean_test_rate": 0.8567395916821695,
+      "rate_ratio": 0.8567395916821695,
+      "median_threshold": 0.5991525423728814,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.12252941996769037
+    },
+    "blocked_bernstein|n=100|alpha=0.1": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 100,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.0002153846153846154,
+      "mean_test_rate": 0.000987599836589949,
+      "rate_ratio": 0.000987599836589949,
+      "median_threshold": null,
+      "fallback_fraction": 0.99,
+      "median_slack": 0.0
+    },
+    "blocked_hoeffding|n=100|alpha=0.1": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 100,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.0,
+      "mean_test_rate": 0.0,
+      "rate_ratio": 0.0,
+      "median_threshold": null,
+      "fallback_fraction": 1.0,
+      "median_slack": 0.0
+    },
+    "timestep_naive|n=100|alpha=0.1": {
+      "procedure": "timestep_naive",
+      "calibration_size": 100,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.11,
+      "mean_rate_ci": [
+        0.07377190160716048,
+        0.16092798300912986
+      ],
+      "patient_violation": 0.3400705128205128,
+      "mean_test_rate": 0.8624506706829075,
+      "rate_ratio": 0.8624506706829075,
+      "median_threshold": 0.5991525423728814,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.11638598709253255
+    },
+    "blocked_bernstein|n=100|alpha=0.2": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 100,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.010685897435897434,
+      "mean_test_rate": 0.04919134392143561,
+      "rate_ratio": 0.04919134392143561,
+      "median_threshold": 0.95,
+      "fallback_fraction": 0.495,
+      "median_slack": 0.8892679470918576
+    },
+    "blocked_hoeffding|n=100|alpha=0.2": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 100,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.004994871794871795,
+      "mean_test_rate": 0.024013752019789284,
+      "rate_ratio": 0.024013752019789284,
+      "median_threshold": null,
+      "fallback_fraction": 0.73,
+      "median_slack": 0.0
+    },
+    "timestep_naive|n=100|alpha=0.2": {
+      "procedure": "timestep_naive",
+      "calibration_size": 100,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.125,
+      "mean_rate_ci": [
+        0.0861191515921568,
+        0.1780153528465839
+      ],
+      "patient_violation": 0.3429230769230769,
+      "mean_test_rate": 0.8689991740177265,
+      "rate_ratio": 0.8689991740177265,
+      "median_threshold": 0.5991525423728814,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.10989966890481366
+    },
+    "blocked_bernstein|n=200|alpha=0.05": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 200,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.10403815789473685,
+      "mean_test_rate": 0.32625894681340356,
+      "rate_ratio": 0.32625894681340356,
+      "median_threshold": 0.8279661016949152,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.6552888728478745
+    },
+    "blocked_hoeffding|n=200|alpha=0.05": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 200,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.07277631578947369,
+      "mean_test_rate": 0.25032417090862485,
+      "rate_ratio": 0.25032417090862485,
+      "median_threshold": 0.873728813559322,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.7373685653281349
+    },
+    "timestep_naive|n=200|alpha=0.05": {
+      "procedure": "timestep_naive",
+      "calibration_size": 200,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.08,
+      "mean_rate_ci": [
+        0.04984015517626642,
+        0.12599048979512317
+      ],
+      "patient_violation": 0.3552671052631578,
+      "mean_test_rate": 0.8970666440090693,
+      "rate_ratio": 0.8970666440090693,
+      "median_threshold": 0.5991525423728814,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.0866847801755172
+    },
+    "blocked_bernstein|n=200|alpha=0.1": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 200,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.12112236842105265,
+      "mean_test_rate": 0.3678923558010718,
+      "rate_ratio": 0.3678923558010718,
+      "median_threshold": 0.8127118644067797,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.6135421580899552
+    },
+    "blocked_hoeffding|n=200|alpha=0.1": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 200,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.08811842105263157,
+      "mean_test_rate": 0.2878297391660888,
+      "rate_ratio": 0.2878297391660888,
+      "median_threshold": 0.8584745762711864,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.7003980623539159
+    },
+    "timestep_naive|n=200|alpha=0.1": {
+      "procedure": "timestep_naive",
+      "calibration_size": 200,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.09,
+      "mean_rate_ci": [
+        0.05768697871453362,
+        0.13776674613848952
+      ],
+      "patient_violation": 0.357275,
+      "mean_test_rate": 0.9016297590888533,
+      "rate_ratio": 0.9016297590888533,
+      "median_threshold": 0.5991525423728814,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.08233854130124091
+    },
+    "blocked_bernstein|n=200|alpha=0.2": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 200,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.13970526315789475,
+      "mean_test_rate": 0.41258881350258164,
+      "rate_ratio": 0.41258881350258164,
+      "median_threshold": 0.7974576271186441,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.5702830900318625
+    },
+    "blocked_hoeffding|n=200|alpha=0.2": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 200,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.10456842105263159,
+      "mean_test_rate": 0.3275249316238289,
+      "rate_ratio": 0.3275249316238289,
+      "median_threshold": 0.8279661016949152,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.6613641133023229
+    },
+    "timestep_naive|n=200|alpha=0.2": {
+      "procedure": "timestep_naive",
+      "calibration_size": 200,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.1,
+      "mean_rate_ci": [
+        0.06566994117157123,
+        0.14940686356308552
+      ],
+      "patient_violation": 0.3595473684210526,
+      "mean_test_rate": 0.9068153305927568,
+      "rate_ratio": 0.9068153305927568,
+      "median_threshold": 0.5838983050847457,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.07774972445709741
+    },
+    "blocked_bernstein|n=800|alpha=0.05": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 800,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.2846078125,
+      "mean_test_rate": 0.7343295441542346,
+      "rate_ratio": 0.7343295441542346,
+      "median_threshold": 0.6601694915254237,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.24316408419720426
+    },
+    "blocked_hoeffding|n=800|alpha=0.05": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 800,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.22722187500000002,
+      "mean_test_rate": 0.6115849908458401,
+      "rate_ratio": 0.6115849908458401,
+      "median_threshold": 0.7059322033898305,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.36868428266406744
+    },
+    "timestep_naive|n=800|alpha=0.05": {
+      "procedure": "timestep_naive",
+      "calibration_size": 800,
+      "alpha": 0.05,
+      "mean_rate_violation": 0.045,
+      "mean_rate_ci": [
+        0.023852271724704166,
+        0.08329759366096785
+      ],
+      "patient_violation": 0.37182187499999997,
+      "mean_test_rate": 0.93401972444321,
+      "rate_ratio": 0.93401972444321,
+      "median_threshold": 0.5838983050847457,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.04330537329369867
+    },
+    "blocked_bernstein|n=800|alpha=0.1": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 800,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.291634375,
+      "mean_test_rate": 0.7500788223684856,
+      "rate_ratio": 0.7500788223684856,
+      "median_threshold": 0.6449152542372881,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.2279122953603967
+    },
+    "blocked_hoeffding|n=800|alpha=0.1": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 800,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.23565000000000003,
+      "mean_test_rate": 0.6295236082161262,
+      "rate_ratio": 0.6295236082161262,
+      "median_threshold": 0.7059322033898305,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.35019903117695794
+    },
+    "timestep_naive|n=800|alpha=0.1": {
+      "procedure": "timestep_naive",
+      "calibration_size": 800,
+      "alpha": 0.1,
+      "mean_rate_violation": 0.06,
+      "mean_rate_ci": [
+        0.0346518499012715,
+        0.10193263530685089
+      ],
+      "patient_violation": 0.3732609375,
+      "mean_test_rate": 0.9372574975207044,
+      "rate_ratio": 0.9372574975207044,
+      "median_threshold": 0.5686440677966101,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.04113410982053734
+    },
+    "blocked_bernstein|n=800|alpha=0.2": {
+      "procedure": "blocked_bernstein",
+      "calibration_size": 800,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.2987171875,
+      "mean_test_rate": 0.7666485580846412,
+      "rate_ratio": 0.7666485580846412,
+      "median_threshold": 0.6449152542372881,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.21219538304067354
+    },
+    "blocked_hoeffding|n=800|alpha=0.2": {
+      "procedure": "blocked_hoeffding",
+      "calibration_size": 800,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.0,
+      "mean_rate_ci": [
+        0.0,
+        0.018846005918320894
+      ],
+      "patient_violation": 0.2452890625,
+      "mean_test_rate": 0.6497581633011831,
+      "rate_ratio": 0.6497581633011831,
+      "median_threshold": 0.690677966101695,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.33068205665116146
+    },
+    "timestep_naive|n=800|alpha=0.2": {
+      "procedure": "timestep_naive",
+      "calibration_size": 800,
+      "alpha": 0.2,
+      "mean_rate_violation": 0.07,
+      "mean_rate_ci": [
+        0.04215178292291873,
+        0.11405578216683726
+      ],
+      "patient_violation": 0.37471875,
+      "mean_test_rate": 0.9404643713929015,
+      "rate_ratio": 0.9404643713929015,
+      "median_threshold": 0.5686440677966101,
+      "fallback_fraction": 0.0,
+      "median_slack": 0.03884166094993188
+    }
+  },
+  "budget": 1.0,
+  "refractory": 4,
+  "l_max": 5.538461538461538,
+  "n_patients": 4000,
+  "n_splits": 200,
+  "n_steps": 289607,
+  "seed": 0,
+  "calibration_sizes": [
+    100,
+    200,
+    800
+  ],
+  "alphas": [
+    0.05,
+    0.1,
+    0.2
+  ],
+  "threshold_count": 60,
+  "interpretation": "finite reused-cohort diagnostic; intervals are descriptive"
+}

@@ -30,3 +30,25 @@ def test_blocked_procedure_never_exceeds_the_budget_on_the_mean():
     for name, row in result["summary"].items():
         if name.startswith("blocked"):
             assert row["mean_rate_violation"] <= 0.10
+
+
+def test_naive_effective_sample_size_contains_only_calibration_steps(monkeypatch):
+    from eaai.data.synthetic import make_scores
+    from eaai.policy.conformal import TimestepConformalCalibrator
+    original = TimestepConformalCalibrator.fit
+    observed = []
+
+    def recording_fit(self, losses, lambdas, n_steps, l_max):
+        observed.append(n_steps)
+        return original(self, losses, lambdas, n_steps=n_steps, l_max=l_max)
+
+    monkeypatch.setattr(TimestepConformalCalibrator, "fit", recording_fit)
+    run(n_patients=120, n_splits=2, calibration_sizes=(40, 60), alphas=(.1,), seed=5)
+    lengths = make_scores(120, seed=5)["lengths"]
+    rng = np.random.default_rng(6)
+    expected = []
+    for _ in range(2):
+        order = rng.permutation(120)
+        expected.extend(int(lengths[order[:n]].sum()) for n in (40, 60))
+    assert observed == expected
+    assert max(observed) < int(lengths.sum())

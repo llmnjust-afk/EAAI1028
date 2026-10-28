@@ -16,7 +16,12 @@ from ..scores.labels import valid_steps
 def evaluate_scores(scores: np.ndarray, labels: np.ndarray,
                     lengths: np.ndarray, n_bins: int = 10) -> dict:
     """Flatten valid timesteps and report AUROC, AUPRC and calibration error."""
-    valid = valid_steps(lengths, scores.shape[1])
+    scores, labels = np.asarray(scores, dtype=float), np.asarray(labels, dtype=float)
+    if scores.ndim != 2 or labels.shape != scores.shape or len(lengths) != scores.shape[0]:
+        raise ValueError("scores, labels and lengths must have consistent shapes")
+    valid = valid_steps(lengths, scores.shape[1]) & np.isfinite(labels)
+    if not valid.any() or not np.isfinite(scores[valid]).all():
+        raise ValueError("evaluation requires finite scores at usable target timesteps")
     y = np.asarray(labels, dtype=float)[valid]
     s = scores[valid]
 
@@ -25,6 +30,7 @@ def evaluate_scores(scores: np.ndarray, labels: np.ndarray,
     report["n_timesteps"] = int(valid.sum())
     report["n_positive"] = int(y.sum())
 
+    lengths = np.asarray(lengths, dtype=int)
     per_patient = np.array([np.nanmax(scores[i, :lengths[i]])
                             for i in range(scores.shape[0])])
     report["patient_max_mean"] = float(np.nanmean(per_patient))

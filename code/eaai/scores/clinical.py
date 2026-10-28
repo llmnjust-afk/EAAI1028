@@ -3,8 +3,10 @@
 Each scorer returns a per-timestep integer score. Components whose source
 variables are absent from the cohort are omitted and recorded in
 ``MISSING_COMPONENTS``; the affected scores are therefore partial and are
-labelled as such wherever they are reported. Omitting a component is
-conservative for threshold-based alerting because it can only lower the score.
+labelled as such wherever they are reported. Lower partial scores do not imply
+safe clinical decisions or valid reproduction of the complete instruments.
+Continuous observations use contiguous extensions of integer chart intervals;
+these research-only partial scores are not certified clinical implementations.
 """
 
 from __future__ import annotations
@@ -15,15 +17,15 @@ import pandas as pd
 MISSING_COMPONENTS: dict[str, tuple[str, ...]] = {
     "qsofa": ("glasgow coma scale",),
     "mews": ("avpu consciousness",),
-    "news": ("avpu consciousness",),
-    "sirs": (),
+    "news": ("avpu consciousness", "supplemental oxygen"),
+    "sirs": ("immature neutrophil fraction",),
     "sofa": ("pao2/fio2 ratio", "vasopressor dose", "glasgow coma scale", "urine output"),
 }
 
 
 def _series(frame: pd.DataFrame, name: str) -> pd.Series:
     if name in frame.columns:
-        return pd.to_numeric(frame[name], errors="coerce")
+        return pd.to_numeric(frame[name], errors="coerce").replace([np.inf, -np.inf], np.nan)
     return pd.Series(np.nan, index=frame.index, dtype=float)
 
 
@@ -60,20 +62,20 @@ def mews(frame: pd.DataFrame) -> np.ndarray:
     sbp_pts = (
         _points(sbp <= 70, 3) + _points((sbp > 70) & (sbp <= 80), 2)
         + _points((sbp > 80) & (sbp <= 100), 1)
-        + _points((sbp > 100) & (sbp <= 199), 0)
+        + _points((sbp > 100) & (sbp < 200), 0)
         + _points(sbp >= 200, 2)
     )
     hr_pts = (
         _points(hr <= 40, 2) + _points((hr > 40) & (hr <= 50), 1)
         + _points((hr > 50) & (hr <= 100), 0)
         + _points((hr > 100) & (hr <= 110), 1)
-        + _points((hr > 110) & (hr <= 129), 2)
+        + _points((hr > 110) & (hr < 130), 2)
         + _points(hr >= 130, 3)
     )
     resp_pts = (
         _points(resp < 9, 2) + _points((resp >= 9) & (resp <= 14), 0)
-        + _points((resp >= 15) & (resp <= 20), 1)
-        + _points((resp >= 21) & (resp <= 29), 2)
+        + _points((resp > 14) & (resp <= 20), 1)
+        + _points((resp > 20) & (resp < 30), 2)
         + _points(resp >= 30, 3)
     )
     temp_pts = _points(temp < 35, 2) + _points((temp >= 35) & (temp <= 38.4), 0) + _points(temp >= 38.5, 2)
@@ -81,7 +83,7 @@ def mews(frame: pd.DataFrame) -> np.ndarray:
 
 
 def news(frame: pd.DataFrame) -> np.ndarray:
-    """National Early Warning Score, five of six components."""
+    """Partial NEWS: five physiological components, no oxygen/consciousness points."""
     resp = _series(frame, "Resp")
     spo2 = _series(frame, "O2Sat")
     temp = _series(frame, "Temp")
@@ -89,14 +91,14 @@ def news(frame: pd.DataFrame) -> np.ndarray:
     hr = _series(frame, "HR")
 
     resp_pts = (
-        _points(resp <= 8, 3) + _points((resp >= 9) & (resp <= 11), 1)
-        + _points((resp >= 12) & (resp <= 20), 0)
-        + _points((resp >= 21) & (resp <= 24), 2)
-        + _points(resp >= 25, 3)
+        _points(resp <= 8, 3) + _points((resp > 8) & (resp <= 11), 1)
+        + _points((resp > 11) & (resp <= 20), 0)
+        + _points((resp > 20) & (resp <= 24), 2)
+        + _points(resp > 24, 3)
     )
     spo2_pts = (
-        _points(spo2 <= 91, 3) + _points((spo2 >= 92) & (spo2 <= 93), 2)
-        + _points((spo2 >= 94) & (spo2 <= 95), 1) + _points(spo2 >= 96, 0)
+        _points(spo2 <= 91, 3) + _points((spo2 > 91) & (spo2 <= 93), 2)
+        + _points((spo2 > 93) & (spo2 <= 95), 1) + _points(spo2 > 95, 0)
     )
     temp_pts = (
         _points(temp <= 35.0, 3) + _points((temp > 35.0) & (temp <= 36.0), 1)
@@ -106,19 +108,19 @@ def news(frame: pd.DataFrame) -> np.ndarray:
     sbp_pts = (
         _points(sbp <= 90, 3) + _points((sbp > 90) & (sbp <= 100), 2)
         + _points((sbp > 100) & (sbp <= 110), 1)
-        + _points((sbp > 110) & (sbp <= 219), 0) + _points(sbp >= 220, 3)
+        + _points((sbp > 110) & (sbp < 220), 0) + _points(sbp >= 220, 3)
     )
     hr_pts = (
         _points(hr <= 40, 3) + _points((hr > 40) & (hr <= 50), 1)
         + _points((hr > 50) & (hr <= 90), 0) + _points((hr > 90) & (hr <= 110), 1)
-        + _points((hr > 110) & (hr <= 130), 2) + _points(hr >= 131, 3)
+        + _points((hr > 110) & (hr <= 130), 2) + _points(hr > 130, 3)
     )
     return _sum([resp_pts, spo2_pts, temp_pts, sbp_pts, hr_pts],
                 [resp, spo2, temp, sbp, hr])
 
 
 def sirs(frame: pd.DataFrame) -> np.ndarray:
-    """Systemic Inflammatory Response Syndrome criteria, four components."""
+    """Partial four-criterion SIRS, without the immature-neutrophil alternative."""
     temp = _series(frame, "Temp")
     hr = _series(frame, "HR")
     resp = _series(frame, "Resp")
@@ -172,7 +174,8 @@ def forward_fill_vitals(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame
     """Carry the most recent observation forward, as clinical staff would."""
     out = frame.copy()
     present = [c for c in columns if c in out.columns]
-    out[present] = out[present].ffill()
+    out[present] = out[present].apply(pd.to_numeric, errors="coerce").replace(
+        [np.inf, -np.inf], np.nan).ffill()
     return out
 
 

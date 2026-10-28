@@ -1,9 +1,11 @@
-"""Blocked conformal risk control for stateful alarm policies.
+"""Patient-blocked finite-grid upper-confidence risk control.
 
 The unit of calibration is the patient, not the timestep. This is the change
-that restores validity once the alarm policy carries internal state, because
-timestep-level losses are dependent within a patient while patients remain
-exchangeable draws from the deployment population.
+that permits independent-sample concentration despite internal policy state.
+The scorer, policy grid and support bound must be fixed independently of risk
+calibration; patient blocks must be iid from the deployment population.
+Class names retain the project's conformal terminology for API compatibility;
+these are Hoeffding/empirical-Bernstein selectors, not standard expected-risk CRC.
 """
 
 from __future__ import annotations
@@ -12,6 +14,24 @@ from dataclasses import dataclass, field
 
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
+
+
+def _validate(losses, lambdas, l_max, budget, alpha):
+    losses = np.asarray(losses, dtype=float)
+    lambdas = np.asarray(lambdas, dtype=float)
+    if losses.ndim != 2 or not all(losses.shape):
+        raise ValueError("losses must be a nonempty two-dimensional matrix")
+    if lambdas.ndim != 1 or losses.shape[1] != lambdas.size:
+        raise ValueError("one loss column per one-dimensional threshold is required")
+    if not np.isfinite(lambdas).all() or not np.all(np.diff(lambdas) > 0):
+        raise ValueError("lambdas must be finite and strictly increasing")
+    if not np.isfinite(l_max) or l_max <= 0:
+        raise ValueError("l_max must be finite and positive")
+    if not np.isfinite(budget) or budget < 0 or not 0 < alpha < 1:
+        raise ValueError("budget must be finite and nonnegative; alpha must lie in (0,1)")
+    if not np.isfinite(losses).all() or np.any(losses < 0) or np.any(losses > l_max):
+        raise ValueError("every loss must be finite and in [0, l_max]; clipping is not valid")
+    return losses, lambdas
 
 
 def _finite_sample_slack(losses: np.ndarray, alpha: float, l_max: float,
@@ -23,14 +43,13 @@ def _finite_sample_slack(losses: np.ndarray, alpha: float, l_max: float,
     the per-patient alarm counts have low variance, which is the typical case.
     """
     n = losses.shape[0]
-    log_term = np.log(2.0 * n_grid / alpha)
-
     if kind == "hoeffding":
-        return np.full(losses.shape[1], l_max * np.sqrt(log_term / (2.0 * n)))
+        return np.full(losses.shape[1], l_max * np.sqrt(np.log(n_grid / alpha) / (2.0 * n)))
 
     if kind == "bernstein":
         if n < 2:
             raise ValueError("bernstein slack needs at least two patients")
+        log_term = np.log(2.0 * n_grid / alpha)
         sigma = losses.std(axis=0, ddof=1)
         return sigma * np.sqrt(2.0 * log_term / n) + 7.0 * l_max * log_term / (3.0 * (n - 1))
 
@@ -50,16 +69,15 @@ class BlockedConformalCalibrator:
     slack:
         ``"bernstein"`` (default, tighter) or ``"hoeffding"`` (Proposition 1).
     smooth:
-        Apply isotonic regression to the empirical risk curve before selecting
-        the threshold. Smoothing reduces selection noise but means the
-        certificate refers to the smoothed risk, which is a pool-adjacent
-        average of the empirical risks rather than a single grid value.
+        Compute an optional isotonic diagnostic curve. It does not affect
+        selection or certification, which always use the unsmoothed risk.
+        Selection does not require a monotonicity assumption on the loss curve.
     """
 
     budget: float
     alpha: float = 0.1
     slack: str = "bernstein"
-    smooth: bool = True
+    smooth: bool = False
     threshold_: float | None = field(default=None, init=False)
     feasible_: bool = field(default=False, init=False)
     diagnostics_: dict = field(default_factory=dict, init=False)
@@ -79,21 +97,10 @@ class BlockedConformalCalibrator:
             Upper bound on the per-patient loss, from
             :func:`eaai.policy.alarm.max_alarms_per_day`.
         """
-        losses = np.asarray(losses, dtype=float)
-        lambdas = np.asarray(lambdas, dtype=float)
-        if losses.ndim != 2:
-            raise ValueError("losses must be two-dimensional")
-        if losses.shape[1] != lambdas.shape[0]:
-            raise ValueError("one loss column per threshold is required")
-        if not np.all(np.diff(lambdas) > 0):
-            raise ValueError("lambdas must be strictly increasing")
-        if not 0.0 < self.alpha < 1.0:
-            raise ValueError("alpha must lie in (0, 1)")
-
-        if l_max <= 0:
-            raise ValueError("l_max must be positive")
-        n_clipped = int(np.count_nonzero(losses > l_max))
-        losses = np.minimum(losses, l_max)
+        # Clear a previous fit before validation so an unsuccessful refit cannot
+        # leave a stale deployable policy behind.
+        self.threshold_, self.feasible_, self.diagnostics_ = None, False, {}
+        losses, lambdas = _validate(losses, lambdas, l_max, self.budget, self.alpha)
 
         empirical = losses.mean(axis=0)
         if self.smooth:
@@ -104,26 +111,28 @@ class BlockedConformalCalibrator:
 
         slack = _finite_sample_slack(losses, self.alpha, l_max,
                                      lambdas.shape[0], self.slack)
-        certified = smoothed + slack
+        certified = empirical + slack
         feasible = np.flatnonzero(certified <= self.budget)
 
         self.feasible_ = bool(feasible.size)
         if feasible.size == 0:
-            index = lambdas.shape[0] - 1
+            index = -1
         else:
             index = int(feasible[0])
 
-        self.threshold_ = float(lambdas[index])
+        self.threshold_ = float(lambdas[index]) if self.feasible_ else float("inf")
         self.diagnostics_ = {
             "index": index,
-            "empirical_risk": float(empirical[index]),
-            "smoothed_risk": float(smoothed[index]),
-            "slack": float(slack[index]),
-            "certified_risk": float(certified[index]),
+            "empirical_risk": float(empirical[index]) if self.feasible_ else 0.0,
+            "smoothed_risk": float(smoothed[index]) if self.feasible_ else 0.0,
+            "slack": float(slack[index]) if self.feasible_ else 0.0,
+            "certified_risk": float(certified[index]) if self.feasible_ else 0.0,
+            "status": "grid_feasible" if self.feasible_ else "no_alarm_fallback",
+            "min_grid_upper_bound": float(np.min(certified)),
             "n_patients": int(losses.shape[0]),
             "n_feasible": int(feasible.size),
             "feasible": bool(feasible.size),
-            "n_clipped": n_clipped,
+            "n_clipped": 0,
             "budget": float(self.budget),
             "alpha": float(self.alpha),
             "l_max": float(l_max),
@@ -140,6 +149,8 @@ class BlockedConformalCalibrator:
         separate.
         """
         losses = np.asarray(losses, dtype=float)
+        if not losses.size or not np.isfinite(losses).all() or np.any(losses < 0):
+            raise ValueError("diagnostic losses must be nonempty, finite and nonnegative")
         return float(np.mean(losses > self.budget))
 
 
@@ -172,28 +183,23 @@ class TimestepConformalCalibrator:
         total number of observations the analyst believes to be independent,
         i.e. the sum of record lengths.
         """
-        losses = np.asarray(losses, dtype=float)
-        lambdas = np.asarray(lambdas, dtype=float)
-        if losses.ndim != 2 or losses.shape[1] != lambdas.size:
-            raise ValueError("losses must be (n_patients, n_thresholds)")
-        if n_steps < 2:
-            raise ValueError("n_steps must be at least two")
-        if not 0.0 < self.alpha < 1.0:
-            raise ValueError("alpha must lie in (0, 1)")
-
-        losses = np.minimum(losses, l_max)
+        self.threshold_, self.diagnostics_ = None, {}
+        losses, lambdas = _validate(losses, lambdas, l_max, self.budget, self.alpha)
+        if not isinstance(n_steps, (int, np.integer)) or n_steps < losses.shape[0]:
+            raise ValueError("n_steps must be an integer at least the calibration patient count")
         empirical = losses.mean(axis=0)
-        slack = l_max * np.sqrt(np.log(2.0 * lambdas.size / self.alpha) / (2.0 * n_steps))
+        slack = l_max * np.sqrt(np.log(lambdas.size / self.alpha) / (2.0 * n_steps))
         certified = empirical + slack
         feasible = np.flatnonzero(certified <= self.budget)
-        index = int(feasible[0]) if feasible.size else lambdas.size - 1
+        index = int(feasible[0]) if feasible.size else -1
 
-        self.threshold_ = float(lambdas[index])
+        self.threshold_ = float(lambdas[index]) if feasible.size else float("inf")
         self.diagnostics_ = {
             "index": index,
-            "empirical_risk": float(empirical[index]),
-            "slack": float(slack),
-            "certified_risk": float(certified[index]),
+            "empirical_risk": float(empirical[index]) if feasible.size else 0.0,
+            "slack": float(slack) if feasible.size else 0.0,
+            "certified_risk": float(certified[index]) if feasible.size else 0.0,
+            "status": "grid_feasible" if feasible.size else "no_alarm_fallback",
             "n_steps": int(n_steps),
             "n_feasible": int(feasible.size),
             "effective_n_inflation": float(n_steps / losses.shape[0]),

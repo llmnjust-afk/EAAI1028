@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from eaai.data.harmonize import pad_records
 from eaai.data.synthetic import make_scores
@@ -34,7 +35,7 @@ def test_event_labels_mark_the_lead_window():
     lengths = np.array([40, 40, 15])
     labels = event_labels(onset, lengths, horizon=6)
     assert labels[0, 24:30].tolist() == [1.0] * 6
-    assert labels[0, 30:].sum() == 0
+    assert np.isnan(labels[0, 30:]).all()
     assert labels[1].sum() == 0
     assert labels[2, 4:10].sum() == 6
 
@@ -58,6 +59,7 @@ def test_prefix_model_fits_and_scores_every_valid_step():
 
 
 def test_masked_gru_trains_and_predicts():
+    pytest.importorskip("torch")
     batch = _batch(n=32, width=24)
     labels = (batch["values"][:, :, 0] > 0.5).astype(float)
     model = MaskedGRU(hidden=8, epochs=2, batch_size=16).fit(batch, labels)

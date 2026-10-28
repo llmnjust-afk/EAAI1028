@@ -4,7 +4,9 @@ Two quantities are reported and they must not be conflated:
 
 ``mean_rate_violation``
     Fraction of splits in which the *test-cohort mean* alarm rate exceeds the
-    budget. This is the quantity Proposition 1 controls.
+    budget. This is a finite-cohort diagnostic, not the population expectation
+    controlled by Proposition 1. Reused patients also make split indicators
+    dependent; Wilson intervals are descriptive rather than coverage guarantees.
 
 ``patient_violation``
     Fraction of individual patients whose own per-day alarm count exceeds the
@@ -45,6 +47,11 @@ def run(n_patients: int = 4000, n_splits: int = 200,
         budget: float = 1.0, refractory: int = 4,
         alphas: tuple[float, ...] = (0.05, 0.10, 0.20), seed: int = 0) -> dict:
     """Estimate mean-rate and patient-level violations for all procedures."""
+    if (not isinstance(n_patients, int) or n_patients < 2 or
+            not isinstance(n_splits, int) or n_splits <= 0 or not calibration_sizes or
+            any(not isinstance(n, int) or n <= 0 for n in calibration_sizes) or
+            not np.isfinite(budget) or budget <= 0 or not alphas):
+        raise ValueError("positive cohort/split/calibration sizes, budget and alphas required")
     if max(calibration_sizes) >= n_patients:
         raise ValueError(
             f"calibration size {max(calibration_sizes)} must be smaller than the "
@@ -54,7 +61,8 @@ def run(n_patients: int = 4000, n_splits: int = 200,
     cohort = make_scores(n_patients, seed=seed)
     thresholds = np.linspace(0.05, 0.95, 60)
     per_day, _ = policy_summaries(cohort, thresholds, refractory=refractory)
-    l_max = max_alarms_per_day(refractory, min_stay_hours=float(cohort["lengths"].min()))
+    # Fixed by the synthetic generator's support, NOT estimated from the cohort.
+    l_max = max_alarms_per_day(refractory, min_stay_hours=24.0)
     if per_day.max() > l_max + 1e-9:
         raise AssertionError(
             f"per-patient loss {per_day.max():.3f} exceeds L_max={l_max:.3f}; "
@@ -82,24 +90,25 @@ def run(n_patients: int = 4000, n_splits: int = 200,
                         budget=budget, alpha=alpha, slack=slack).fit(
                             per_day[calibration], thresholds, l_max)
                     index = int(calibrator.diagnostics_["index"])
-                    test_losses = per_day[test, index]
+                    test_losses = per_day[test, index] if index >= 0 else np.zeros(test.size)
                     store = bucket(f"blocked_{slack}", n, alpha)
                     store["mean_violation"].append(float(test_losses.mean() > budget))
                     store["patient_violation"].append(float((test_losses > budget).mean()))
                     store["test_mean"].append(float(test_losses.mean()))
-                    store["threshold"].append(float(thresholds[index]))
+                    store["threshold"].append(float(calibrator.threshold_))
                     store["slack"].append(float(calibrator.diagnostics_["slack"]))
 
                 naive = TimestepConformalCalibrator(
                     budget=budget, alpha=alpha).fit(
-                        per_day[calibration], thresholds, n_steps=n_steps, l_max=l_max)
+                        per_day[calibration], thresholds,
+                        n_steps=int(cohort["lengths"][calibration].sum()), l_max=l_max)
                 index = int(naive.diagnostics_["index"])
-                test_losses = per_day[test, index]
+                test_losses = per_day[test, index] if index >= 0 else np.zeros(test.size)
                 store = bucket("timestep_naive", n, alpha)
                 store["mean_violation"].append(float(test_losses.mean() > budget))
                 store["patient_violation"].append(float((test_losses > budget).mean()))
                 store["test_mean"].append(float(test_losses.mean()))
-                store["threshold"].append(float(thresholds[index]))
+                store["threshold"].append(float(naive.threshold_))
                 store["slack"].append(float(naive.diagnostics_["slack"]))
 
     summary = {}
@@ -107,6 +116,7 @@ def run(n_patients: int = 4000, n_splits: int = 200,
         mean_rate = np.asarray(values["mean_violation"])
         patient = np.asarray(values["patient_violation"])
         test_mean = np.asarray(values["test_mean"])
+        median_threshold = float(np.median(values["threshold"]))
         summary[f"{name}|n={n}|alpha={alpha:g}"] = {
             "procedure": name,
             "calibration_size": n,
@@ -116,13 +126,17 @@ def run(n_patients: int = 4000, n_splits: int = 200,
             "patient_violation": float(patient.mean()),
             "mean_test_rate": float(test_mean.mean()),
             "rate_ratio": float(test_mean.mean() / budget),
-            "median_threshold": float(np.median(values["threshold"])),
+            "median_threshold": median_threshold if np.isfinite(median_threshold) else None,
+            "fallback_fraction": float(np.isinf(values["threshold"]).mean()),
             "median_slack": float(np.median(values["slack"])),
         }
 
     return {"summary": summary, "budget": budget, "refractory": refractory,
             "l_max": l_max, "n_patients": n_patients, "n_splits": n_splits,
-            "n_steps": n_steps}
+             "n_steps": n_steps, "seed": seed,
+             "calibration_sizes": list(calibration_sizes), "alphas": list(alphas),
+             "threshold_count": int(thresholds.size),
+             "interpretation": "finite reused-cohort diagnostic; intervals are descriptive"}
 
 
 def format_table(result: dict) -> str:
@@ -132,7 +146,7 @@ def format_table(result: dict) -> str:
         f"   L_max={result['l_max']:.2f}   splits={result['n_splits']}",
         "",
         f"{'procedure':18s} {'n_cal':>6s} {'alpha':>6s} {'P(mean>B)':>10s} "
-        f"{'95% CI':>16s} {'P(pt>B)':>8s} {'mean rate':>10s} {'rate/B':>7s} {'slack':>7s}",
+        f"{'95% CI':>16s} {'P(pt>B)':>8s} {'mean rate':>10s} {'rate/B':>7s} {'slack':>7s} {'fallback':>8s}",
     ]
     order = {"blocked_bernstein": 0, "blocked_hoeffding": 1, "timestep_naive": 2}
     rows = sorted(result["summary"].values(),
@@ -143,6 +157,6 @@ def format_table(result: dict) -> str:
             f"{row['procedure']:18s} {row['calibration_size']:6d} {row['alpha']:6.2f} "
             f"{row['mean_rate_violation']:10.3f} {f'[{lo:.3f}, {hi:.3f}]':>16s} "
             f"{row['patient_violation']:8.3f} {row['mean_test_rate']:10.3f} "
-            f"{row['rate_ratio']:7.3f} {row['median_slack']:7.3f}"
+            f"{row['rate_ratio']:7.3f} {row['median_slack']:7.3f} {row['fallback_fraction']:8.3f}"
         )
     return "\n".join(lines)

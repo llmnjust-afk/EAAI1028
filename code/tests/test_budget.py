@@ -1,7 +1,7 @@
 import numpy as np
 
 from eaai.data.synthetic import make_scores
-from eaai.experiments.e2_budget import evaluate_at_budget, pareto_front, sweep
+from eaai.experiments.e2_budget import evaluate_at_budget, pareto_front, sweep, _policy_outcomes
 
 
 def _fixture(n=400, seed=0):
@@ -10,22 +10,20 @@ def _fixture(n=400, seed=0):
     return cohort, order[: n // 2], order[n // 2 :]
 
 
-def test_budget_sweep_is_monotone_in_alarm_rate():
+def test_larger_budget_does_not_raise_selected_threshold():
     cohort, calibration, test = _fixture()
     rows = sweep(cohort["scores"], cohort["onset"], cohort["lengths"],
                  calibration, test, budgets=(0.5, 1.0, 2.0, 4.0),
                  thresholds=np.linspace(0.05, 0.95, 40))
-    rates = [r["alarm_rate"] for r in rows]
-    assert all(b >= a - 1e-9 for a, b in zip(rates, rates[1:]))
+    thresholds = [r["threshold"] for r in rows]
+    assert all(b <= a for a, b in zip(thresholds, thresholds[1:]))
 
 
-def test_higher_budget_never_reduces_sensitivity():
-    cohort, calibration, test = _fixture()
-    rows = sweep(cohort["scores"], cohort["onset"], cohort["lengths"],
-                 calibration, test, budgets=(0.5, 2.0, 8.0),
-                 thresholds=np.linspace(0.05, 0.95, 40))
-    sens = [r["sensitivity"] for r in rows]
-    assert all(b >= a - 1e-9 for a, b in zip(sens, sens[1:]))
+def test_lower_threshold_can_reduce_window_sensitivity_under_refractory_policy():
+    scores, onset, lengths = [np.array([.6, .2, .8, .2])], np.array([3]), np.array([4])
+    high = _policy_outcomes(scores, onset, lengths, .7, 4, 0, 1., 1.)
+    low = _policy_outcomes(scores, onset, lengths, .5, 4, 0, 1., 1.)
+    assert high["sensitivity"] == 1. and low["sensitivity"] == 0.
 
 
 def test_patient_violation_is_reported_separately():
@@ -34,7 +32,7 @@ def test_patient_violation_is_reported_separately():
                              calibration, test, budget=1.0,
                              thresholds=np.linspace(0.05, 0.95, 40))
     assert 0.0 <= row["patient_violation"] <= 1.0
-    assert row["alarm_rate"] <= 1.0 + 1e-6
+    assert row["certified_risk"] <= 1.0 + 1e-6
 
 
 def test_pareto_front_is_non_dominated():

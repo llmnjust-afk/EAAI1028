@@ -1,169 +1,149 @@
 # Alert-Budgeted Clinical Early Warning
 
-Manuscript and reference implementation for *Alert-Budgeted Clinical Early
-Warning: Conformal Risk Control for Stateful Deterioration Alarm Policies*
-(submitted to *Engineering Applications of Artificial Intelligence*).
+Draft manuscript and reference implementation for **Alert-Budgeted Clinical
+Early Warning: Conformal Risk Control for Stateful Deterioration Alarm Policies**,
+with *Engineering Applications of Artificial Intelligence* as the intended venue.
+This is **not a submitted paper or a completed clinical reproduction**: real-data
+comparative experiments, results, discussion and conclusion remain incomplete.
 
-Most early-warning systems are evaluated at a fixed decision threshold, which
-means every method is compared at a different alarm load. This work instead
-treats the alarm rate as a **budget** that must be certified, and calibrates a
-stateful alarm policy against it at the patient level rather than the timestep
-level.
+The implemented statistical procedure is a **patient-blocked finite-grid upper
+confidence bound**, using Hoeffding or empirical-Bernstein concentration. It is
+not the standard expected-risk conformal risk-control construction. Existing API
+class names retain “Conformal” for compatibility, but the guarantee requires iid
+patient blocks from the deployment population, a fixed scorer/policy family/grid,
+and a support-wide loss bound fixed independently of calibration/test data.
+Patient exchangeability alone does not justify this concentration proof.
 
-## Contents
+## Contents and implemented components
 
 ```
-main.tex              manuscript (elsarticle, single column)
-sections/             one file per section
-refs.bib              bibliography
-code/eaai/            reference implementation
-code/tests/           66 unit tests, no data required
-code/scripts/         command-line entry points
+main.tex                 single-column elsarticle draft
+sections/                manuscript sections; method split into reviewable parts
+refs.bib                 bibliography
+code/eaai/policy/         causal stateful alarm and upper-confidence selectors
+code/eaai/data/           official-format readers, masks, clocks and patient splits
+code/eaai/scores/         prefix logistic/LightGBM and causal masked GRU references
+code/eaai/eval/           diagnostic and inferential metrics
+code/eaai/experiments/    synthetic E0, generic training/cache, budget-sweep drivers
+code/tests/              data-free unit and safety-property regression tests
+code/scripts/            command-line entry points
 ```
 
-## The three pieces
+The risk estimand is the **unweighted mean of each patient's alarms per day**,
+not a pooled ward total divided by pooled patient-days. Neither a per-patient
+maximum nor a realised ward alarm cap follows from its population-mean bound.
+Methods share a requested budget, not necessarily identical realised alarm rates.
+The smallest certified threshold is deployed; utility-maximising selection among
+feasible thresholds is not implemented.
 
-1. **Stateful alarm policy** (`eaai/policy/alarm.py`). A threshold, a refractory
-   window and an escalation tier. The refractory window is what makes alarms
-   dependent within a patient, and it is exactly what the timestep-level
-   calibration in prior work ignores.
-2. **Blocked conformal risk control** (`eaai/policy/conformal.py`). Calibration
-   units are patients, not timesteps. Proposition 1 in `sections/method.tex`
-   bounds the probability that the deployed *population* alarm rate exceeds the
-   budget; per-patient violation is reported as a separate diagnostic and is
-   never claimed to follow from the proposition.
-3. **Alarm-rate-matched evaluation** (`eaai/experiments/e2_budget.py`). Compares
-   methods at equal alarms per patient-day and traces the lead-time/budget
-   Pareto frontier.
+## Quick start and synthetic diagnostic
 
-## Quick start
+Python **3.10+** is required. From `code/`:
 
 ```bash
-cd code
 python3 -m pip install -r requirements.txt
-python3 -m pytest tests -q          # 66 passed
-python3 scripts/run_e0.py           # certification benchmark, ~20 s on CPU
+python3 -m pytest tests -q
+python3 scripts/run_e0.py --patients 4000 --splits 200 --seed 0
+python3 scripts/audit_official2012.py  # optional network QC, all 4000 set-A records
 ```
 
-`run_e0.py` is the experiment that needs no clinical data and no GPU. It uses a
-60-point threshold grid for speed; the reported quantities move only through
-`log|Λ|`, so the grid resolution changes the slack by a few percent. It draws a
-synthetic cohort with patient-level heterogeneity, calibrates under a fixed
-budget, and reports two quantities that must not be conflated:
+The GRU needs optional PyTorch; its tests skip when PyTorch is absent. The
+reference GRU currently trains on CPU, not CUDA. External deep-model adapters
+and a measured full-experiment GPU-hour budget have not been supplied.
 
-| quantity | meaning |
+E0 draws a synthetic heterogeneous cohort, evaluates a fixed threshold grid,
+and repeatedly partitions that cohort into calibration and test patients:
+
+| Output | Interpretation |
 | --- | --- |
-| `P(mean>B)` | how often the deployed population alarm rate exceeds the budget — what Proposition 1 bounds |
-| `P(pt>B)` | how often an individual patient exceeds the budget — a diagnostic only |
+| `P(mean>B)` | held-out **finite-cohort** mean exceedance; not the theorem's population-risk event |
+| `P(pt>B)` | individual patients above the average budget; no tail guarantee is claimed |
+| `fallback_fraction` | fraction of splits with no finite feasible grid threshold |
+| `rate/B` | empirical budget utilisation, including zero for fallback |
 
-Representative output at a budget of 1 alarm per patient-day, refractory window
-4 h, 4000 patients, 200 random splits (`L_max = 5.54`, the 26-hour supremum):
+Repeated partitions reuse patients. Wilson intervals on those split indicators
+are descriptive; they do not establish nominal coverage or prove the population
+risk theorem. The deliberately invalid baseline changes only the confidence
+radius's effective sample size, using **calibration-only** timestep counts.
+It is not a reproduction of a named published timestep-conformal method.
+Previous representative results were removed because they used an unsafe finite
+fallback and an inflated timestep count from the whole cohort. Rerun the corrected
+driver rather than reusing those numbers.
 
-```
-procedure           n_cal  alpha  P(mean>B)           95% CI  P(pt>B)  rate/B   slack
-blocked_bernstein     100   0.05      0.000  [0.000, 0.019]    0.016   0.082   1.108
-blocked_bernstein     800   0.05      0.000  [0.000, 0.019]    0.285   0.734   0.243
-blocked_hoeffding     800   0.05      0.000  [0.000, 0.019]    0.220   0.596   0.386
-timestep_naive        100   0.05      0.430  [0.363, 0.499]    0.383   0.960   0.020
-timestep_naive        800   0.05      0.235  [0.182, 0.298]    0.382   0.956   0.020
-```
+If no finite threshold is certified, the policy uses `threshold=+inf`, an exact
+no-alarm fallback with risk zero and status `no_alarm_fallback`. Its grid index
+is **-1, a sentinel, never the last loss-matrix column**. E0/E2 explicitly evaluate
+zero fallback losses. E0 JSON uses `null` when the median threshold is infinite.
+Raw loss values outside `[0,L_max]` are rejected instead of clipped. Optional
+isotonic output is diagnostic only and never replaces the raw certificate.
 
-Three readings matter. Blocked calibration never exceeds the budget at any
-calibration size, and it becomes less conservative as the calibration set grows,
-which is the expected finite-sample trade-off. The first row also shows the cost
-of that guarantee: at `n_cal = 100` the slack alone (1.108) exceeds the budget
-of one alarm per day, so the certificate is vacuous and the policy suppresses
-almost every alarm. A procedure can be valid and useless at the same time, which
-is why `rate/B` is reported next to the violation frequency rather than instead
-of it. The timestep shortcut uses the
-*same* point estimator and differs only in treating the ~72 dependent steps per
-patient as independent, so its guard band is 12 times narrower than the correct
-one at equal calibration data; it then sits at 96% of budget with no margin and
-breaks its own nominal level in 23% of deployments at `n_cal = 800` and 43% at
-`n_cal = 100`. A second seed gives 9–35%, so the exact fraction is a function of
-grid resolution and calibration size. That is the point: the shortcut certifies
-nothing, so the violation rate is whatever the discretisation happens to give,
-while the blocked procedure is valid by construction.
+## Data conventions and limits
 
-`P(pt>B)` is the diagnostic that must not be confused with the guarantee. It
-rises with the calibration set because a sharper threshold concentrates alarms
-on genuinely unstable patients, whose own rate then exceeds the average budget.
-A bound on the mean says nothing about that tail, and the code reports it
-separately for exactly that reason.
+Official sources: [2019](https://physionet.org/content/challenge-2019/1.0.0/) and
+[2012](https://physionet.org/content/challenge-2012/1.0.0/).
+Pass the root directory explicitly to the readers; no `EAAI_DATA_ROOT` environment
+variable is consumed by the implementation.
 
-## Data
+- **2019:** put `.psv` files under `training_setA/` or `training_setB/` (20,336
+  and 20,000 records). These are the two public hospital datasets; a public
+  A→C hospital experiment is not supported. Supplied labels turn positive six
+  hours before clinical onset. Default `label_lead_hours=0` retains the shipped
+  label boundary; `=6` shifts it only when that boundary is identifiable.
+  Initially positive records have `onset_left_censored=True` and onset sentinel
+  zero: they cannot supply identifiable pre-onset targets or lead times. Shifted
+  events beyond follow-up are excluded from lead-time cases, not silently capped.
+- **2012:** put official `Time,Parameter,Value` records under `set-a/`, `set-b/`
+  or `set-c/` and the corresponding `Outcomes-a/b/c.txt` at the root. Outcomes
+  are joined by RecordID, never file order. Non-hourly measurements become
+  available at `ceil(timestamp/60)`; the last valid within-hour measurement wins.
+  The mortality input has decision times 0,...,48 h, **49 points, not a 49-hour
+  deterioration follow-up**. All onset entries are -1 because no event onset is
+  available. Mortality is returned separately, never included in model features.
+  Admission features are Age/Gender/Height/ICUType; no hospital indicators are
+  invented. `-1` is missing; other negative/nonfinite measurements are also
+  missing with explicit `qc_invalid_measurements` counts. The official set-A
+  network audit detects 24 such out-of-documentation-range measurements.
+- Shared **names are not a complete cross-cohort semantic harmonisation**.
+  Source units are retained; 2012 Lactate is documented in mmol/L whereas the
+  2019 release documents mg/dL. Unit conversion, a shared static feature schema,
+  and task-specific labels are required before direct external model transfer.
+- Patient/record-disjoint splits prevent within-record leakage. The optional
+  `purge` function is an outcome-dependent eligibility restriction and can cause
+  selection bias; it is not a necessary leakage guard or proof against censoring.
+  Public record identifiers cannot establish that repeated admissions belong to
+  different people, so the independence assumption needs separate justification.
+- Missing-value delta is finite elapsed time **before** incorporating the current
+  observation, including at missing hours. Post-onset and padded training targets
+  are NaN and excluded from the loss, rather than treated as negative examples.
 
-All cohorts are public and require no data use agreement.
+## Baselines, cache compatibility and remaining work
 
-| cohort | patients | role |
-| --- | --- | --- |
-| PhysioNet/CinC Challenge 2019, training set A | 20,336 | in-hospital training and calibration |
-| PhysioNet/CinC Challenge 2019, training set B | 20,000 | cross-site test (hospitals B and C) |
-| PhysioNet/CinC Challenge 2012 | 12,000 | external task transfer (mortality) |
-| MIMIC-IV demo | 100 | pipeline smoke test only, no reported results |
+The package provides prefix logistic regression (optional LightGBM) and a
+**causal unidirectional** masked GRU. Perturbing future observations is tested
+not to change past scores; patient prediction batches limit forward-pass memory.
+Static missingness is median-imputed in the prefix learner and zero-imputed in
+the GRU reference. Neither implementation is an external paper's complete model.
 
-Download the 2019 training sets and place each patient `.psv` under
-`data/physionet2019/training_setA/` and `.../training_setB/`. Set
-`EAAI_DATA_ROOT` to override the default location.
+The clinical-score functions are **research-only partial instruments**. NEWS
+omits consciousness and supplemental oxygen; SIRS lacks the immature-neutrophil
+alternative; other omissions are listed in `MISSING_COMPONENTS`. Contiguous
+extensions handle fractional chart values instead of silently assigning zero
+to a gap between integer bands. Raw clinical scores are not probabilities: a
+training-only probability adapter is required before ECE or net-benefit metrics.
 
-Two details that change results by several AUROC points if ignored:
-`SepsisLabel` flips to 1 six hours **before** clinical onset, so the onset index
-must be recovered as the first labelled step; and splits must be made by patient
-with a purge gap of at least the label horizon, or trajectories from the same
-admission leak across folds.
+Old unversioned caches are rejected. **Regenerate all earlier GRU/prediction
+caches and downstream results**; changing the code cannot repair scores already
+computed using future information. Cache format version 2 validates shapes,
+lengths, onset metadata and finite valid scores.
 
-## Baselines
+Not implemented/completed: external architecture adapters, the complete multi-seed
+clinical training grid, the official 2019 challenge utility scorer, full cross-site
+and external-task experiments, observation-sparsification/subgroup study drivers,
+and real-cohort results. MIMIC demo processing is not present. The E2 module is
+a generic cached-score budget sweep, not a completed A→B/A→C transfer study.
+No clinical superiority, submission status or measured 45-GPU-hour result is claimed.
 
-Off-the-shelf, not reimplemented: `pypots` (GRU-D, SAITS), `tsai`
-(InceptionTime, ResNet, TCN), `lightgbm` for the tabular reference. Install them
-from `requirements-optional.txt`. `eaai/scores/baselines.py` provides two
-self-contained models that need nothing beyond core dependencies: a prefix
-logistic regression over last-value and observation-rate features, and a masked
-bidirectional GRU consuming values, mask and elapsed time.
-
-Clinical scores (qSOFA, MEWS, NEWS, SIRS, partial SOFA) are implemented from
-their source definitions in `eaai/scores/clinical.py`, because reviewers check
-thresholds and partial-observation handling.
-
-## Experiments
-
-| id | what | training |
-| --- | --- | --- |
-| E0 | certification benchmark on synthetic cohort | none |
-| E1 | in-hospital discrimination for 8 score functions x 5 seeds | 40 fits |
-| E2 | cross-site transfer A to B and A to C | cached |
-| E3 | blocked versus timestep calibration, 100 splits | none |
-| E4 | budget sweep, lead-time/Pareto frontier | none |
-| E5 | ablations: refractory, escalation, grid resolution, calibration size | none |
-| E6 | observation sparsification | cached |
-| E7 | subgroup and net-benefit analysis | cached |
-| E8 | external task transfer to PhysioNet 2012 | 12 fits |
-
-Scores are cached per `(cohort, model, seed)` by `eaai.scores.api.ScoreCache`,
-so every experiment after E1 and E2 is post-hoc and needs no GPU. Total budget
-is roughly 45 GPU-hours on a single 24 GB card.
-
-## Status
-
-Implemented and tested: policy, blocked conformal calibration, evaluation
-metrics (AUROC/AUPRC with DeLong, ECE, calibration slope, lead time, net
-benefit, bootstrap intervals, paired Wilcoxon), data harmonisation with an
-ICULOS clock, patient-level splitting with purge, clinical scores, score cache,
-synthetic cohort generator, E0 and E2 drivers, and the two reference baselines.
-
-Not included: training loops for the external deep backbones (installed from
-`pypots` and `tsai`; `eaai/experiments/e1_train.py` is backbone-agnostic and
-accepts any estimator with `fit`/`predict`), and the real-cohort results, which
-require downloading the data above.
-
-## Citation
-
-```bibtex
-@article{eaai_alarm_budget,
-  title  = {Alert-Budgeted Clinical Early Warning: Conformal Risk Control for
-            Stateful Deterioration Alarm Policies},
-  journal = {Engineering Applications of Artificial Intelligence},
-  year   = {2026},
-  note   = {Under review}
-}
-```
+Corrected synthetic outputs for seeds 0, 1 and 2 are under `code/audit_results/`.
+They remain finite-cohort diagnostics, including cases where certification is
+achieved by the operationally useless no-alarm fallback. See `AUDIT_REPORT.md`
+for the second audit's defects, checks and limitations.

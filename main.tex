@@ -19,6 +19,13 @@
 \newtheorem{assumption}{Assumption}
 
 \biboptions{numbers,sort&compress}
+\setlength{\emergencystretch}{2em}
+\makeatletter
+\def\ps@pprintTitle{%
+  \let\@oddhead\@empty\let\@evenhead\@empty
+  \def\@oddfoot{\hfil Draft manuscript --- not submitted\hfil}%
+  \let\@evenfoot\@oddfoot}
+\makeatother
 
 \journal{Engineering Applications of Artificial Intelligence}
 
@@ -28,22 +35,14 @@
 
 \title{Alert-Budgeted Clinical Early Warning: Conformal Risk Control for Stateful Deterioration Alarm Policies}
 
-\author[a]{First Author\corref{cor1}}
-\ead{first.author@institution.edu}
-\author[a]{Second Author}
-\author[b]{Third Author}
-
-\cortext[cor1]{Corresponding author.}
-
-\affiliation[a]{organization={Department, Institution}, city={City}, postcode={000000}, country={Country}}
-\affiliation[b]{organization={Department, Institution}, city={City}, postcode={000000}, country={Country}}
+\author{Author information pending}
 
 \begin{abstract}
 \input{sections/abstract}
 \end{abstract}
 
 \begin{keyword}
-Clinical early warning \sep Clinical deterioration \sep Alarm fatigue \sep Conformal prediction \sep Irregularly sampled time series \sep Decision support systems
+Clinical early warning \sep Alarm budgets \sep Stateful policies \sep Risk calibration \sep Clinical time series
 \end{keyword}
 
 \end{frontmatter}

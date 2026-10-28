@@ -27,34 +27,51 @@ class PatientRecord:
     onset_index: int | None
     static: np.ndarray
     variables: tuple[str, ...] = ()
+    onset_left_censored: bool = False
 
     def loss_mask(self) -> np.ndarray:
         return np.ones(self.length, dtype=bool)
 
 
 def _clock(frame: pd.DataFrame) -> np.ndarray:
+    if frame.empty:
+        raise ValueError("cannot harmonise an empty patient record")
+    if frame.columns.duplicated().any():
+        raise ValueError("duplicate variable names are ambiguous")
     if "ICULOS" in frame.columns:
         clock = pd.to_numeric(frame["ICULOS"], errors="coerce").to_numpy()
-        clock = clock - np.nanmin(clock)
+        if not np.isfinite(clock).all() or np.any(clock != np.floor(clock)):
+            raise ValueError("ICULOS must be finite integer hours")
+        if np.any(np.diff(clock) <= 0):
+            raise ValueError("ICULOS must be strictly increasing without duplicates")
+        clock = clock - clock[0]
     else:
         clock = np.arange(len(frame), dtype=float)
-    return np.nan_to_num(clock, nan=0.0).astype(int)
+    return clock.astype(int)
 
 
 def harmonise(frame: pd.DataFrame,
               variables: tuple[str, ...] = CHALLENGE_2019_DYNAMIC,
               label_column: str = CHALLENGE_2019_LABEL,
-              label_lead_hours: int = 0) -> PatientRecord:
+              label_lead_hours: int = 0,
+              static_names: tuple[str, ...] = ("Age", "Gender", "Unit1", "Unit2", "HospAdmTime")) -> PatientRecord:
     """Reindex a patient frame onto its hourly clock and build mask/delta tensors.
 
     ``onset_index`` is the first step at which ``label_column`` is positive. The
     2019 challenge sets that label six hours before clinical onset, so pass
     ``label_lead_hours=6`` to recover the clinical event time; the default keeps
     the label convention used by most published baselines so that lead times
-    remain comparable across papers. With the shift, an onset may fall at or
-    beyond the last observed step, which means the event coincides with
-    discharge; such records are removed by :func:`eaai.data.splits.purge`.
+    remain comparable across papers. A shifted onset outside observed follow-up
+    is not a lead-time case; this does not imply that discharge equals onset.
+    If the first row is already positive, onset is left-censored and adding six
+    hours does not reconstruct a unique clinical time. Such records retain
+    onset_index=0 and onset_left_censored=True: no identifiable pre-onset period
+    is used for event-label training or lead-time evaluation.
     """
+    if not isinstance(label_lead_hours, (int, np.integer)) or label_lead_hours < 0:
+        raise ValueError("label_lead_hours must be a nonnegative integer")
+    if not variables or len(set(variables)) != len(variables):
+        raise ValueError("variables must be nonempty and unique")
     clock = _clock(frame)
     horizon = int(clock.max()) + 1
     grid = np.full(horizon, -1, dtype=int)
@@ -67,37 +84,50 @@ def harmonise(frame: pd.DataFrame,
             placed = np.where(grid >= 0, column[np.clip(grid, 0, None)], np.nan)
             raw[:, j] = placed
 
-    mask = ~np.isnan(raw)
+    raw[~np.isfinite(raw)] = np.nan
+    mask = np.isfinite(raw)
 
     delta = np.zeros_like(raw)
-    last_seen = np.full(raw.shape[1], np.nan)
+    # Elapsed time just before incorporating the current observation. Before
+    # the first observation, use time since the record origin. Missing hours
+    # must retain elapsed time, rather than being reset to zero.
+    last_seen = np.zeros(raw.shape[1])
     for t in range(horizon):
         seen = mask[t]
         delta[t] = t - last_seen
-        delta[t, ~seen] = np.nan
         last_seen[seen] = t
-    delta = np.where(mask, delta, 0.0)
 
     onset = None
+    left_censored = False
     if label_column in frame.columns:
         labels = pd.to_numeric(frame[label_column], errors="coerce").to_numpy()
+        if not np.isin(labels, [0, 1]).all():
+            raise ValueError("supplied event labels must be complete binary values")
         hits = np.flatnonzero(np.nan_to_num(labels, nan=0.0) >= 1)
         if hits.size:
-            onset = int(clock[hits[0]]) + int(label_lead_hours)
+            left_censored = bool(hits[0] == 0)
+            onset = 0 if left_censored else int(clock[hits[0]]) + int(label_lead_hours)
 
-    static_names = ("Age", "Gender", "Unit1", "Unit2", "HospAdmTime")
     static = np.array([float(pd.to_numeric(frame[c], errors="coerce").iloc[0])
                        if c in frame.columns else np.nan for c in static_names])
-    static = np.nan_to_num(static, nan=0.0)
+    static[~np.isfinite(static)] = np.nan
 
     return PatientRecord(values=raw, mask=mask, delta=delta, length=horizon,
-                         onset_index=onset, static=static,
-                         variables=tuple(variables))
+                          onset_index=onset, static=static,
+                          variables=tuple(variables), onset_left_censored=left_censored)
 
 
 def pad_records(records: list[PatientRecord]) -> dict:
     """Stack records into padded arrays plus a validity mask."""
     n = len(records)
+    if n == 0:
+        raise ValueError("records must contain at least one patient")
+    first = records[0]
+    for r in records:
+        if (r.length <= 0 or r.values.shape != (r.length, first.values.shape[1])
+                or r.mask.shape != r.values.shape or r.delta.shape != r.values.shape
+                or r.static.shape != first.static.shape or r.variables != first.variables):
+            raise ValueError("records must have consistent shapes and variable order")
     horizon = max(r.length for r in records)
     d = records[0].values.shape[1]
     s = records[0].static.shape[0]
@@ -121,8 +151,9 @@ def pad_records(records: list[PatientRecord]) -> dict:
 
     variables = records[0].variables if records else ()
     return {"values": values, "mask": mask, "delta": delta, "valid": valid,
-            "static": static, "lengths": lengths, "onset": onset,
-            "variables": list(variables)}
+             "static": static, "lengths": lengths, "onset": onset,
+             "variables": list(variables),
+             "onset_left_censored": np.array([r.onset_left_censored for r in records])}
 
 
 def summarise(record: PatientRecord) -> dict:

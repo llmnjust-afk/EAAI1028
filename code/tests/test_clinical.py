@@ -46,4 +46,19 @@ def test_forward_fill_carries_last_observation():
 
 def test_missing_components_are_documented():
     assert "glasgow coma scale" in MISSING_COMPONENTS["sofa"]
-    assert MISSING_COMPONENTS["sirs"] == ()
+    assert "immature neutrophil fraction" in MISSING_COMPONENTS["sirs"]
+    assert "supplemental oxygen" in MISSING_COMPONENTS["news"]
+
+
+def test_fractional_vitals_do_not_fall_through_chart_intervals():
+    assert score_cohort(frame(HR=129.5), "mews")[0] == 2.
+    assert score_cohort(frame(Resp=20.5), "mews")[0] == 2.
+    assert score_cohort(frame(HR=130.5), "news")[0] == 3.
+    assert score_cohort(frame(O2Sat=91.5), "news")[0] == 2.
+    assert score_cohort(frame(Resp=8.5), "news")[0] == 1.
+
+
+def test_infinite_clinical_measurements_are_missing_not_extreme_scores():
+    assert np.isnan(score_cohort(frame(HR=np.inf), "news")[0])
+    raw = pd.DataFrame({"HR": [130., np.inf]})
+    assert score_cohort(raw, "news").tolist() == [2., 2.]

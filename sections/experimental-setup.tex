@@ -1,0 +1,48 @@
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Datasets}
+
+All experiments use open, de-identified cohorts so that every reported number is reproducible without data-use agreements. \Cref{tab:datasets} summarises the three sources. The primary cohort is the PhysioNet/Computing in Cardiology Challenge 2019 corpus, which contains hourly records from three independent hospitals: set A comprises 20{,}336 patients from one institution and set B comprises 20{,}000 patients from two further institutions. Because the three sites differ in coding practice, laboratory ordering policy, and case mix, the A$\rightarrow$B and A$\rightarrow$C directions constitute genuine cross-institution transfer rather than a random resplit of a pooled sample. Sepsis onset is defined by the Sepsis-3 criteria with the onset window spanning six hours before to three hours after the clinical diagnosis, as released with the challenge; because this labelling rule is itself a source of ambiguity, \cref{sec:setup} specifies a sensitivity analysis over the window width.
+
+The secondary cohort is the PhysioNet/Computing in Cardiology Challenge 2012 corpus, which provides a different task, in-hospital mortality, over a different variable set and a different era of care. It is used to test whether the calibration procedure depends on the specific label definition of the primary cohort. The MIMIC-IV demonstration subset is used only to verify that the preprocessing pipeline executes on an independently formatted source; with one hundred patients it is far too small to support any comparative claim and no result in this paper is derived from it.
+
+\begin{table}[tb]
+\centering
+\caption{Open cohorts used in this study. Alarm budgets are expressed per patient-day. The 2019 cohort provides three hospitals, which we index by the challenge's set identifiers.}
+\label{tab:datasets}
+\begin{tabular}{lcccc}
+\toprule
+Cohort & Patients & Variables & Task & Access \\
+\midrule
+Challenge 2019, set A & 20{,}336 & 40 & Sepsis onset & Open \\
+Challenge 2019, set B & 20{,}000 & 40 & Sepsis onset & Open \\
+Challenge 2012, set A--C & 12{,}000 & 42 & Mortality & Open \\
+MIMIC-IV demo & 100 & 100+ & Pipeline check & Open \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Partitioning and Transfer Protocol}
+
+Every split is made at the patient level; no patient contributes observations to more than one partition. Within the source hospital we use a four-way partition of $60\%$ training, $15\%$ validation, $10\%$ calibration, and $15\%$ test. The validation partition selects early-stopping epochs and the structural policy parameters $(\tau,\kappa)$; the calibration partition is used only by \cref{eq:lambda} and is never seen during training or model selection; the test partition is touched once per configuration.
+
+Cross-site experiments follow a deployment-realistic protocol in two variants. In the \emph{local-calibration} variant, the score function and structural parameters are fitted on the source hospital, and a small number $m\in\{50,100,200,500\}$ of target-hospital patients is used for blocked conformal calibration before evaluation on the remaining target patients. This reflects the situation in which a site can supply a modest retrospective sample but not a labelled training cohort. In the \emph{no-target-data} variant, calibration is performed entirely on source patients and transferred unchanged, which isolates how much of the guarantee survives when the exchangeability assumption is violated outright. The gap between the two variants is itself a reported result rather than a nuisance to be hidden.
+
+\subsection{Score Functions and Baselines}
+
+We separate the score function, which produces $s_{it}$, from the alarm policy, which consumes it. Holding the policy fixed while varying the score function isolates the contribution of the backbone; holding the backbone fixed while varying the policy isolates ours. The score functions are drawn from four families. Clinical instruments comprise the quick Sequential Organ Failure Assessment, the National Early Warning Score, the Modified Early Warning Score, the Systemic Inflammatory Response Syndrome criteria, and the full Sequential Organ Failure Assessment, computed from the released variables according to their published definitions. Classical learners comprise logistic regression and gradient-boosted trees over summary statistics of each patient's trajectory. Recurrent and convolutional networks comprise an long short-term memory network, a temporal convolutional network, and a residual network, implemented with the \texttt{tsai} time-series library. Irregularity-aware models comprise GRU-D and SAITS from the \texttt{PyPOTS} partially-observed time-series toolbox, together with reimplementations of reliability-aware temporal aggregation \citep{kim2026retamamba}, masked-attention prediction with informative missingness \citep{mun2026made}, and graph-based forecasting over irregular observations \citep{yalavarthi2024grafiti}.
+
+Alarm policies comprise four baselines and the proposed policy. The memoryless threshold rule is the de facto standard and is tuned to the budget post hoc. The top-$k$ rule alerts on the $k$ highest-scoring timesteps per patient, with $k$ chosen to meet the budget. The refractory-only rule applies \cref{eq:policy} with $\tau>0$ but selects $\lambda$ by grid search on the test alarm rate, which is the optimistic bound that a practitioner could not obtain prospectively. The timestep-conformal rule applies split conformal at the observation level, which we include specifically to quantify the invalidity argued in \cref{sec:method}. The proposed rule is \cref{alg:calibration}.
+
+\subsection{Metrics}
+
+Discrimination is reported as area under the receiver operating characteristic curve and area under the precision-recall curve, the latter because prevalence in the evaluation windows is low and the former is optimistic under imbalance. Operational quantities are alarms per patient-day, the false-to-true alarm ratio, the median and interquartile range of detection lead time from \cref{eq:lead}, and the fraction of events detected at all within the twelve-hour window. Calibration is reported as expected calibration error with fifteen equal-width bins, the calibration slope, and reliability diagrams. Clinical utility is summarised by net benefit across threshold probabilities from $0.01$ to $0.20$, and by the official challenge utility score for the 2019 cohort. Budget validity is reported as the empirical violation rate, the proportion of held-out patients whose per-day alarm count exceeds $B$, estimated over one hundred random calibration--test splits, and compared against the nominal $\alpha$.
+
+\subsection{Statistical Analysis}
+
+Confidence intervals for all point estimates are obtained by bootstrapping patients with one thousand resamples. Differences in area under the curve between a pair of score functions are tested with the DeLong procedure for correlated curves; differences in operational metrics, which are not covered by DeLong, are tested with a paired Wilcoxon signed-rank test across the five training seeds, with the seed as the unit of pairing. Effect sizes are reported alongside exact $p$-values rather than as thresholded statements. Because one hundred calibration splits are available for the validity experiments, violation rates are accompanied by Wilson intervals, and a configuration is described as valid only when the interval contains the nominal level rather than when the point estimate falls below it. Subgroup analyses stratify by age band, sex, and comorbidity count, and are reported in full rather than filtered to significant contrasts.
+
+\subsection{Implementation and Compute}
+
+The full experimental grid comprises eight score functions $\times$ five seeds for the main comparisons, twelve baselines $\times$ three seeds for the policy comparison, and thirty ablation configurations. On a single 24\,GB accelerator the entire programme requires approximately 45 accelerator-hours, dominated by the recurrent and irregularity-aware backbones; the conformal calibration stage is inference-only and contributes under three hours. Threshold grids use $|\Lambda|=200$ equally spaced quantiles of the pooled calibration scores. Code, preprocessing scripts, and the exact patient-level partitions will be released on acceptance.

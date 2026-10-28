@@ -1,0 +1,5 @@
+torch>=2.1
+lightgbm>=4.0
+pypots>=0.3
+tsai>=0.3
+optuna>=3.4

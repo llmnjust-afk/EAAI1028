@@ -1,0 +1,65 @@
+\documentclass[preprint,12pt]{elsarticle}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{placeins}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+
+\biboptions{numbers,sort&compress}
+
+\journal{Engineering Applications of Artificial Intelligence}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Alert-Budgeted Clinical Early Warning: Conformal Risk Control for Stateful Deterioration Alarm Policies}
+
+\author[a]{First Author\corref{cor1}}
+\ead{first.author@institution.edu}
+\author[a]{Second Author}
+\author[b]{Third Author}
+
+\cortext[cor1]{Corresponding author.}
+
+\affiliation[a]{organization={Department, Institution}, city={City}, postcode={000000}, country={Country}}
+\affiliation[b]{organization={Department, Institution}, city={City}, postcode={000000}, country={Country}}
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\begin{keyword}
+Clinical early warning \sep Clinical deterioration \sep Alarm fatigue \sep Conformal prediction \sep Irregularly sampled time series \sep Decision support systems
+\end{keyword}
+
+\end{frontmatter}
+
+\input{sections/introduction}
+\input{sections/related-work}
+\input{sections/method}
+\input{sections/experimental-setup}
+
+% Sections below are written only after experiments are complete.
+% \input{sections/results}
+% \input{sections/discussion}
+% \input{sections/conclusion}
+
+\FloatBarrier
+\bibliographystyle{elsarticle-num}
+\bibliography{refs}
+
+\end{document}

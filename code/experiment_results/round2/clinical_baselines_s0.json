@@ -1,0 +1,472 @@
+{
+  "min_stay_hours": 24.0,
+  "budgets": [
+    0.25,
+    0.5,
+    1.0,
+    2.0
+  ],
+  "instruments": {
+    "news": {
+      "threshold_grid": [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+        10.0,
+        11.0,
+        12.0,
+        13.0,
+        14.0
+      ],
+      "internal": [
+        {
+          "setting": "internal",
+          "alarm_rate": 0.15903352041568172,
+          "sensitivity": 0.14285714285714285,
+          "median_lead_time": 8.0,
+          "detected": 24,
+          "n_events": 168,
+          "budget": 0.25,
+          "threshold": 8.0,
+          "patient_violation": 0.15590484282073067,
+          "certified_risk": 0.17831139059534126,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 7,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.3577488944405683,
+          "sensitivity": 0.25595238095238093,
+          "median_lead_time": 7.0,
+          "detected": 43,
+          "n_events": 168,
+          "budget": 0.5,
+          "threshold": 7.0,
+          "patient_violation": 0.2531860662701784,
+          "certified_risk": 0.39087311775374767,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 8,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.7303871146404185,
+          "sensitivity": 0.39880952380952384,
+          "median_lead_time": 8.0,
+          "detected": 67,
+          "n_events": 168,
+          "budget": 1.0,
+          "threshold": 6.0,
+          "patient_violation": 0.27017841971113,
+          "certified_risk": 0.759081307253728,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 9,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 1.2737325963511186,
+          "sensitivity": 0.5416666666666666,
+          "median_lead_time": 8.0,
+          "detected": 91,
+          "n_events": 168,
+          "budget": 2.0,
+          "threshold": 5.0,
+          "patient_violation": 0.2527612574341546,
+          "certified_risk": 1.303530070129571,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 10,
+          "l_max": 5.538461538461538
+        }
+      ],
+      "external": [
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.1323727838930299,
+          "sensitivity": 0.17655571635311143,
+          "median_lead_time": 6.5,
+          "detected": 122,
+          "n_events": 691,
+          "budget": 0.25,
+          "threshold": 8.0,
+          "patient_violation": 0.13437668645439826,
+          "certified_risk": 0.17831139059534126,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 7,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.2932280954868875,
+          "sensitivity": 0.3053545586107091,
+          "median_lead_time": 7.0,
+          "detected": 211,
+          "n_events": 691,
+          "budget": 0.5,
+          "threshold": 7.0,
+          "patient_violation": 0.21026713437668645,
+          "certified_risk": 0.39087311775374767,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 8,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.5862427082336695,
+          "sensitivity": 0.44862518089725034,
+          "median_lead_time": 8.0,
+          "detected": 310,
+          "n_events": 691,
+          "budget": 1.0,
+          "threshold": 6.0,
+          "patient_violation": 0.21256071235833784,
+          "certified_risk": 0.759081307253728,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 9,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 1.0455993574254732,
+          "sensitivity": 0.613603473227207,
+          "median_lead_time": 8.0,
+          "detected": 424,
+          "n_events": 691,
+          "budget": 2.0,
+          "threshold": 5.0,
+          "patient_violation": 0.19407717215326498,
+          "certified_risk": 1.303530070129571,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 10,
+          "l_max": 5.538461538461538
+        }
+      ],
+      "eligibility": {
+        "source": {
+          "eligible": 15837,
+          "total": 20336
+        },
+        "target": {
+          "eligible": 14824,
+          "total": 20000
+        }
+      }
+    },
+    "sirs": {
+      "threshold_grid": [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0
+      ],
+      "internal": [
+        {
+          "setting": "internal",
+          "alarm_rate": 0.11568614866958091,
+          "sensitivity": 0.1130952380952381,
+          "median_lead_time": 7.0,
+          "detected": 19,
+          "n_events": 168,
+          "budget": 0.25,
+          "threshold": 4.0,
+          "patient_violation": 0.11809685641461343,
+          "certified_risk": 0.10022584875561412,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.11568614866958091,
+          "sensitivity": 0.1130952380952381,
+          "median_lead_time": 7.0,
+          "detected": 19,
+          "n_events": 168,
+          "budget": 0.5,
+          "threshold": 4.0,
+          "patient_violation": 0.09770603228547153,
+          "certified_risk": 0.10022584875561412,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.7961315690935674,
+          "sensitivity": 0.47023809523809523,
+          "median_lead_time": 8.0,
+          "detected": 79,
+          "n_events": 168,
+          "budget": 1.0,
+          "threshold": 3.0,
+          "patient_violation": 0.2829226847918437,
+          "certified_risk": 0.8140199291295603,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 2,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.7961315690935674,
+          "sensitivity": 0.47023809523809523,
+          "median_lead_time": 8.0,
+          "detected": 79,
+          "n_events": 168,
+          "budget": 2.0,
+          "threshold": 3.0,
+          "patient_violation": 0.1469838572642311,
+          "certified_risk": 0.8140199291295603,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 2,
+          "l_max": 5.538461538461538
+        }
+      ],
+      "external": [
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.05126269002356901,
+          "sensitivity": 0.10709117221418235,
+          "median_lead_time": 6.0,
+          "detected": 74,
+          "n_events": 691,
+          "budget": 0.25,
+          "threshold": 4.0,
+          "patient_violation": 0.05706961683756071,
+          "certified_risk": 0.10022584875561412,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.05126269002356901,
+          "sensitivity": 0.10709117221418235,
+          "median_lead_time": 6.0,
+          "detected": 74,
+          "n_events": 691,
+          "budget": 0.5,
+          "threshold": 4.0,
+          "patient_violation": 0.041689152725310305,
+          "certified_risk": 0.10022584875561412,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.493109427563402,
+          "sensitivity": 0.4240231548480463,
+          "median_lead_time": 8.0,
+          "detected": 293,
+          "n_events": 691,
+          "budget": 1.0,
+          "threshold": 3.0,
+          "patient_violation": 0.18159740960604426,
+          "certified_risk": 0.8140199291295603,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 2,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.493109427563402,
+          "sensitivity": 0.4240231548480463,
+          "median_lead_time": 8.0,
+          "detected": 293,
+          "n_events": 691,
+          "budget": 2.0,
+          "threshold": 3.0,
+          "patient_violation": 0.08324338909875877,
+          "certified_risk": 0.8140199291295603,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 2,
+          "l_max": 5.538461538461538
+        }
+      ],
+      "eligibility": {
+        "source": {
+          "eligible": 15837,
+          "total": 20336
+        },
+        "target": {
+          "eligible": 14824,
+          "total": 20000
+        }
+      }
+    },
+    "qsofa": {
+      "threshold_grid": [
+        0.0,
+        1.0,
+        2.0
+      ],
+      "internal": [
+        {
+          "setting": "internal",
+          "alarm_rate": 0.0,
+          "sensitivity": 0.0,
+          "median_lead_time": null,
+          "detected": 0,
+          "n_events": 168,
+          "budget": 0.25,
+          "threshold": null,
+          "patient_violation": 0.0,
+          "certified_risk": 0.0,
+          "status": "no_alarm_fallback",
+          "procedure": "global",
+          "n_feasible": 0,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.49150014176518825,
+          "sensitivity": 0.22023809523809523,
+          "median_lead_time": 9.0,
+          "detected": 37,
+          "n_events": 168,
+          "budget": 0.5,
+          "threshold": 2.0,
+          "patient_violation": 0.31563296516567546,
+          "certified_risk": 0.49131448618697143,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.49150014176518825,
+          "sensitivity": 0.22023809523809523,
+          "median_lead_time": 9.0,
+          "detected": 37,
+          "n_events": 168,
+          "budget": 1.0,
+          "threshold": 2.0,
+          "patient_violation": 0.17417162276975362,
+          "certified_risk": 0.49131448618697143,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "internal",
+          "alarm_rate": 0.49150014176518825,
+          "sensitivity": 0.22023809523809523,
+          "median_lead_time": 9.0,
+          "detected": 37,
+          "n_events": 168,
+          "budget": 2.0,
+          "threshold": 2.0,
+          "patient_violation": 0.07349192863211555,
+          "certified_risk": 0.49131448618697143,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        }
+      ],
+      "external": [
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.0,
+          "sensitivity": 0.0,
+          "median_lead_time": null,
+          "detected": 0,
+          "n_events": 691,
+          "budget": 0.25,
+          "threshold": null,
+          "patient_violation": 0.0,
+          "certified_risk": 0.0,
+          "status": "no_alarm_fallback",
+          "procedure": "global",
+          "n_feasible": 0,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.32720346646804976,
+          "sensitivity": 0.2402315484804631,
+          "median_lead_time": 7.0,
+          "detected": 166,
+          "n_events": 691,
+          "budget": 0.5,
+          "threshold": 2.0,
+          "patient_violation": 0.23563140852671344,
+          "certified_risk": 0.49131448618697143,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.32720346646804976,
+          "sensitivity": 0.2402315484804631,
+          "median_lead_time": 7.0,
+          "detected": 166,
+          "n_events": 691,
+          "budget": 1.0,
+          "threshold": 2.0,
+          "patient_violation": 0.11616297895304911,
+          "certified_risk": 0.49131448618697143,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        },
+        {
+          "setting": "B_lead6",
+          "alarm_rate": 0.32720346646804976,
+          "sensitivity": 0.2402315484804631,
+          "median_lead_time": 7.0,
+          "detected": 166,
+          "n_events": 691,
+          "budget": 2.0,
+          "threshold": 2.0,
+          "patient_violation": 0.03831624392876417,
+          "certified_risk": 0.49131448618697143,
+          "status": "grid_feasible",
+          "procedure": "global",
+          "n_feasible": 1,
+          "l_max": 5.538461538461538
+        }
+      ],
+      "eligibility": {
+        "source": {
+          "eligible": 15837,
+          "total": 20336
+        },
+        "target": {
+          "eligible": 14824,
+          "total": 20000
+        }
+      }
+    }
+  }
+}

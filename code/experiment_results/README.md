@@ -176,3 +176,8 @@ python3 scripts/bootstrap_policy.py \
   --budgets 0.25 0.5 1.0 2.0 --n-boot 2000 \
   --out /data/lab/EAAI1028-data/results/bootstrap_all_s0.json
 ```
+
+
+## Round 2 archived results
+
+`round2/` stores the derived JSON outputs and the three subject-split files used by the LightGBM, target label-budget, bootstrap and clinical-baseline runs. These are small, non-identifying aggregates; no raw PhysioNet records or score caches are included. The files are archived so a restarted Lab Compute session can compare against or reuse the published numbers without re-running every experiment. Raw caches remain under `/data/lab/EAAI1028-data/cache` and are intentionally not committed.

@@ -16,3 +16,4 @@ __pycache__/
 code/cache/
 code/results/
 .DS_Store
+data/

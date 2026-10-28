@@ -50,3 +50,30 @@ def test_pareto_front_is_non_dominated():
 def test_pareto_front_handles_empty_input():
     rates, leads = pareto_front([{"alarm_rate": 1.0, "median_lead_time": float("nan")}])
     assert rates.size == 0 and leads.size == 0
+
+
+def test_alarm_loss_matrix_matches_direct_policy_replay():
+    from eaai.experiments.e2_budget import alarm_loss_matrix
+    from eaai.policy.alarm import AlarmPolicy, run_policy
+
+    cohort, _, _ = _fixture(n=60, seed=3)
+    thresholds = np.linspace(0.1, 0.9, 9)
+    matrix = alarm_loss_matrix(cohort["scores"], cohort["lengths"], thresholds,
+                               refractory=4, escalation=0)
+    for k, threshold in enumerate(thresholds):
+        for i, seq in enumerate(cohort["scores"]):
+            fired = run_policy(np.asarray(seq)[:cohort["lengths"][i]],
+                               AlarmPolicy(float(threshold), 4, 0))
+            expected = np.count_nonzero(fired) * 24.0 / cohort["lengths"][i]
+            assert matrix[i, k] == expected
+
+
+def test_timestep_comparator_is_labelled_and_bounded():
+    cohort, calibration, test = _fixture()
+    row = evaluate_at_budget(cohort["scores"], cohort["onset"], cohort["lengths"],
+                             calibration, test, budget=1.0,
+                             thresholds=np.linspace(0.05, 0.95, 40),
+                             procedure="timestep")
+    assert row["procedure"] == "timestep"
+    assert 0.0 <= row["patient_violation"] <= 1.0
+    assert row["status"] in ("grid_feasible", "no_alarm_fallback")

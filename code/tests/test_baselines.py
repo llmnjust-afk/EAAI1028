@@ -90,3 +90,18 @@ def test_align_lengths_accepts_ragged_sequences():
     assert out.shape == (2, 3)
     assert out[0].tolist() == [0.1, 0.2, 0.3]
     assert np.isnan(out[1, 2])
+
+
+def test_prefix_model_keeps_feature_missing_across_a_site():
+    batch = _batch(n=80)
+    batch["values"][:, :, 2] = np.nan
+    batch["mask"][:, :, 2] = False
+    labels = (batch["values"][:, :, 0] > 0.5).astype(float)
+    model = PrefixFeatureModel().fit(batch, labels)
+
+    external = _batch(n=12, seed=7)
+    external["values"][:, :, 2] = 1.0
+    external["mask"][:, :, 2] = True
+    scores = model.predict(external)
+    assert scores.shape == (12, 40)
+    assert np.isfinite(scores[valid_steps(external["lengths"], 40)]).all()

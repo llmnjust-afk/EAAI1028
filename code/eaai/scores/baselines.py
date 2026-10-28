@@ -61,10 +61,10 @@ class PrefixFeatureModel:
                 raise ImportError("pip install lightgbm to use backend='lightgbm'") from exc
             estimator = LGBMClassifier(n_estimators=300, learning_rate=0.05,
                                        num_leaves=31, random_state=self.random_state)
-            return Pipeline([("impute", SimpleImputer(strategy="median")), ("model", estimator)])
+            return Pipeline([("impute", SimpleImputer(strategy="median", keep_empty_features=True)), ("model", estimator)])
 
         estimator = LogisticRegression(max_iter=2000, C=1.0, random_state=self.random_state)
-        return Pipeline([("impute", SimpleImputer(strategy="median")),
+        return Pipeline([("impute", SimpleImputer(strategy="median", keep_empty_features=True)),
                          ("scale", StandardScaler()), ("model", estimator)])
 
     def fit(self, batch: dict, labels: np.ndarray) -> "PrefixFeatureModel":
@@ -101,13 +101,14 @@ class MaskedGRU:
 
     def __init__(self, name: str = "masked_gru", hidden: int = 64, epochs: int = 30,
                  learning_rate: float = 1e-3, batch_size: int = 64,
-                 random_state: int = 0) -> None:
+                 random_state: int = 0, device: str = "cpu") -> None:
         self.name = name
         self.hidden = hidden
         self.epochs = epochs
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.random_state = random_state
+        self.device = device
         self.module = None
         if (any(not isinstance(v, (int, np.integer)) or v <= 0
                 for v in (hidden, epochs, batch_size)) or
@@ -153,7 +154,7 @@ class MaskedGRU:
         filled = np.where(mask > 0, values, 0.0)
         static_rep = np.repeat(static[:, None, :], values.shape[1], axis=1)
         x = np.concatenate([filled, mask, delta, static_rep], axis=2)
-        return torch.from_numpy(x)
+        return torch.from_numpy(x).to(self.device)
 
     def fit(self, batch: dict, labels: np.ndarray) -> "MaskedGRU":
         self.module = None
@@ -161,6 +162,10 @@ class MaskedGRU:
         from torch import nn
 
         torch.manual_seed(self.random_state)
+        if self.device.startswith("cuda"):
+            torch.cuda.manual_seed_all(self.random_state)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
         x = self._tensorise(batch)
         labels = np.asarray(labels, dtype=np.float32)
         if labels.shape != tuple(x.shape[:2]):
@@ -168,10 +173,10 @@ class MaskedGRU:
         usable = valid_steps(batch["lengths"], x.shape[1]) & np.isfinite(labels)
         if not usable.any() or not np.isin(labels[usable], [0, 1]).all():
             raise ValueError("training labels must contain usable binary targets")
-        y = torch.from_numpy(np.where(usable, labels, 0.0))
-        valid = torch.from_numpy(usable)
+        y = torch.from_numpy(np.where(usable, labels, 0.0)).to(self.device)
+        valid = torch.from_numpy(usable).to(self.device)
 
-        self.module = self._build(x.shape[2])
+        self.module = self._build(x.shape[2]).to(self.device)
         optimiser = torch.optim.Adam(self.module.parameters(), lr=self.learning_rate)
         loss_fn = nn.BCEWithLogitsLoss(reduction="none")
 
@@ -180,7 +185,7 @@ class MaskedGRU:
             self.module.train()
             order = torch.randperm(n)
             for start in range(0, n, self.batch_size):
-                idx = order[start:start + self.batch_size]
+                idx = order[start:start + self.batch_size].to(self.device)
                 if not valid[idx].any():
                     continue
                 logits = self.module(x[idx])
@@ -205,7 +210,7 @@ class MaskedGRU:
             for start in range(0, len(batch["lengths"]), self.batch_size):
                 part = {k: np.asarray(batch[k])[start:start+self.batch_size]
                         for k in ("values", "mask", "delta", "static", "lengths")}
-                outputs.append(torch.sigmoid(self.module(self._tensorise(part))).numpy())
+                outputs.append(torch.sigmoid(self.module(self._tensorise(part))).cpu().numpy())
         scores = np.concatenate(outputs, axis=0)
         valid = valid_steps(batch["lengths"], scores.shape[1])
         return np.where(valid, scores, np.nan)

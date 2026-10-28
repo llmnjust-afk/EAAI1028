@@ -1,0 +1,127 @@
+{
+  "data": {
+    "root": "/data/lab/EAAI1028-data/physionet2019",
+    "subset": "A",
+    "limit": null,
+    "label_lead_hours": 6,
+    "horizon": 6
+  },
+  "model": {
+    "name": "prefix_lr",
+    "seed": 1,
+    "params": {
+      "name": "prefix_lr",
+      "backend": "logistic",
+      "random_state": 1,
+      "n_features_": 73
+    }
+  },
+  "split": {
+    "train": {
+      "patients": 12201,
+      "timesteps": 471404,
+      "positive_timesteps": 5736,
+      "positive_patients": 956,
+      "left_censored": 119,
+      "median_length": 39.0
+    },
+    "validation": {
+      "patients": 3051,
+      "timesteps": 117758,
+      "positive_timesteps": 1386,
+      "positive_patients": 231,
+      "left_censored": 32,
+      "median_length": 39.0
+    },
+    "calibration": {
+      "patients": 2033,
+      "timesteps": 78515,
+      "positive_timesteps": 1014,
+      "positive_patients": 169,
+      "left_censored": 18,
+      "median_length": 39.0
+    },
+    "test": {
+      "patients": 3051,
+      "timesteps": 114924,
+      "positive_timesteps": 1386,
+      "positive_patients": 231,
+      "left_censored": 34,
+      "median_length": 38.0
+    }
+  },
+  "partitions": {
+    "validation": {
+      "auroc": 0.7670130939001458,
+      "auprc": 0.043784132791039654,
+      "ece": 0.0008566557741515398,
+      "n_timesteps": 117758,
+      "n_positive": 1386,
+      "patient_max_mean": 0.021734798729787237,
+      "patients": 3051,
+      "timesteps": 117758,
+      "positive_timesteps": 1386,
+      "positive_patients": 231,
+      "left_censored": 32,
+      "median_length": 39.0,
+      "partition": "validation"
+    },
+    "calibration": {
+      "auroc": 0.753571977833104,
+      "auprc": 0.03868180734658121,
+      "ece": 0.0010775621159055157,
+      "n_timesteps": 78515,
+      "n_positive": 1014,
+      "patient_max_mean": 0.021791234637332815,
+      "patients": 2033,
+      "timesteps": 78515,
+      "positive_timesteps": 1014,
+      "positive_patients": 169,
+      "left_censored": 18,
+      "median_length": 39.0,
+      "partition": "calibration"
+    },
+    "test": {
+      "auroc": 0.7205058095112526,
+      "auprc": 0.029760904334432018,
+      "ece": 0.0005142317455822603,
+      "n_timesteps": 114924,
+      "n_positive": 1386,
+      "patient_max_mean": 0.021051428038627144,
+      "patients": 3051,
+      "timesteps": 114924,
+      "positive_timesteps": 1386,
+      "positive_patients": 231,
+      "left_censored": 34,
+      "median_length": 38.0,
+      "partition": "test"
+    }
+  },
+  "cache": {
+    "cohort": "A_lead6",
+    "path": "/data/lab/EAAI1028-data/cache/A_lead6__prefix_lr__s1.npz",
+    "patients": 20336
+  },
+  "external": {
+    "subset": "B",
+    "report": {
+      "auroc": 0.6703364209156513,
+      "auprc": 0.016974451012096124,
+      "ece": 0.0007421225350691284,
+      "n_timesteps": 756688,
+      "n_positive": 5473,
+      "patient_max_mean": 0.014052551813381987,
+      "patients": 20000,
+      "timesteps": 756688,
+      "positive_timesteps": 5473,
+      "positive_patients": 919,
+      "left_censored": 223,
+      "median_length": 38.0
+    },
+    "patients": 20000,
+    "cache": {
+      "cohort": "B_lead6",
+      "path": "/data/lab/EAAI1028-data/cache/B_lead6__prefix_lr__s1.npz"
+    }
+  }
+}

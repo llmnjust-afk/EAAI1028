@@ -48,8 +48,9 @@ python3 scripts/audit_official2012.py  # optional network QC, all 4000 set-A rec
 ```
 
 The GRU needs optional PyTorch; its tests skip when PyTorch is absent. The
-reference GRU currently trains on CPU, not CUDA. External deep-model adapters
-and a measured full-experiment GPU-hour budget have not been supplied.
+reference GRU now accepts `--device cuda`; the reported 2019 runs used an
+RTX 4090. It remains a reference masked GRU, not a GRU-D reproduction, and no
+formal GPU-hour budget has been measured.
 
 E0 draws a synthetic heterogeneous cohort, evaluates a fixed threshold grid,
 and repeatedly partitions that cohort into calibration and test patients:
@@ -76,6 +77,32 @@ is **-1, a sentinel, never the last loss-matrix column**. E0/E2 explicitly evalu
 zero fallback losses. E0 JSON uses `null` when the median threshold is infinite.
 Raw loss values outside `[0,L_max]` are rejected instead of clipped. Optional
 isotonic output is diagnostic only and never replaces the raw certificate.
+
+## Real-cohort status (2019 A/B)
+
+All 40,336 public 2019 records were downloaded and checksum-verified. The
+completed summaries are in `code/experiment_results/`; raw records and score
+caches remain outside the repository.
+
+- **E1 (score discrimination).** Prefix logistic, three seeds: A-test AUROC
+  $0.7356\pm0.0133$, AUPRC $0.0343\pm0.0058$; B external AUROC
+  $0.6761\pm0.0052$, AUPRC $0.0172\pm0.0002$. Masked GRU, three seeds:
+  A-test $0.7434\pm0.0108$ / $0.0428\pm0.0048$; B external
+  $0.6829\pm0.0042$ / $0.0183\pm0.0016$. A seed-0 patient bootstrap does not
+  establish a significant GRU advantage on A (AUROC difference 0.0039, 95\%
+  interval $[-0.0233,0.0316]$).
+- **E2 (budgeted policies).** With A-only calibration and a 24-hour minimum
+  observed stay, prefix logistic at 1 alarm/patient-day reaches A sensitivity
+  0.585 (three-seed mean) but B sensitivity 0.315; the A-derived threshold is
+  therefore not transportable without target calibration. At the tightest
+  budget (0.25/day), mean A sensitivity is 0.185 and B sensitivity 0.081.
+  The deliberately invalid timestep comparator is less conservative at tight
+  budgets but is not a coverage-rate study.
+- **Limits.** These are retrospective, record-disjoint experiments on one public
+  challenge cohort with a fixed scorer grid. They are not clinical validation,
+  do not establish alert fatigue reduction, and do not include target-site
+  recalibration, subgroup/sparsification analyses or the official 2019 utility
+  scorer. The GRU E2 sweep is seed 0 only.
 
 ## Data conventions and limits
 
@@ -136,12 +163,12 @@ caches and downstream results**; changing the code cannot repair scores already
 computed using future information. Cache format version 2 validates shapes,
 lengths, onset metadata and finite valid scores.
 
-Not implemented/completed: external architecture adapters, the complete multi-seed
-clinical training grid, the official 2019 challenge utility scorer, full cross-site
-and external-task experiments, observation-sparsification/subgroup study drivers,
-and real-cohort results. MIMIC demo processing is not present. The E2 module is
-a generic cached-score budget sweep, not a completed A→B/A→C transfer study.
-No clinical superiority, submission status or measured 45-GPU-hour result is claimed.
+Not implemented/completed: target-site recalibration, external architecture
+adapters, the official 2019 challenge utility scorer, 2012 same-task transfer,
+observation-sparsification and subgroup study drivers, and MIMIC processing.
+The E2 A→B experiment is complete for the reference scorers, but it is not an
+A→C study and does not establish clinical superiority. No measured 45-GPU-hour
+result, deployment claim or submission status is claimed.
 
 Corrected synthetic outputs for seeds 0, 1 and 2 are under `code/audit_results/`.
 They remain finite-cohort diagnostics, including cases where certification is

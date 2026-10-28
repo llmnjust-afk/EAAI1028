@@ -26,6 +26,7 @@ class PatientRecord:
     length: int
     onset_index: int | None
     static: np.ndarray
+    variables: tuple[str, ...] = ()
 
     def loss_mask(self) -> np.ndarray:
         return np.ones(self.length, dtype=bool)
@@ -42,8 +43,18 @@ def _clock(frame: pd.DataFrame) -> np.ndarray:
 
 def harmonise(frame: pd.DataFrame,
               variables: tuple[str, ...] = CHALLENGE_2019_DYNAMIC,
-              label_column: str = CHALLENGE_2019_LABEL) -> PatientRecord:
-    """Reindex a patient frame onto its hourly clock and build mask/delta tensors."""
+              label_column: str = CHALLENGE_2019_LABEL,
+              label_lead_hours: int = 0) -> PatientRecord:
+    """Reindex a patient frame onto its hourly clock and build mask/delta tensors.
+
+    ``onset_index`` is the first step at which ``label_column`` is positive. The
+    2019 challenge sets that label six hours before clinical onset, so pass
+    ``label_lead_hours=6`` to recover the clinical event time; the default keeps
+    the label convention used by most published baselines so that lead times
+    remain comparable across papers. With the shift, an onset may fall at or
+    beyond the last observed step, which means the event coincides with
+    discharge; such records are removed by :func:`eaai.data.splits.purge`.
+    """
     clock = _clock(frame)
     horizon = int(clock.max()) + 1
     grid = np.full(horizon, -1, dtype=int)
@@ -72,7 +83,7 @@ def harmonise(frame: pd.DataFrame,
         labels = pd.to_numeric(frame[label_column], errors="coerce").to_numpy()
         hits = np.flatnonzero(np.nan_to_num(labels, nan=0.0) >= 1)
         if hits.size:
-            onset = int(clock[hits[0]])
+            onset = int(clock[hits[0]]) + int(label_lead_hours)
 
     static_names = ("Age", "Gender", "Unit1", "Unit2", "HospAdmTime")
     static = np.array([float(pd.to_numeric(frame[c], errors="coerce").iloc[0])
@@ -80,7 +91,8 @@ def harmonise(frame: pd.DataFrame,
     static = np.nan_to_num(static, nan=0.0)
 
     return PatientRecord(values=raw, mask=mask, delta=delta, length=horizon,
-                         onset_index=onset, static=static)
+                         onset_index=onset, static=static,
+                         variables=tuple(variables))
 
 
 def pad_records(records: list[PatientRecord]) -> dict:
@@ -107,9 +119,10 @@ def pad_records(records: list[PatientRecord]) -> dict:
         lengths[i] = r.length
         onset[i] = -1 if r.onset_index is None else r.onset_index
 
+    variables = records[0].variables if records else ()
     return {"values": values, "mask": mask, "delta": delta, "valid": valid,
             "static": static, "lengths": lengths, "onset": onset,
-            "variables": list(CHALLENGE_2019_DYNAMIC)}
+            "variables": list(variables)}
 
 
 def summarise(record: PatientRecord) -> dict:

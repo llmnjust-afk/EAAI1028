@@ -39,12 +39,18 @@ def four_way(n: int, ratios: tuple[float, float, float, float] = (0.60, 0.15, 0.
 
 def purge(index: np.ndarray, onset: np.ndarray, lengths: np.ndarray,
           gap_hours: int = 12) -> np.ndarray:
-    """Drop patients whose onset falls inside the purge gap of the partition.
+    """Drop patients whose event falls inside the final ``gap_hours`` of follow-up.
 
-    ``onset`` holds -1 for patients without an event; ``lengths`` is the record
-    length in hours. A patient is kept when the event either does not occur or
-    occurs at least ``gap_hours`` before the end of the record, so that the
-    pre-onset window is fully observed.
+    This is a censoring guard, not a leakage guard. Because every partition here
+    is made on patient identifiers, a patient's own hours can never appear on
+    both sides of a split; the label horizon does not create leakage either,
+    since the horizon sits inside the same record. What does bias the estimate is
+    truncation: when onset lands a few hours before discharge, the post-onset
+    trajectory is almost entirely unobserved and the patient's alarm rate is
+    driven by a handful of steps. Such patients are excluded, and the exclusion
+    is applied to every partition identically.
+
+    ``onset`` holds -1 for patients without an event.
     """
     index = np.asarray(index)
     keep = (onset[index] < 0) | (onset[index] <= lengths[index] - gap_hours)

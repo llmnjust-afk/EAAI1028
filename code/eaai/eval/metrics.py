@@ -39,13 +39,27 @@ def expected_calibration_error(y_true: np.ndarray, y_prob: np.ndarray,
 
 
 def calibration_slope(y_true: np.ndarray, y_prob: np.ndarray) -> float:
-    """Slope of the logistic recalibration of ``y_prob`` on ``y_true``."""
-    y_true = np.asarray(y_true, dtype=float).ravel()
+    """Cox calibration slope: the coefficient of ``logit(p)`` in a logistic fit.
+
+    A slope below one means the scores are over-confident, above one means they
+    are under-confident. The model is fitted by maximum likelihood rather than by
+    least squares, because the binary outcome makes the linear probability model
+    a different and unbounded estimator.
+    """
+    from sklearn.linear_model import LogisticRegression
+
+    y_true = np.asarray(y_true).astype(int).ravel()
+    y_prob = np.asarray(y_prob, dtype=float).ravel()
+    if np.unique(y_true).size < 2:
+        return float("nan")
+
     eps = 1e-6
-    logit = np.log(np.clip(y_prob, eps, 1 - eps) / (1 - np.clip(y_prob, eps, 1 - eps)))
-    design = np.column_stack([np.ones_like(logit), logit])
-    coef, *_ = np.linalg.lstsq(design, y_true, rcond=None)
-    return float(coef[1])
+    clipped = np.clip(y_prob, eps, 1.0 - eps)
+    logit = np.log(clipped / (1.0 - clipped)).reshape(-1, 1)
+    model = LogisticRegression(C=np.inf, solver="lbfgs", max_iter=1000,
+                               fit_intercept=True)
+    model.fit(logit, y_true)
+    return float(model.coef_[0, 0])
 
 
 def lead_time_hours(scores: Sequence[float], onset_index: int | None,
@@ -68,6 +82,8 @@ def net_benefit(y_true: np.ndarray, y_prob: np.ndarray, threshold: float) -> flo
     """Net benefit of treating at ``threshold`` (decision curve analysis)."""
     y_true = np.asarray(y_true).astype(int).ravel()
     y_prob = np.asarray(y_prob, dtype=float).ravel()
+    if not 0.0 < threshold < 1.0:
+        raise ValueError("threshold must lie strictly between zero and one")
     n = y_true.size
     tp = np.sum((y_prob >= threshold) & (y_true == 1))
     fp = np.sum((y_prob >= threshold) & (y_true == 0))

@@ -102,12 +102,26 @@ def alarms_per_day(alarms: np.ndarray, length_hours: float,
 
 
 def max_alarms_per_day(refractory: int, step_hours: float = 1.0,
-                       hours_per_day: float = HOURS_PER_DAY) -> float:
-    """Tight upper bound on alarms per day for a policy with a refractory window.
+                       hours_per_day: float = HOURS_PER_DAY,
+                       min_stay_hours: float = 24.0) -> float:
+    """Upper bound on alarms per patient-day for a policy with a refractory window.
 
-    A policy cannot fire more often than once every ``refractory + 1`` steps,
-    so with hourly sampling and ``refractory = 4`` the bound is 5 rather than
-    24. This constant is the ``L_max`` used by the conformal slack.
+    A policy cannot fire more often than once every ``refractory + 1`` steps, so
+    the rate is at most ``24 / (refractory + 1)`` for a long stay. Short stays
+    are the binding case: a six-hour stay permits two alarms, which is eight
+    alarms per day, while a 24-hour stay permits only five. The supremum is
+    therefore taken over every admissible stay length rather than evaluated at
+    one day, which is why ``min_stay_hours`` is a required modelling decision.
+
+    Pass the shortest admissible length of stay for the cohort. Records shorter
+    than that must be excluded before calibration, otherwise the per-patient
+    loss can exceed ``L_max`` and the conformal slack is invalid.
     """
-    steps_per_day = hours_per_day / step_hours
-    return float(np.ceil(steps_per_day / (refractory + 1)))
+    horizon = max(hours_per_day, 10.0 * hours_per_day) if min_stay_hours <= hours_per_day else 10.0 * min_stay_hours
+    grid = np.arange(max(min_stay_hours, step_hours), horizon + 1e-9, step_hours)
+    if grid.size == 0:
+        grid = np.array([max(min_stay_hours, step_hours)], dtype=float)
+
+    steps = np.maximum(np.floor(grid / step_hours).astype(int), 1)
+    n_alarms = np.floor((steps - 1) / (refractory + 1)).astype(int) + 1
+    return float(np.max(n_alarms * hours_per_day / grid))

@@ -61,7 +61,10 @@ def evaluate_at_budget(scores: list[np.ndarray], onset: np.ndarray,
             fired = run_policy(seq, AlarmPolicy(float(threshold), refractory, escalation))
             per_day[i, k] = float(np.count_nonzero(fired)) * HOURS_PER_DAY / hours
 
-    l_max = max_alarms_per_day(refractory, step_hours=step_hours)
+    l_max = max_alarms_per_day(refractory, step_hours=step_hours,
+                               min_stay_hours=float(np.min(lengths)) * step_hours)
+    if per_day.max() > l_max + 1e-9:
+        raise AssertionError("per-patient loss exceeds L_max; declare the minimum stay")
     calibrator = BlockedConformalCalibrator(budget=budget, alpha=alpha, slack=slack)
     calibrator.fit(per_day[calibration], thresholds, l_max)
 

@@ -3,6 +3,7 @@ import numpy as np
 from eaai.data.harmonize import pad_records
 from eaai.data.synthetic import make_scores
 from eaai.scores.baselines import MaskedGRU, PrefixFeatureModel, _prefix_features
+from eaai.scores.api import align_lengths
 from eaai.scores.labels import event_labels, valid_steps
 
 
@@ -79,3 +80,11 @@ def test_pad_records_roundtrip_feeds_the_baselines():
     assert labels.shape == matrix.shape
     model = PrefixFeatureModel().fit(batch, labels)
     assert np.isfinite(model.predict(batch)[0, :3]).all()
+
+
+def test_align_lengths_accepts_ragged_sequences():
+    seqs = [np.array([0.1, 0.2, 0.3]), np.array([0.4, 0.5])]
+    out = align_lengths(seqs, np.array([3, 2]))
+    assert out.shape == (2, 3)
+    assert out[0].tolist() == [0.1, 0.2, 0.3]
+    assert np.isnan(out[1, 2])

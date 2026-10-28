@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from .harmonize import PatientRecord, harmonise, pad_records
@@ -36,7 +37,15 @@ def load_challenge2019(root: str | Path, subset: str = "A",
 
 def load_challenge2012(root: str | Path, subset: str = "a",
                        limit: int | None = None) -> list[tuple[str, pd.DataFrame]]:
-    """Load one subset of the 2012 cohort (mortality task)."""
+    """Load one subset of the 2012 cohort (mortality task).
+
+    Each record is a single file with a header row and one row per hour, so the
+    header must be parsed rather than skipped; ``-1`` marks a missing
+    observation and is mapped to NaN here. ``ICULOS`` is present and supplies the
+    hourly clock. There is no onset time in this cohort, so ``harmonise`` leaves
+    ``onset_index`` as ``None`` and the record can only be used for the
+    mortality-transfer task, never for lead-time evaluation.
+    """
     folder = Path(root) / f"set-{subset.lower()}"
     if not folder.is_dir():
         raise FileNotFoundError(f"{folder} not found; download the 2012 cohort from PhysioNet")
@@ -45,7 +54,8 @@ def load_challenge2012(root: str | Path, subset: str = "a",
         files = files[:limit]
     frames = []
     for p in files:
-        frame = pd.read_csv(p, sep=",", header=None, na_values=["-1", "-1.0"])
+        frame = pd.read_csv(p, na_values=["-1", "-1.0"])
+        frame.columns = [str(c).strip() for c in frame.columns]
         frames.append((p.stem, frame))
     return frames
 
@@ -64,5 +74,33 @@ def build_2019_tensors(root: str | Path, subset: str = "A",
         ids.append(pid)
     batch = pad_records(records)
     batch["ids"] = ids
+    batch["subset"] = subset
+    return batch
+
+
+def build_2012_tensors(root: str | Path, subset: str = "a",
+                       limit: int | None = None,
+                       variables: tuple[str, ...] | None = None) -> dict:
+    """Load, harmonise and pad a 2012 subset into model-ready arrays.
+
+    ``SepsisLabel`` does not exist in this cohort, so every ``onset`` entry is
+    ``-1``. The outcome column is ``In-hospital_death`` and is returned
+    separately as ``mortality``.
+    """
+    from .schema import CHALLENGE_2012_VARIABLES
+
+    variables = variables or CHALLENGE_2012_VARIABLES
+    records: list[PatientRecord] = []
+    ids: list[str] = []
+    mortality: list[float] = []
+    for pid, frame in load_challenge2012(root, subset=subset, limit=limit):
+        records.append(harmonise(frame, variables=variables,
+                                 label_column="__absent__"))
+        ids.append(pid)
+        outcome = frame.get("In-hospital_death")
+        mortality.append(float(outcome.iloc[0]) if outcome is not None else float("nan"))
+    batch = pad_records(records)
+    batch["ids"] = ids
+    batch["mortality"] = np.asarray(mortality)
     batch["subset"] = subset
     return batch

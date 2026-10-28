@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from eaai.policy.alarm import (
     AlarmPolicy,
@@ -46,10 +47,23 @@ def test_alarms_per_day_scaling():
     assert alarms_per_day(fired, length_hours=12) == 4.0
 
 
-def test_max_alarms_per_day_is_tighter_than_sampling_rate():
+def test_max_alarms_per_day_bounds_every_admissible_stay():
     assert max_alarms_per_day(0) == 24.0
-    assert max_alarms_per_day(4) == 5.0
-    assert max_alarms_per_day(11) == 2.0
+    assert max_alarms_per_day(11) == pytest.approx(3 * 24 / 25)
+
+    l_max = max_alarms_per_day(4, min_stay_hours=24)
+    assert l_max == pytest.approx(6 * 24 / 26)
+    assert l_max > 5.0, "the bound must cover the 26-hour stay, not just the 24-hour one"
+
+    for stay in range(24, 240):
+        policy = AlarmPolicy(0.0, refractory=4)
+        fired = run_policy(np.zeros(stay), policy)
+        assert np.count_nonzero(fired) * 24.0 / stay <= l_max + 1e-12
+
+
+def test_short_stays_raise_the_bound():
+    assert max_alarms_per_day(4, min_stay_hours=6) == pytest.approx(8.0)
+    assert max_alarms_per_day(4, min_stay_hours=6) > max_alarms_per_day(4, min_stay_hours=24)
 
 
 def test_invalid_configuration_rejected():

@@ -17,7 +17,7 @@ main.tex              manuscript (elsarticle, single column)
 sections/             one file per section
 refs.bib              bibliography
 code/eaai/            reference implementation
-code/tests/           56 unit tests, no data required
+code/tests/           66 unit tests, no data required
 code/scripts/         command-line entry points
 ```
 
@@ -41,11 +41,13 @@ code/scripts/         command-line entry points
 ```bash
 cd code
 python3 -m pip install -r requirements.txt
-python3 -m pytest tests -q          # 56 passed
+python3 -m pytest tests -q          # 66 passed
 python3 scripts/run_e0.py           # certification benchmark, ~20 s on CPU
 ```
 
-`run_e0.py` is the experiment that needs no clinical data and no GPU. It draws a
+`run_e0.py` is the experiment that needs no clinical data and no GPU. It uses a
+60-point threshold grid for speed; the reported quantities move only through
+`log|Λ|`, so the grid resolution changes the slack by a few percent. It draws a
 synthetic cohort with patient-level heterogeneity, calibrates under a fixed
 budget, and reports two quantities that must not be conflated:
 
@@ -55,21 +57,39 @@ budget, and reports two quantities that must not be conflated:
 | `P(pt>B)` | how often an individual patient exceeds the budget — a diagnostic only |
 
 Representative output at a budget of 1 alarm per patient-day, refractory window
-4 h, `alpha = 0.05`:
+4 h, 4000 patients, 200 random splits (`L_max = 5.54`, the 26-hour supremum):
 
 ```
-procedure           n_cal  P(mean>B)  P(pt>B)  rate/B
-blocked_bernstein     100     0.000    0.016   0.082
-blocked_bernstein     800     0.000    0.292   0.750
-blocked_hoeffding     800     0.000      --      --
-timestep_naive        200     0.540    0.393   0.982
+procedure           n_cal  alpha  P(mean>B)           95% CI  P(pt>B)  rate/B   slack
+blocked_bernstein     100   0.05      0.000  [0.000, 0.019]    0.016   0.082   1.108
+blocked_bernstein     800   0.05      0.000  [0.000, 0.019]    0.285   0.734   0.243
+blocked_hoeffding     800   0.05      0.000  [0.000, 0.019]    0.220   0.596   0.386
+timestep_naive        100   0.05      0.430  [0.363, 0.499]    0.383   0.960   0.020
+timestep_naive        800   0.05      0.235  [0.182, 0.298]    0.382   0.956   0.020
 ```
 
-Two readings matter. Blocked calibration is valid at every calibration size and
-becomes less conservative as the calibration set grows, which is the expected
-finite-sample trade-off. The timestep-level shortcut that prior work uses
-exceeds the budget in roughly half of deployments while looking well calibrated
-on average, which is the failure this paper is about.
+Three readings matter. Blocked calibration never exceeds the budget at any
+calibration size, and it becomes less conservative as the calibration set grows,
+which is the expected finite-sample trade-off. The first row also shows the cost
+of that guarantee: at `n_cal = 100` the slack alone (1.108) exceeds the budget
+of one alarm per day, so the certificate is vacuous and the policy suppresses
+almost every alarm. A procedure can be valid and useless at the same time, which
+is why `rate/B` is reported next to the violation frequency rather than instead
+of it. The timestep shortcut uses the
+*same* point estimator and differs only in treating the ~72 dependent steps per
+patient as independent, so its guard band is 12 times narrower than the correct
+one at equal calibration data; it then sits at 96% of budget with no margin and
+breaks its own nominal level in 23% of deployments at `n_cal = 800` and 43% at
+`n_cal = 100`. A second seed gives 9–35%, so the exact fraction is a function of
+grid resolution and calibration size. That is the point: the shortcut certifies
+nothing, so the violation rate is whatever the discretisation happens to give,
+while the blocked procedure is valid by construction.
+
+`P(pt>B)` is the diagnostic that must not be confused with the guarantee. It
+rises with the calibration set because a sharper threshold concentrates alarms
+on genuinely unstable patients, whose own rate then exceeds the average budget.
+A bound on the mean says nothing about that tail, and the code reports it
+separately for exactly that reason.
 
 ## Data
 

@@ -61,6 +61,7 @@ class BlockedConformalCalibrator:
     slack: str = "bernstein"
     smooth: bool = True
     threshold_: float | None = field(default=None, init=False)
+    feasible_: bool = field(default=False, init=False)
     diagnostics_: dict = field(default_factory=dict, init=False)
 
     def fit(self, losses: np.ndarray, lambdas: np.ndarray,
@@ -89,6 +90,11 @@ class BlockedConformalCalibrator:
         if not 0.0 < self.alpha < 1.0:
             raise ValueError("alpha must lie in (0, 1)")
 
+        if l_max <= 0:
+            raise ValueError("l_max must be positive")
+        n_clipped = int(np.count_nonzero(losses > l_max))
+        losses = np.minimum(losses, l_max)
+
         empirical = losses.mean(axis=0)
         if self.smooth:
             isotonic = IsotonicRegression(increasing=False, out_of_bounds="clip")
@@ -101,6 +107,7 @@ class BlockedConformalCalibrator:
         certified = smoothed + slack
         feasible = np.flatnonzero(certified <= self.budget)
 
+        self.feasible_ = bool(feasible.size)
         if feasible.size == 0:
             index = lambdas.shape[0] - 1
         else:
@@ -115,6 +122,8 @@ class BlockedConformalCalibrator:
             "certified_risk": float(certified[index]),
             "n_patients": int(losses.shape[0]),
             "n_feasible": int(feasible.size),
+            "feasible": bool(feasible.size),
+            "n_clipped": n_clipped,
             "budget": float(self.budget),
             "alpha": float(self.alpha),
             "l_max": float(l_max),
@@ -135,20 +144,58 @@ class BlockedConformalCalibrator:
 
 
 class TimestepConformalCalibrator:
-    """The invalid baseline: calibrate as if timesteps were exchangeable.
+    """The invalid baseline: count timesteps as independent calibration units.
 
-    Included only to quantify how far the resulting alarm rate drifts from the
-    nominal level. It should not be used for deployment.
+    The point estimator is identical to :class:`BlockedConformalCalibrator`, so
+    the only difference is the sample size entering the finite-sample slack.
+    A timestep-level procedure treats the ``N`` dependent observations as ``N``
+    independent draws, which shrinks the guard band by roughly
+    ``sqrt(N / n_patients)`` relative to the correct one. That shrinkage, not the
+    estimator, is what breaks the budget.
+
+    Included only to quantify the drift. It should not be used for deployment.
     """
 
-    def __init__(self, alpha: float = 0.1) -> None:
+    def __init__(self, budget: float = 1.0, alpha: float = 0.1) -> None:
+        self.budget = budget
         self.alpha = alpha
         self.threshold_: float | None = None
+        self.diagnostics_: dict = {}
 
-    def fit(self, timestep_losses: np.ndarray, lambdas: np.ndarray) -> "TimestepConformalCalibrator":
-        """Certify a threshold on pooled timestep losses of shape ``(n_steps, n_thresholds)``."""
-        empirical = np.asarray(timestep_losses, dtype=float).mean(axis=0)
-        order = np.argsort(empirical)
-        rank = max(int(np.ceil((1.0 - self.alpha) * order.size)) - 1, 0)
-        self.threshold_ = float(np.asarray(lambdas)[order[rank]])
+    def fit(self, losses: np.ndarray, lambdas: np.ndarray, n_steps: int,
+            l_max: float) -> "TimestepConformalCalibrator":
+        """Select a threshold using ``n_steps`` as the effective sample size.
+
+        ``losses`` are per-patient per-day losses of shape
+        ``(n_patients, n_thresholds)``, exactly as for the blocked calibrator, so
+        that the two procedures differ only in the slack. ``n_steps`` is the
+        total number of observations the analyst believes to be independent,
+        i.e. the sum of record lengths.
+        """
+        losses = np.asarray(losses, dtype=float)
+        lambdas = np.asarray(lambdas, dtype=float)
+        if losses.ndim != 2 or losses.shape[1] != lambdas.size:
+            raise ValueError("losses must be (n_patients, n_thresholds)")
+        if n_steps < 2:
+            raise ValueError("n_steps must be at least two")
+        if not 0.0 < self.alpha < 1.0:
+            raise ValueError("alpha must lie in (0, 1)")
+
+        losses = np.minimum(losses, l_max)
+        empirical = losses.mean(axis=0)
+        slack = l_max * np.sqrt(np.log(2.0 * lambdas.size / self.alpha) / (2.0 * n_steps))
+        certified = empirical + slack
+        feasible = np.flatnonzero(certified <= self.budget)
+        index = int(feasible[0]) if feasible.size else lambdas.size - 1
+
+        self.threshold_ = float(lambdas[index])
+        self.diagnostics_ = {
+            "index": index,
+            "empirical_risk": float(empirical[index]),
+            "slack": float(slack),
+            "certified_risk": float(certified[index]),
+            "n_steps": int(n_steps),
+            "n_feasible": int(feasible.size),
+            "effective_n_inflation": float(n_steps / losses.shape[0]),
+        }
         return self

@@ -56,9 +56,23 @@ class ScoreCache:
             return {k: data[k] for k in ("scores", "onset", "lengths")}
 
 
-def align_lengths(scores: np.ndarray, lengths: np.ndarray,
+def align_lengths(scores, lengths: np.ndarray,
                   horizon: int | None = None) -> np.ndarray:
-    """Pad or trim a score matrix to a common horizon, filling with NaN."""
+    """Pad or trim score sequences to a common horizon, filling with NaN.
+
+    Accepts either a dense matrix or a list of per-patient sequences, which is
+    what the policy layer produces and what the cache stores.
+    """
+    lengths = np.asarray(lengths, dtype=int).ravel()
+    if isinstance(scores, (list, tuple)):
+        width = int(horizon or (lengths.max() if lengths.size else 0))
+        out = np.full((len(scores), width), np.nan)
+        for i, seq in enumerate(scores):
+            seq = np.asarray(seq, dtype=float).ravel()
+            take = min(int(lengths[i]), width, seq.size)
+            out[i, :take] = seq[:take]
+        return out
+
     scores = np.asarray(scores, dtype=float)
     if scores.ndim == 1:
         scores = scores[None, :]

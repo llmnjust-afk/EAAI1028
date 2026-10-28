@@ -129,7 +129,7 @@ def sirs(frame: pd.DataFrame) -> np.ndarray:
     hr_pts = _points(hr > 90, 1)
     resp_pts = _points((resp > 20) | (paco2 < 32), 1)
     wbc_pts = _points((wbc > 12.0) | (wbc < 4.0), 1)
-    return _sum([temp_pts, hr_pts, resp_pts, wbc_pts], [temp, hr, resp, wbc])
+    return _sum([temp_pts, hr_pts, resp_pts, wbc_pts], [temp, hr, resp, paco2, wbc])
 
 
 def sofa(frame: pd.DataFrame) -> np.ndarray:

@@ -105,3 +105,19 @@ def test_bootstrap_ci_brackets_the_mean():
     point, lo, hi = bootstrap_ci(values, seed=1)
     assert lo < point < hi
     assert lo < 5.0 < hi
+
+
+def test_calibration_slope_detects_overconfidence():
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=4000)
+    latent = 2.0 * x
+    y = rng.random(size=x.size) < 1.0 / (1.0 + np.exp(-latent))
+    honest = 1.0 / (1.0 + np.exp(-latent))
+    over = 1.0 / (1.0 + np.exp(-2.0 * latent))
+    assert calibration_slope(y, honest) == pytest.approx(1.0, abs=0.12)
+    assert calibration_slope(y, over) == pytest.approx(0.5, abs=0.08)
+
+
+def test_net_benefit_rejects_degenerate_thresholds():
+    with pytest.raises(ValueError):
+        net_benefit(np.array([0, 1]), np.array([0.2, 0.8]), 1.0)

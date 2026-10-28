@@ -1,10 +1,12 @@
 # Alert-Budgeted Clinical Early Warning
 
-Draft manuscript and reference implementation for **Alert-Budgeted Clinical
+Manuscript and reference implementation for **Alert-Budgeted Clinical
 Early Warning: Conformal Risk Control for Stateful Deterioration Alarm Policies**,
 with *Engineering Applications of Artificial Intelligence* as the intended venue.
-This is **not a submitted paper or a completed clinical reproduction**: real-data
-comparative experiments, results, discussion and conclusion remain incomplete.
+This is **not a submitted paper or a clinical validation**. The real-data
+comparative experiments and manuscript are complete for the documented scope;
+clinical effectiveness, alert-fatigue reduction and deployment readiness are not
+claimed.
 
 The implemented statistical procedure is a **patient-blocked finite-grid upper
 confidence bound**, using Hoeffding or empirical-Bernstein concentration. It is
@@ -17,7 +19,7 @@ Patient exchangeability alone does not justify this concentration proof.
 ## Contents and implemented components
 
 ```
-main.tex                 single-column elsarticle draft
+main.tex                 single-column elsarticle manuscript
 sections/                manuscript sections; method split into reviewable parts
 refs.bib                 bibliography
 code/eaai/policy/         causal stateful alarm and upper-confidence selectors
@@ -143,7 +145,7 @@ variable is consumed by the implementation.
   observation, including at missing hours. Post-onset and padded training targets
   are NaN and excluded from the loss, rather than treated as negative examples.
 
-## Baselines, cache compatibility and remaining work
+## Baselines, cache compatibility and scope limits
 
 The package provides prefix logistic regression (optional LightGBM) and a
 **causal unidirectional** masked GRU. Perturbing future observations is tested
@@ -163,8 +165,8 @@ caches and downstream results**; changing the code cannot repair scores already
 computed using future information. Cache format version 2 validates shapes,
 lengths, onset metadata and finite valid scores.
 
-Not implemented/completed: target-site recalibration, external architecture
-adapters, the official 2019 challenge utility scorer, 2012 same-task transfer,
+Not implemented: target-site recalibration, external architecture adapters,
+the official 2019 challenge utility scorer, 2012 same-task transfer,
 observation-sparsification and subgroup study drivers, and MIMIC processing.
 The E2 A→B experiment is complete for the reference scorers, but it is not an
 A→C study and does not establish clinical superiority. No measured 45-GPU-hour

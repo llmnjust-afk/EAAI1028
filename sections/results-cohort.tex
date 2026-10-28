@@ -1,0 +1,44 @@
+\subsection{Cohort Audit and Score Discrimination}
+
+The public cohort is large enough to estimate patient-level alarm rates, but its measurement process is far from uniform. Table~\ref{tab:cohort} shows that site A has a higher positive-record fraction than site B (8.8\% versus 5.7\%), while both sites contain a non-trivial number of left-censored records whose first label is already positive. The observed-variable table also explains why a naive cross-site model can fail: EtCO$_2$ is entirely absent at A but present in 7.6\% of B records, and temperature is observed in only about one third of either cohort. A model that drops an all-missing training column would therefore change its input dimension at the external site; the implementation retains such a column as a constant during imputation and the regression test in the repository checks this case explicitly.
+
+\begin{table}[tb]
+\centering
+\caption{Public 2019 cohort audit after downloading and checksum verification. Percentages for observed variables are the fraction of records with at least one non-missing value. The two sites are separate hospital systems.}
+\label{tab:cohort}
+\begin{tabular}{lrr}
+\toprule
+Quantity & Site A & Site B \\
+\midrule
+Records & 20{,}336 & 20{,}000 \\
+Positive records & 1{,}790 & 1{,}142 \\
+Left-censored records & 203 & 223 \\
+Identifiable pre-onset events & 1{,}587 & 919 \\
+Median observed stay (h) & 39 & 38 \\
+EtCO$_2$ observed (\%) & 0.0 & 7.6 \\
+Temperature observed (\%) & 33.8 & 33.9 \\
+Lactate observed (\%) & 3.4 & 1.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:discrimination} reports three-seed score discrimination. The prefix logistic model reaches an A-test AUROC of $0.736\pm0.013$ and AUPRC of $0.034\pm0.006$; the masked GRU reaches $0.743\pm0.011$ and $0.043\pm0.005$. These AUPRC values must be read against the 1.27\% positive-timestep prevalence: both models rank positive steps several times better than chance, but the absolute positive predictive signal remains modest. On site B the logistic model falls to $0.676\pm0.005$ AUROC and $0.017\pm0.000$ AUPRC, while the GRU reaches $0.683\pm0.004$ and $0.018\pm0.002$. Ten-bin ECE is small in absolute terms (0.0011 and 0.0017 at A; 0.0014 and 0.0018 at B), but it is descriptive and should not be read as evidence of clinical calibration under shift. The drop is consistent with multisite sepsis-model evaluations that report degraded transport across hospitals \citep{valan2025evaluating,ostermayer2024external}, and it is larger in AUPRC than in AUROC because prevalence also changes.
+
+\begin{table}[tb]
+\centering
+\caption{Three-seed score discrimination (mean $\pm$ sample standard deviation). AUPRC is computed over usable pre-onset timesteps; positive-timestep prevalence is 1.27\% at A and 0.72\% at B. Ten-bin ECE is reported in the text and is descriptive.}
+\label{tab:discrimination}
+\small
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{Site A test} & \multicolumn{2}{c}{Site B external} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Model & AUROC & AUPRC & AUROC & AUPRC \\
+\midrule
+Prefix logistic & $0.736\pm0.013$ & $0.034\pm0.006$ & $0.676\pm0.005$ & $0.0172\pm0.0002$ \\
+Masked GRU & $0.743\pm0.011$ & $0.043\pm0.005$ & $0.683\pm0.004$ & $0.0183\pm0.0016$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The seed-0 patient bootstrap sharpens the comparison without turning a small numerical difference into a claim. At site A the logistic model has AUROC $0.741$ with 95\% interval $[0.710,0.766]$ and AUPRC $0.041$ with interval $[0.035,0.051]$; the GRU has AUROC $0.744$ $[0.716,0.772]$ and AUPRC $0.044$ $[0.038,0.056]$. The paired GRU-minus-logistic difference is $0.004$ for AUROC with interval $[-0.023,0.032]$ and two-sided $p=0.775$, and $0.003$ for AUPRC with interval $[-0.006,0.014]$ and $p=0.42$. The GRU is therefore a secondary architecture check, not a demonstrated improvement. At site B the AUROC difference is essentially zero, while the AUPRC difference is $0.003$ with interval $[0.0002,0.0059]$ and $p=0.05$; this isolated interval is reported as exploratory because it is not corrected across metrics or sites.

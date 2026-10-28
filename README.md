@@ -103,11 +103,29 @@ caches remain outside the repository.
   The masked GRU reaches 0.684 at A and 0.375 at B at 1/day over three seeds,
   with a higher B alarm rate (0.328 versus 0.276); it is a secondary check, not
   a demonstrated improvement.
+- **E1 LightGBM.** Three seeds reach A-test AUROC $0.763\pm0.009$ and
+  AUPRC $0.042\pm0.004$, with B external AUROC $0.713\pm0.003$ and AUPRC
+  $0.0250\pm0.0010$. The tree model narrows, but does not remove, the transport
+  gap.
+- **E2 LightGBM.** At 1/day it reaches A sensitivity $0.661\pm0.042$ at rate
+  $0.655\pm0.147$ and B sensitivity $0.540\pm0.071$ at rate $0.410\pm0.156$.
+  The B gain over the blocked logistic policy is $+0.081$ [$0.027$, $0.133$]
+  with Holm $p=0.066$, so it is not a decisive sensitivity advantage; the lower
+  alarm-rate difference ($-0.087$ [$ -0.105$, $ -0.069$]) has Holm $p=0.036$.
+- **Target label budget.** An oracle-style nested calibration curve on B shows
+  that about 10\% of target labels recover the 1/day full-pool sensitivity
+  ($0.497$ at 1,482 labelled patients versus $0.294$ with none); at 0.5/day the
+  curve is still improving at 50\%. Target labels are used, so this is a
+  diagnostic, not a deployable label-free method.
+- **Partial clinical instruments.** At 1/day, partial NEWS and SIRS beat the
+  blocked logistic policy on B sensitivity ($0.449$ and $0.424$ versus $0.315$)
+  but at much higher realised rates ($0.586$ and $0.493$ versus $0.276$);
+  qSOFA loses sensitivity. Only the qSOFA loss survives Holm correction.
 - **E2 target diagnostic.** An oracle-style target-site split of B (7,412 calibration
   and 7,412 test patients) raises B sensitivity at 1/day from 0.294 to 0.497
   but also raises the realised rate from 0.270 to 0.616. Target labels are used
   for threshold selection, so this is an oracle-style reference estimate, not a deployable label-free
-  procedure. The GRU target diagnostic is seed 0 only.
+  procedure. The GRU and target-budget diagnostics use the archived seed files in `code/experiment_results/round2/`; the target-budget curve is logistic-only.
 - **Limits.** These are retrospective, subject-disjoint experiments on one public
   challenge cohort with a fixed scorer grid. They are not clinical validation,
   do not establish alert fatigue reduction, and do not include label-free

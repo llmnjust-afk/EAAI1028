@@ -3,7 +3,7 @@
 
 Seed-to-seed standard deviations describe calibration variability, not sampling uncertainty on the target population. We therefore resample whole B subjects with replacement 2{,}000 times at the 1-per-day operating point and recompute sensitivity, realised rate and patient-violation fraction on each replicate. Resampling subjects rather than hours preserves the within-patient dependence that the calibration argument is built on. Table~\ref{tab:bootstrap} reports the seed-0 intervals and paired differences against the blocked prefix-logistic policy; Holm adjustment covers the six model--procedure rows and three metrics.
 
-\begin{table}[tb]
+\begin{table}[H]
 \centering
 \caption{Patient-block bootstrap at the 1-per-patient-day operating point on site B, seed 0, 2{,}000 resamples. Intervals are 95\% percentile intervals. $\Delta$Sens is the paired difference against the blocked prefix-logistic policy; $p_{\mathrm{Holm}}$ is adjusted across the reported rows and metrics. The global rows use a point-estimate threshold and are workload comparators, not certified policies.}
 \label{tab:bootstrap}

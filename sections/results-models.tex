@@ -3,7 +3,7 @@
 
 A budget curve is only as useful as the scores it ranks. Table~\ref{tab:model-comparison} therefore compares the three backbones at the 1-per-patient-day operating point, holding the policy family, support bound and threshold grid fixed. At site A the GRU has the highest mean sensitivity ($0.684\pm0.006$), followed by LightGBM ($0.661\pm0.042$) and the prefix logistic model ($0.585\pm0.020$). At site B the ordering changes: LightGBM reaches $0.540\pm0.071$, the GRU $0.375\pm0.078$, and the logistic model $0.315\pm0.062$. The LightGBM advantage is not a free lunch, because its B alarm rate is also higher ($0.410\pm0.156$ versus $0.276\pm0.063$ for logistic and $0.328\pm0.164$ for the GRU), but all three policies remain below the requested B budget of 1 per day. A stronger tabular scorer therefore narrows the transport gap without eliminating it.
 
-\begin{table}[tb]
+\begin{table}[H]
 \centering
 \caption{Backbone comparison at the 1-per-patient-day operating point, mean $\pm$ sample standard deviation over three seeds. The threshold is calibrated on site A and applied unchanged to site B. Rates are realised alarms per patient-day; the requested budget is 1.0. LightGBM is a stronger tabular baseline, not a tuned state-of-the-art model.}
 \label{tab:model-comparison}

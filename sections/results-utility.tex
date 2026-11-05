@@ -1,0 +1,30 @@
+\subsection{Official Utility and Decision-Curve Analysis}
+\label{sec:utility}
+
+Sensitivity under a rate budget does not encode the clinical cost of a false alarm. We therefore evaluate the same deployed policies with the official PhysioNet 2019 utility, which rewards a true alarm near the six-hour optimum, penalises a missed event and subtracts a fixed cost for each false alarm \citep{reyna2019early}. The score is normalised so that inactivity is zero and the oracle is one. For a patient-level decision curve we also report net benefit at threshold probabilities $p_t=0.05,0.10,0.20$, where net benefit is $\mathrm{sens}\cdot\pi-(1-\mathrm{spec})(1-\pi)p_t/(1-p_t)$ and $\pi$ is event prevalence.
+
+\begin{table}[tb]
+\centering
+\caption{Official 2019 utility and decision-curve net benefit on the A calibration split and the transported B evaluation. ``Utility'' is challenge-normalised (inactive $=0$, oracle $=1$); NB$_{0.10}$ is patient-level net benefit at $p_t=0.10$. At 0.25 per day CRC improves utility over the blocked certificate; at 1 per day the blocked selector is better because CRC buys sensitivity with false alarms.}
+\label{tab:utility}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccccc}
+\toprule
+ & & \multicolumn{2}{c}{Internal A} & \multicolumn{2}{c}{External B} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+Budget & Policy & Utility & NB$_{0.10}$ & Utility & NB$_{0.10}$ \\
+\midrule
+0.25 & Blocked & $0.502$ & $0.0206$ & $0.144$ & $0.0053$ \\
+0.25 & CRC & $0.687$ & $0.0244$ & $0.247$ & $0.0074$ \\
+0.25 & LTT & $0.550$ & $0.0229$ & $0.185$ & $0.0060$ \\
+1.00 & Blocked & $0.926$ & $0.0236$ & $0.284$ & $0.0053$ \\
+1.00 & CRC & $0.852$ & $0.0203$ & $0.154$ & $0.0007$ \\
+1.00 & LTT & $0.926$ & $0.0236$ & $0.284$ & $0.0053$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The official utility is not monotone in the requested budget. At 0.25 per day, CRC raises normalised utility from $0.502$ to $0.687$ at A and from $0.144$ to $0.247$ at B, because the blocked certificate leaves so much budget unused that the extra true alarms dominate the false-alarm cost. At 1 per day the ordering reverses: the blocked selector reaches $0.926$ at A and $0.284$ at B, whereas CRC falls to $0.852$ and $0.154$. CRC is optimising sensitivity subject to a rate constraint, not utility, and at the looser budget its additional alarms are mostly false. The decision curve tells the same story at $p_t=0.10$: CRC is better at 0.25 ($0.0244$ versus $0.0206$ at A; $0.0074$ versus $0.0053$ at B) and worse at 1.0 ($0.0203$ versus $0.0236$ at A; $0.0007$ versus $0.0053$ at B). At $p_t=0.20$ every policy has negative net benefit at B, so the clinical case for alarm-based screening weakens when the decision threshold is high.
+
+This tension is an engineering result, not a defect of either selector. A hospital that wants the greatest chance of catching an event under a hard alarm budget should use CRC at tight budgets; a hospital that wants to maximise the official utility at a looser budget should use the blocked selector or select among certified thresholds by utility. The certificate constrains the alarm rate, but it does not choose the point on the utility curve. Reporting both quantities prevents a sensitivity gain from being presented as a clinical improvement when it is purchased with false alarms that the utility penalises.

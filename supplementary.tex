@@ -1,0 +1,63 @@
+\documentclass[3p,times]{elsarticle}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{placeins}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\usepackage[capitalise,noabbrev]{cleveref}
+\usepackage{xr}
+\externaldocument{main}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+
+\biboptions{numbers,sort&compress}
+\setlength{\emergencystretch}{2em}
+\journal{Engineering Applications of Artificial Intelligence}
+
+\floatplacement{table}{H}
+\floatplacement{figure}{H}
+
+\begin{document}
+
+\begin{frontmatter}
+\title{Supplementary Material: Alert-Budgeted Clinical Early Warning}
+\author{Anonymous Author(s)}
+\begin{abstract}
+This supplement reports secondary analyses referenced from the main manuscript: target label cost, backbone and bootstrap comparisons, partial clinical-instrument baselines, target adaptation, ablations, and expected calibration error. It is intended to be read alongside the main text.
+\end{abstract}
+\end{frontmatter}
+
+\input{sections/supp-cohort}
+
+\input{sections/supp-target}
+
+\input{sections/supp-proofs}
+
+\section{Target Label Cost}
+\input{sections/results-label-budget}
+
+\section{Backbone and Bootstrap Comparisons}
+\input{sections/results-models}
+\input{sections/results-uncertainty}
+
+\section{Clinical-Instrument Baselines}
+\input{sections/results-clinical}
+
+\input{sections/supp-adaptation}
+
+\input{sections/supp-figure}
+
+\bibliographystyle{elsarticle-num}
+\bibliography{refs}
+
+\end{document}

@@ -14,6 +14,7 @@ Figure~\ref{fig:budget} and Table~\ref{tab:e2} report the operational frontier f
 \caption{E2 budget sweep for the prefix logistic scorer, mean $\pm$ sample standard deviation over three seeds. Rates are alarms per patient-day; lead time is the median among detected events in hours; violation is the fraction of test patients whose per-day count exceeds the budget. The 4-per-day row is at the threshold grid floor; in the full sweep it coincides with 8 per day.}
 \label{tab:e2}
 \small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
 \multicolumn{5}{c}{Site A (calibration/test)} \\
@@ -25,9 +26,10 @@ Budget & Rate & Sens. & Lead & Viol. \\
 2.00 & $1.366\pm0.026$ & $0.774\pm0.032$ & $10.0\pm0.0$ & $0.309\pm0.004$ \\
 4.00 & $2.096\pm0.026$ & $0.894\pm0.011$ & $10.0\pm0.0$ & $0.271\pm0.012$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 
 \vspace{6pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
 \multicolumn{5}{c}{Site B (external audit)} \\
@@ -39,36 +41,15 @@ Budget & Rate & Sens. & Lead & Viol. \\
 2.00 & $0.750\pm0.157$ & $0.557\pm0.051$ & $9.0\pm0.0$ & $0.163\pm0.038$ \\
 4.00 & $1.473\pm0.250$ & $0.724\pm0.049$ & $9.3\pm0.6$ & $0.131\pm0.025$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 The external audit exposes a qualitatively different operating point. At the 1-per-day budget the A-calibrated policy emits $0.276\pm0.063$ alarms per B patient-day, less than half the A rate, and detects $0.315\pm0.062$ of eligible B events compared with $0.585\pm0.020$ at A. At the tightest budget, B sensitivity falls to $0.081\pm0.026$ while the realised B alarm rate is only $0.040\pm0.014$. The direction of the rate change is not a free lunch: the same threshold is simply less active on the shifted score distribution, and the lost activity is concentrated on true events. This is exactly the failure mode that a threshold-only transport claim would hide, and it is consistent with recent evidence that score distributions and calibration can shift across hospitals \citep{lu2022estimating,wu2026outofdistribution}. A target-site adaptation step is therefore necessary before deployment, and the label-free rate-matching study below evaluates one such step without target labels.
 
-\begin{table}[tb]
-\centering
-\caption{Target-site recalibration diagnostic for the prefix logistic scorer, mean $\pm$ sample standard deviation over three source seeds. The target hospital is split 50/50 into subject-disjoint calibration and test halves; the calibration half uses target labels to select the threshold. Sensitivity and realised alarm rate are evaluated on the target test half (7,412 patients, about 337 events). This is an oracle-style target-calibrated reference estimate, not a deployable label-free procedure.}
-\label{tab:target}
-\small
-\begin{tabular}{lcccc}
-\toprule
- & \multicolumn{2}{c}{No recalibration} & \multicolumn{2}{c}{Target recalibrated} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-Budget & Sens. & Rate & Sens. & Rate \\
-\midrule
-0.25 & $0.073\pm0.026$ & $0.039\pm0.014$ & $0.218\pm0.036$ & $0.159\pm0.009$ \\
-0.50 & $0.173\pm0.074$ & $0.118\pm0.043$ & $0.358\pm0.031$ & $0.360\pm0.019$ \\
-1.00 & $0.294\pm0.082$ & $0.270\pm0.065$ & $0.497\pm0.022$ & $0.616\pm0.058$ \\
-2.00 & $0.544\pm0.072$ & $0.744\pm0.165$ & $0.724\pm0.056$ & $1.466\pm0.260$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The no-recalibration audit establishes that the source threshold does not travel, but it does not quantify how much of the loss is recoverable by adaptation. To estimate that quantity, we split target B into subject-disjoint calibration and test halves (7,412 patients each; on average 354 calibration events and 337 test events over three seeds), recalibrated the same policy family on B calibration labels, and evaluated it on the B test half. This is an oracle diagnostic: target labels are used for threshold selection, so it is not a deployable label-free procedure and must not be compared with the primary external audit as if it were one. Table~\ref{tab:target} reports the result for the logistic scorer. At 1 alarm per patient-day, target calibration raises mean B sensitivity from $0.294\pm0.082$ to $0.497\pm0.022$ and the realised rate from $0.270\pm0.065$ to $0.616\pm0.058$; at 0.25 per day it raises sensitivity from $0.073\pm0.026$ to $0.218\pm0.036$ at a realised rate of $0.159\pm0.009$. The recovery is real but partial, and it is purchased with a higher alarm load and a higher patient-violation fraction because the target-calibrated threshold is lower. The single-seed GRU diagnostic shows the same direction ($0.314$ to $0.493$ at 1 per day). At 2 per day the target-recalibrated selector hits the threshold-grid floor: sensitivity saturates at $0.724\pm0.056$ while the realised rate rises to $1.466\pm0.260$, so the diagnostic identifies a range where adaptation matters rather than a universal gain.
-
-
+To estimate how much of the transport loss is recoverable, we split target B into subject-disjoint calibration and test halves (7,412 patients each; about 354 calibration and 337 test events over three seeds) and recalibrate the same policy family on B labels. At 1 alarm per patient-day this oracle-style target calibration raises mean B sensitivity from $0.294\pm0.082$ to $0.497\pm0.022$ and the realised rate from $0.270\pm0.065$ to $0.616\pm0.058$; at 0.25 per day it raises sensitivity from $0.073\pm0.026$ to $0.218\pm0.036$. The recovery is real but partial and is purchased with a higher alarm load, so it identifies the value of target labels rather than a deployable procedure. The full table is in the supplement.
 
 The timestep comparator is a diagnostic, not a proposed method, and the repeated-split study in \cref{sec:coverage} changes how it should be read. In the single split it selects a lower threshold than the blocked certificate at some budgets and raises sensitivity, but its realised mean rate remained below the requested budget in all ten repeated splits on both sites. It behaves like the plug-in rule because its effective sample size is large. The defensible criticism is therefore not that the shortcut always violates the mean-rate constraint; it is that the shortcut supplies no patient-level guarantee, and at 1 per day its patient-violation fraction is $0.296$ versus $0.210$ for the blocked certificate. A mean-rate bound estimated from correlated hours cannot certify the patient-average estimand, even when the realised mean happens to stay below budget on one cohort.
 
-The GRU changes the level of the frontier but not its transport behaviour. At 1 alarm per patient-day its three-seed mean A sensitivity is $0.684\pm0.006$ and its B sensitivity is $0.375\pm0.078$, compared with $0.585\pm0.020$ and $0.315\pm0.062$ for the logistic model; the B alarm rate is also higher ($0.328\pm0.164$ versus $0.276\pm0.063$). At 0.25 per day the GRU reaches $0.301\pm0.082$ at A and $0.115\pm0.027$ at B, again above the logistic frontier. The GRU is therefore a secondary architecture check rather than a demonstrated improvement: its seed-level spread is large, its paired site-B sensitivity interval includes zero after Holm adjustment, and its external alarm rate is higher. LightGBM is stronger on site B but, as \cref{sec:models} shows, it still leaves the realised rate below the requested budget and does not remove the need for target calibration. A more expressive scorer can move the external frontier without repairing the site shift, and it can raise external alarm load while doing so. The calibration procedure, not the backbone alone, determines whether a stated alert budget is met.
+The GRU changes the level of the frontier but not its transport behaviour. At 1 alarm per patient-day its three-seed mean A sensitivity is $0.684\pm0.006$ and its B sensitivity is $0.375\pm0.078$, compared with $0.585\pm0.020$ and $0.315\pm0.062$ for the logistic model; the B alarm rate is also higher ($0.328\pm0.164$ versus $0.276\pm0.063$). At 0.25 per day the GRU reaches $0.301\pm0.082$ at A and $0.115\pm0.027$ at B, again above the logistic frontier. The GRU is therefore a secondary architecture check rather than a demonstrated improvement: its seed-level spread is large, its paired site-B sensitivity interval includes zero after Holm adjustment, and its external alarm rate is higher. LightGBM is stronger on site B, but as the supplementary backbone comparison shows it still leaves the realised rate below the requested budget and does not remove the need for target calibration. A more expressive scorer can move the external frontier without repairing the site shift, and it can raise external alarm load while doing so. The calibration procedure, not the backbone alone, determines whether a stated alert budget is met.
 
 Two limitations of the grid are visible in the table. First, the 4-per-day row already sits at the threshold grid floor and, in the full sweep, coincides with 8 per day; the grid stops at 0.01; above roughly 2 alarms per patient-day the budget constraint is no longer binding and the frontier is truncated by the candidate set. Second, every certified operating point has a realised rate below its requested budget, so the experiment demonstrates conservative risk control rather than tight budget utilisation. Neither observation undermines the certificate, but both matter for engineering deployment: a hospital that needs a precise alarm load may prefer a finer grid or a utility-based selection among certified thresholds, and a hospital that needs a higher sensitivity must accept the corresponding increase in realised alert volume. The repeated-split study in \cref{sec:coverage} shows that the empirical-Bernstein LTT and randomised-mixture selectors can raise utilisation without a mean-rate violation, so the conservatism of the blocked row is a property of that selector rather than of the budget constraint itself. The clinical interpretation of these rates also depends on local workflow and alarm-fatigue tolerance, which this retrospective study does not measure \citep{ray2026alert,jaidev2026sepsis}.

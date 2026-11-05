@@ -1,5 +1,13 @@
 \section{Method}
 \label{sec:method}
+
+\subsection{A Reusable Calibration Layer}
+\label{sec:framework}
+
+The method is deliberately modular. The first component is a causal score model that maps the observed prefix of a trajectory to a risk score; the second is a stateful alarm policy that converts scores into a refractory and optionally escalating alarm sequence; the third is a patient-blocked loss that summarises the operational burden of that sequence; and the fourth is a finite-sample selector that certifies a threshold or returns an explicit no-alarm fallback. Only the score model is application-specific. The policy, loss and selector can be reused for any binary alarm task with a bounded per-patient event rate, including mortality, deterioration, arrhythmia and equipment alarms.
+
+This separation makes the result an engineering framework rather than a particular sepsis pipeline. A hospital can replace the scorer, change the refractory window or add escalation without recomputing the certificate from scratch, provided the loss matrix and support bound are recomputed for the new policy. The deployment contract then has three separate objects: the budget is a property of the calibrated policy family, the certificate is a property of the calibration sample, and the realised ward load is a property of the arrival and handling model.
+
 \input{sections/method-policy}
 \input{sections/method-risk}
 \input{sections/method-selection}

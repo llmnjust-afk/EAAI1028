@@ -43,7 +43,7 @@ unsubmitted draft with author information pending.
 
 ## Local verification
 
-- `python3 -m pytest tests -q`: **164 passed** on Python 3.11.2 (about 25 seconds in the final local run).
+- `python3 -m pytest tests -q`: **172 passed** on Python 3.11.2 (26.45 seconds in the final local run).
 - Tests include exhaustive small binary state-machine trajectories, discrete
   support supremum checks with escalation and long refractory durations, strict
   loss/grid validation, safe fallback, causal GRU predictions, delta/target
@@ -75,7 +75,7 @@ unsubmitted draft with author information pending.
 ## Independent Lab verification
 
 The final Lab job completed with exit status zero after `compileall`, the full
-test suite (**162 passed in 26.96 seconds**), fresh three-seed reference
+test suite (**172 passed in 7.52 seconds**), fresh three-seed reference
 verification, and the official set-A network QC. All seeds matched at the same
 numeric tolerances as the local comparison. The official-data counts, tensor
 shape and both SHA-256 source hashes match the local QC record above.
@@ -90,11 +90,12 @@ data ingestion, not clinical comparative effectiveness.
 ## Scope limits
 
 Independent patient-block sampling is an assumption, not something established
-by public record IDs. Direct 2019-to-2012 model transfer still needs explicit
-unit conversion and compatible static schemas. Raw partial clinical scores need
-a training-only probability adapter for probability metrics. External deep
-backbone adapters, official 2019 utility scoring, the full clinical experimental
-grid, clinical conclusions and measured GPU cost remain incomplete.
+by public record IDs. The 2012 cohort is used as an outcome-shift stress test,
+not as a same-task sepsis transfer; a shared sepsis endpoint across hospitals
+still requires an external cohort such as MIMIC-IV or eICU. Raw partial clinical
+scores need a training-only probability adapter for probability metrics.
+External deep backbone adapters, the full clinical experimental grid, clinical
+conclusions and measured GPU cost remain incomplete.
 
 All old unversioned score caches and downstream clinical results must be
 regenerated. Passing these checks does not prove absence of every possible

@@ -3,7 +3,7 @@
 
 A learned score is not the only way to operate an alarm policy, so we calibrated partial NEWS, SIRS and qSOFA on the same A calibration subjects and evaluated them at the same requested budgets. Table~\ref{tab:clinical} reports the 1-per-day operating point. The instruments are coarse integer scores, and the calibration grid is limited to their attainable values; qSOFA, for example, has only three levels, so the selector can miss a requested budget by a wide margin or return the no-alarm fallback. On site A, NEWS reaches $0.399$ sensitivity at $0.730$ alarms per day, SIRS reaches $0.470$ at $0.796$, and qSOFA reaches only $0.220$ at $0.492$. The learned logistic policy is more sensitive at a lower rate ($0.585$ at $0.651$), and LightGBM is higher still ($0.661$ at $0.655$).
 
-\begin{table}[tb]
+\begin{table}[H]
 \centering
 \caption{Partial clinical-instrument baselines at the 1-per-patient-day operating point. Thresholds are calibrated on site A and applied unchanged to site B. NEWS, SIRS and qSOFA omit components unavailable in the 2019 release and are research-only partial instruments. qSOFA has a three-level grid, so its realised rate is far from the request.}
 \label{tab:clinical}

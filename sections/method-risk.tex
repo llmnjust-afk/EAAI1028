@@ -31,14 +31,7 @@ when the set is nonempty, and select the exact no-alarm policy $\widehat\lambda=
 The probability is over calibration samples; $R$ is a population expectation conditional on the fixed scorer and policy family.
 \end{proposition}
 
-\begin{proof}
-For each fixed $\lambda$, the relevant one-sided Hoeffding inequality is
-\begin{equation*}
-\Pr\{R(\lambda)-\widehat R_n(\lambda)>\epsilon\}
- \le\exp(-2n\epsilon^2/L_{\max}^2).
-\end{equation*}
-Setting $\epsilon=L_{\max}\sqrt{\log(|\Lambda|/\alpha)/(2n)}$ and applying a union bound gives simultaneous upper bounds $R(\lambda)\le\widehat R_n(\lambda)+\epsilon$ for all grid policies with probability at least $1-\alpha$. On that event, any policy selected from the feasible set satisfies $R(\widehat\lambda)\le B$. If the feasible set is empty, the fallback has identically zero loss and hence satisfies the budget without a concentration argument. Thus a budget violation can occur only on the failure event of the simultaneous upper bounds, which has probability at most $\alpha$.
-\end{proof}
+The proof is given in the supplement.
 
 The empirical-Bernstein radius used in the reported experiments has a separate finite-grid guarantee. It is not an unproved tighter variant of \cref{prop:validity}.
 
@@ -64,15 +57,35 @@ when the set is nonempty, and the exact no-alarm policy otherwise. Then
 \end{equation}
 \end{proposition}
 
-\begin{proof}
-For a fixed $\lambda$, the random variables $L_i(\lambda)$ lie in $[0,L_{\max}]$ and are independent across subjects. The empirical-Bernstein inequality of Maurer and Pontil \citep{maurer2009empirical} with failure probability $\delta=\alpha/|\Lambda|$ gives, with probability at least $1-\delta$,
-\begin{equation*}
-R(\lambda)\le\widehat R_n(\lambda)
-+\widehat\sigma_n(\lambda)\sqrt{\frac{2\log(2/\delta)}{n}}
-+\frac{7L_{\max}\log(2/\delta)}{3(n-1)}.
-\end{equation*}
-Substituting $\delta=\alpha/|\Lambda|$ yields the radius in \eqref{eq:bernstein}. A union bound over the $|\Lambda|$ fixed grid points makes these inequalities simultaneous with probability at least $1-\alpha$. On that event, every policy in the feasible set of \eqref{eq:lambda-eb} satisfies $R(\lambda)\le B$; the no-alarm fallback has zero loss. Thus a budget violation can occur only on the union-bound failure event, whose probability is at most $\alpha$.
-\end{proof}
+The proof is given in the supplement.
+
+A sharper finite-sample alternative is conformal risk control \citep{angelopoulos2022conformal}. It replaces the high-probability radius by an expected-risk correction and is particularly convenient for stateful policies because it requires only the bounded patient loss and exchangeability, not a variance estimate.
+
+\begin{proposition}[Expected-risk validity]
+\label{prop:crc}
+Under the fixed-scorer, finite-grid and independent-subject conditions of Proposition~\ref{prop:validity}, define
+\begin{equation}
+\label{eq:crc-threshold}
+\widehat\lambda_{\mathrm{CRC}}=\min\left\{\lambda\in\Lambda:
+\frac{n}{n+1}\widehat R_n(\lambda)+\frac{L_{\max}}{n+1}\le B\right\}
+\end{equation}
+when the set is nonempty, and the exact no-alarm policy otherwise. Then
+\begin{equation}
+\label{eq:crc-bound}
+\mathbb{E}\left[R(\widehat\lambda_{\mathrm{CRC}})\right]\le B .
+\end{equation}
+\end{proposition}
+
+The proof is given in the supplement.
+
+\begin{proposition}[Randomised mixtures]
+\label{prop:mixture}
+Let $\lambda_1,\lambda_2\in\Lambda$ satisfy $R(\lambda_1)\le B$ and $R(\lambda_2)\le B$, and let $\lambda_p$ randomise between them with probability $p\in[0,1]$. Then $R(\lambda_p)=pR(\lambda_1)+(1-p)R(\lambda_2)\le B$. If the selector certifies the augmented family $\Lambda\cup\{\lambda_p\}$ with the same simultaneous bound, the randomised policy inherits the certificate.
+\end{proposition}
+
+The proof is given in the supplement.
+
+Proposition~\ref{prop:crc} is the expected-risk alternative used in \cref{sec:crc}; it is sharper than the blocked certificate but does not imply the high-probability statement of Proposition~\ref{prop:eb}. Proposition~\ref{prop:mixture} explains why a randomised selector can interpolate between grid points without leaving the certified family, provided the mixture itself is included in the family that is calibrated.
 
 Proposition~\ref{prop:validity} is the conservative Hoeffding certificate, while Proposition~\ref{prop:eb} covers the empirical-Bernstein certificates reported in the experiments. The latter can be tighter when the per-subject alarm counts have low variance, but it is not uniformly tighter. Both are finite-grid upper-confidence risk procedures; subject blocking does not turn either into the standard expected-risk conformal construction. The manuscript's conformal terminology denotes this broader calibration motivation, not a claim that the proof requires only conformal exchangeability.
 

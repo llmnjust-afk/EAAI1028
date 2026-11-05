@@ -1,6 +1,6 @@
 \subsection{Operating Points and Lead-Time Evaluation}
 
-The reference selector deploys the smallest finite threshold whose raw risk upper bound meets the requested budget. This is a deterministic operating-point convention rather than a guarantee of optimal detection. A separate utility objective could select among the uniformly certified candidates without invalidating the risk bound, but such an optimiser is not implemented here. Neither a lower threshold nor a higher budget is assumed to improve every operational metric of a stateful policy.
+The reference selector deploys the smallest finite threshold whose raw risk upper bound meets the requested budget. This is a deterministic operating-point convention rather than a guarantee of optimal detection. A separate utility objective can select among the uniformly certified candidates without invalidating the risk bound; \cref{sec:utility} reports the official 2019 utility and a patient-level decision curve for the deployed selectors. Neither a lower threshold nor a higher budget is assumed to improve every operational metric of a stateful policy.
 
 For an event observed during follow-up, define the detection window $\mathcal W_i=[\max(0,t_i^\star-W),t_i^\star)$. An event is detected if at least one alarm falls in that window, and its lead time is
 \begin{equation}

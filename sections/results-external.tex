@@ -1,0 +1,32 @@
+\subsection{Independent-Cohort Stress Test}
+\label{sec:external2012}
+
+The 2019 A/B pair is a demanding but single transfer problem: both sites share the sepsis endpoint, the same challenge instrumentation and the same label construction. To ask whether the calibration layer travels beyond that pair, we apply the identical selector and policy family to the public PhysioNet/CinC Challenge 2012 cohort \citep{citi2012physionet}, whose endpoint is in-hospital mortality rather than sepsis onset. We use the three released hospital sets as A, B and C, retain records with at least 24 observed hours, and label the 12 hours preceding death as the detection window. The prefix logistic scorer is trained on set A and frozen; the A-calibrated threshold is then applied unchanged to sets B and C. This is an outcome-shift and instrumentation-shift stress test, not a sepsis replication, and we report it as such.
+
+\begin{table}[tb]
+\centering
+\caption{Independent-cohort stress test on PhysioNet 2012. The scorer and threshold are calibrated on set A and transported unchanged to sets B and C; the endpoint is in-hospital mortality and the detection window is 12 hours. Rates are alarms per patient-day; ``Util.'' is realised rate divided by the requested budget. At 0.25 per day no grid threshold is certified and the exact no-alarm fallback is returned on all three sets.}
+\label{tab:external2012}
+\small
+\begin{tabular}{llccc}
+\toprule
+Cohort & Budget & Rate & Sens. & Util. \\
+\midrule
+2012-A (calibration/test) & 0.50 & $0.108$ & $0.084$ & $0.22$ \\
+ & 1.00 & $0.416$ & $0.313$ & $0.42$ \\
+ & 2.00 & $1.133$ & $0.506$ & $0.57$ \\
+\midrule
+2012-B (external) & 0.50 & $0.136$ & $0.116$ & $0.27$ \\
+ & 1.00 & $0.461$ & $0.324$ & $0.46$ \\
+ & 2.00 & $1.254$ & $0.602$ & $0.63$ \\
+\midrule
+2012-C (external) & 0.50 & $0.139$ & $0.113$ & $0.28$ \\
+ & 1.00 & $0.465$ & $0.303$ & $0.47$ \\
+ & 2.00 & $1.236$ & $0.586$ & $0.62$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three observations follow. First, the budget remains portable: no transported threshold exceeds its requested rate on either external hospital, and the realised rates remain in the same conservative band as the calibration site. Second, the transported operating point is not stable even when the budget is met. At 1 per day the realised rate rises from $0.416$ on A to $0.461$ and $0.465$ on B and C, an 11--12\% relative increase, while sensitivity changes only from $0.313$ to $0.324$ and $0.303$. Third, the sharp sensitivity loss observed in the sepsis A$\rightarrow$B transfer is therefore not a universal law of threshold transport. It is a property of that score, endpoint and cohort shift; with a different outcome and instrumentation, the same threshold becomes slightly more active and detects a similar fraction of deaths. The stable object is the calibrated budget, not a claim that transport always fails in one direction.
+
+This distinction matters for how the paper's external result should be read. The sepsis audit shows that a source threshold can under-alarm on a target site; the 2012 stress test shows that the direction and magnitude of that error depend on the deployment distribution. A hospital cannot infer either sign from the source certificate, which is why the budget is the portable contract and target-site calibration or rate matching remains necessary. The test also has clear limits: mortality is not sepsis, the 2012 records use a different variable set and sampling grid, and the external sets are not independent of the challenge's original hospital grouping. We therefore treat it as a transport stress test that broadens the evidence base, not as a replacement for a prospective multi-hospital sepsis study.

@@ -1,0 +1,33 @@
+\subsection{A Sharper Selector with Conformal Risk Control}
+\label{sec:crc}
+
+The blocked empirical-Bernstein certificate is valid but conservative. A conformal risk control (CRC) selector provides a sharper alternative for the same patient-blocked loss. For a candidate threshold $\lambda$, let $\widehat R_n(\lambda)$ be the mean calibration loss and let $L_{\max}$ be the support bound of \cref{eq:lmax}. CRC selects the smallest threshold satisfying
+\begin{equation}
+\label{eq:crc}
+\frac{n}{n+1}\widehat R_n(\lambda)+\frac{L_{\max}}{n+1}\le B .
+\end{equation}
+Under exchangeability of calibration and deployment subjects, the selected policy satisfies $\mathbb{E}[R(\widehat\lambda)]\le B$ \citep{angelopoulos2022conformal}. This is an expected-risk statement, not the high-probability statement of \cref{prop:eb}; the two certificates answer different questions and should not be compared as if one dominated the other.
+
+Table~\ref{tab:crc-selector} compares the blocked and CRC selectors on the primary A calibration split, with the same threshold grid and stateful replay. CRC more than doubles the internal sensitivity at the 0.25-per-day budget ($0.250$ to $0.363$) and raises external B sensitivity from $0.106$ to $0.200$; at 1 per day it raises internal sensitivity from $0.607$ to $0.667$ and external sensitivity from $0.382$ to $0.482$. The gain comes from using more of the budget, not from a different score or a target-label oracle.
+
+\begin{table}[tb]
+\centering
+\caption{Blocked empirical-Bernstein versus conformal risk control on the primary A calibration split, with the A-calibrated threshold transported to B. ``Cert.'' is the CRC certified risk on the calibration subjects; the request is the budget. CRC controls expected risk, whereas the blocked selector controls the probability of exceeding the budget.}
+\label{tab:crc-selector}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{Internal A} & \multicolumn{2}{c}{External B} & \multicolumn{2}{c}{CRC} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Budget & Sens. & Rate & Sens. & Rate & Cert. & Status \\
+\midrule
+0.25 blocked & $0.250$ & $0.117$ & $0.106$ & $0.052$ & -- & feasible \\
+0.25 CRC & $0.363$ & $0.239$ & $0.200$ & $0.115$ & $0.240$ & feasible \\
+1.00 blocked & $0.607$ & $0.631$ & $0.382$ & $0.348$ & -- & feasible \\
+1.00 CRC & $0.667$ & $0.905$ & $0.482$ & $0.549$ & $0.974$ & feasible \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The repeated-split study in \cref{sec:coverage} confirms the pattern and exposes its cost. At 1 per day, CRC uses $93\%$ of the budget on both sites and raises mean sensitivity from $0.613$ to $0.706$ at A and from $0.514$ to $0.619$ at B, while the blocked selector uses only $63\%$. At 0.25 per day, CRC uses $82\%$ of the A budget and $93\%$ of the B budget, compared with $75\%$ and $65\%$ for the blocked selector. The sharper selector is not uniformly aggressive: on the A 0.25 budget it still leaves $18\%$ of the budget unused, and its mean rate exceeded the request in one of ten splits. That single exceedance is consistent with expected-risk control and is exactly why CRC should not be described as a PAC certificate. For deployment, the choice is therefore explicit: the blocked selector buys a high-probability budget guarantee at the cost of sensitivity, whereas CRC buys sensitivity at the cost of a weaker guarantee type and a higher patient-level violation fraction.

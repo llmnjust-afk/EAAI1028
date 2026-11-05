@@ -1,0 +1,59 @@
+\section{Target Adaptation and Ablations}
+\label{sec:supp-adaptation}
+
+\subsection{Label-Free Target Adaptation}
+\label{sec:adaptation}
+
+The source-threshold audit shows that a threshold trained on A is too quiet on B. A target site that can observe unlabelled traces can still match its requested rate without waiting for outcome labels: it chooses the most aggressive threshold whose empirical alarm rate on a warm-up half of the target subjects is at most the budget, then deploys that threshold on the held-out half. Table~\ref{tab:adaptation} compares this rate-matched rule with source transfer and with an oracle that uses target labels.
+
+\begin{table}[H]
+\centering
+\caption{Target adaptation on site B, seed 0. The target cohort is split into disjoint warm-up and test halves. ``Source'' applies the A-calibrated threshold; ``rate-matched'' uses no target labels and matches the requested rate on the warm-up half; ``oracle'' recalibrates on target labels. Sensitivity and rate are evaluated on the target test half.}
+\label{tab:adaptation}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{Source} & \multicolumn{2}{c}{Rate-matched} & \multicolumn{2}{c}{Oracle} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Budget & Sens. & Rate & Sens. & Rate & Sens. & Rate \\
+\midrule
+0.25 & $0.194$ & $0.094$ & $0.322$ & $0.237$ & $0.261$ & $0.171$ \\
+0.50 & $0.261$ & $0.171$ & $0.414$ & $0.356$ & $0.414$ & $0.356$ \\
+1.00 & $0.414$ & $0.356$ & $0.620$ & $0.950$ & $0.620$ & $0.950$ \\
+2.00 & $0.620$ & $0.950$ & $0.809$ & $1.792$ & $0.809$ & $1.792$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On the target test half the label-free rule recovers the oracle operating point at 0.5, 1 and 2 per day: its threshold coincides with the target-calibrated threshold on the fixed grid. At 1 per day it raises sensitivity on that half from $0.414$ to $0.620$ and the realised rate from $0.356$ to $0.950$, still below the request. The source threshold is quieter on this half than on the full B test set, where the external audit reports $0.315$ sensitivity and a $0.276$ rate, because the warm-up/test partition changes the eligible-event mix. At 0.25 per day it selects a more aggressive threshold than the certified oracle, raising sensitivity from $0.194$ to $0.322$ at a rate of $0.237$ rather than the oracle's $0.261$ at $0.171$. This is a positive engineering result, but it must be read narrowly. The rule is transductive: it uses a warm-up sample from the deployment site, and it controls the alarm rate rather than the risk. If the target case mix changes the relationship between score and event risk, a rate-matched threshold can meet the budget while detecting fewer events. The oracle agreement here is a property of this cohort and this grid, not a general guarantee. The finite-sample certificate still requires labelled target calibration patients; rate matching is a deployment heuristic that can be audited with the operational metrics above.
+
+\subsection{Ablations}
+\label{sec:ablation}
+
+One-at-a-time ablations on the primary A split identify which design choices are first-order. The refractory window is one: moving from $\tau=2$ to $\tau=12$ raises sensitivity from $0.518$ to $0.726$ but also raises the patient-violation fraction from $0.167$ to $0.327$ at the 1-per-day budget. The escalation tier is a strong de-alarming control: $\kappa=1$ lowers the realised rate from $0.631$ to $0.472$ and sensitivity from $0.607$ to $0.286$. The lead window changes sensitivity modestly ($0.560$ at 6 hours, $0.607$ at 12, $0.631$ at 24) without changing the threshold. The risk level is second-order on this split: $\alpha=0.05,0.1,0.2$ selects the same threshold, with certified risk changing from $0.844$ to $0.823$. Grid resolution is first-order at the coarse end: 20 thresholds produce a rate of $0.082$ and sensitivity $0.179$, 50 and 100 thresholds produce about $0.44$ and $0.51$, and 200 thresholds recover $0.631$ and $0.607$. The minimum-stay restriction changes both eligibility and the selected threshold: at 6, 12 and 48 hours the sensitivities are $0.627$, $0.655$ and $0.609$ at rates $0.832$, $0.825$ and $0.747$. These results do not justify a universal tuning rule, but they show that the reported operating point depends on declared structural choices, which is why those choices are fixed before calibration and reported with the certificate.
+
+\subsection{Human-Factors Queueing Sensitivity}
+\label{sec:queue}
+
+The hourly capacity model above is a deliberately conservative staffing abstraction: one alarm per hour is equivalent to a 60-minute service time, far longer than a typical bedside response. To ground the translation in human-factors data, we add a continuous-time queue in which alarms wait for one of $c$ nurses and service times are exponential with a declared mean. Bridi et al.\ report a median alarm response of about 5 minutes in an intensive-care unit, with more than 60\% of alarms unanswered after 10 minutes during busy periods \citep{bridi2014reaction}. We therefore evaluate mean service times of 5 and 15 minutes; the latter represents detection, travel and bedside confirmation rather than the alarm acknowledgement alone.
+
+\begin{table}[H]
+\centering
+\caption{Alarm-handling queue on a simulated 20-bed ward with five admissions per day. Service times are exponential; ``Util.'' is nurse utilisation over the 30-day horizon. The 5-minute mean is the median response reported by Bridi et al.; 15 minutes adds travel and confirmation. At 0.25 per day at most 0.7\% of CRC alarms wait more than 5 minutes.}
+\label{tab:queue}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+Budget & Policy & Service & Util. & $>5$ min & $>10$ min & p95 wait \\
+\midrule
+1.00 & Blocked & 5 min & $0.032$ & $0.000$ & $0.000$ & $0.0$ \\
+1.00 & Blocked & 15 min & $0.095$ & $0.020$ & $0.015$ & $0.0$ \\
+1.00 & CRC & 5 min & $0.050$ & $0.022$ & $0.006$ & $0.0$ \\
+1.00 & CRC & 15 min & $0.150$ & $0.089$ & $0.070$ & $18.7$ \\
+2.00 & Both & 5 min & $0.057$ & $0.024$ & $0.005$ & $0.2$ \\
+2.00 & Both & 15 min & $0.171$ & $0.126$ & $0.094$ & $26.8$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:queue} shows that the queue is not saturated even at the loosest budget, but waiting is not negligible once service includes travel. At 1 alarm per patient-day, the blocked policy keeps the fraction waiting more than 10 minutes below 2\% with a 15-minute service mean, whereas CRC reaches 7.0\% and a 95th-percentile wait of 18.7 minutes. At 2 per day both policies produce the same traces on this split and 9.4\% of alarms wait more than 10 minutes with one nurse; a second nurse removes essentially all waits. These fractions are lower than the 60\% unanswered rate in the observational study because our queue assumes perfect work-conserving service and no competing nursing tasks. The comparison is therefore a lower bound on human delay, not a validation of the ward model. Its engineering value is to show that the difference between a 1-per-day and a 2-per-day budget is visible in response latency even when average nurse utilisation is below 20\%, because alarm bursts matter more than the daily mean.

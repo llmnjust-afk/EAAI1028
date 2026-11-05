@@ -1,0 +1,23 @@
+\section{Target-Site Recalibration}
+\label{sec:supp-target}
+
+The no-recalibration audit establishes that the source threshold does not travel, but it does not quantify how much of the loss is recoverable by adaptation. We split target B into subject-disjoint calibration and test halves (7,412 patients each; on average 354 calibration events and 337 test events over three seeds), recalibrated the same policy family on B calibration labels, and evaluated it on the B test half. This is an oracle diagnostic: target labels are used for threshold selection, so it is not a deployable label-free procedure and must not be compared with the primary external audit as if it were one. Table~\ref{tab:target} reports the result for the logistic scorer. At 1 alarm per patient-day, target calibration raises mean B sensitivity from $0.294\pm0.082$ to $0.497\pm0.022$ and the realised rate from $0.270\pm0.065$ to $0.616\pm0.058$; at 0.25 per day it raises sensitivity from $0.073\pm0.026$ to $0.218\pm0.036$ at a realised rate of $0.159\pm0.009$. The recovery is real but partial, and it is purchased with a higher alarm load and a higher patient-violation fraction because the target-calibrated threshold is lower. The single-seed GRU diagnostic shows the same direction ($0.314$ to $0.493$ at 1 per day). At 2 per day the target-recalibrated selector hits the threshold-grid floor: sensitivity saturates at $0.724\pm0.056$ while the realised rate rises to $1.466\pm0.260$, so the diagnostic identifies a range where adaptation matters rather than a universal gain.
+
+\begin{table}[H]
+\centering
+\caption{Target-site recalibration diagnostic for the prefix logistic scorer, mean $\pm$ sample standard deviation over three source seeds. The target hospital is split 50/50 into subject-disjoint calibration and test halves; the calibration half uses target labels to select the threshold. Sensitivity and realised alarm rate are evaluated on the target test half (7,412 patients, about 337 events). This is an oracle-style target-calibrated reference estimate, not a deployable label-free procedure.}
+\label{tab:target}
+\small
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{No recalibration} & \multicolumn{2}{c}{Target recalibrated} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Budget & Sens. & Rate & Sens. & Rate \\
+\midrule
+0.25 & $0.073\pm0.026$ & $0.039\pm0.014$ & $0.218\pm0.036$ & $0.159\pm0.009$ \\
+0.50 & $0.173\pm0.074$ & $0.118\pm0.043$ & $0.358\pm0.031$ & $0.360\pm0.019$ \\
+1.00 & $0.294\pm0.082$ & $0.270\pm0.065$ & $0.497\pm0.022$ & $0.616\pm0.058$ \\
+2.00 & $0.544\pm0.072$ & $0.744\pm0.165$ & $0.724\pm0.056$ & $1.466\pm0.260$ \\
+\bottomrule
+\end{tabular}
+\end{table}

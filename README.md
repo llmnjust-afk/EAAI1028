@@ -21,7 +21,8 @@ does not justify this concentration proof.
 ## Contents and implemented components
 
 ```
-main.tex                 elsarticle manuscript (3p layout)
+main.tex                 elsarticle manuscript (5p, 15 pages)
+supplementary.tex        supplementary material (8 pages)
 sections/                manuscript sections; method split into reviewable parts
 refs.bib                 bibliography
 code/eaai/policy/         causal stateful alarm and upper-confidence selectors
@@ -165,6 +166,23 @@ caches remain outside the repository.
   and 63--88% on B; the sharper selectors use 65--94% across sites and budgets. The timestep shortcut
   stays below the mean budget but has a higher patient-level violation fraction
   at 1/day (0.296 versus 0.210), because it has no patient-level guarantee.
+- **Conformal risk control (CRC).** A CRC selector uses 93% of the 1/day budget
+  on both sites and raises sensitivity from 0.613 to 0.706 at A and from 0.514
+  to 0.619 at B, but controls expected risk rather than the probability of
+  exceeding the budget; it crossed the 0.25/day request in one of ten A splits.
+- **Independent 2012 stress test.** The same scorer, policy and A-calibrated
+  threshold were applied to the 2012 A/B/C mortality sets. At 1/day the realised
+  rate shifts from 0.416 (A) to 0.461/0.465 (B/C) with sensitivity 0.313 versus
+  0.324/0.303. The budget travels; the operating point does not, but the sharp
+  sepsis A-to-B sensitivity loss is not universal. This is an outcome-shift
+  stress test, not a sepsis replication.
+- **Official utility and decision curve.** At 0.25/day CRC improves normalised
+  2019 utility from 0.502 to 0.687 at A and 0.144 to 0.247 at B; at 1/day the
+  blocked selector is better (0.926/0.284 versus 0.852/0.154) because CRC buys
+  sensitivity with false alarms. Net benefit at p=0.10 agrees.
+- **Alarm-handling queue.** With one nurse and a 15-minute mean service time,
+  9.4% of alarms wait more than 10 minutes at 2 alarms/patient-day, versus 0.5%
+  at a 5-minute mean; a second nurse removes most of the delay.
 - **Label-free adaptation.** Matching the requested rate on an unlabelled target
   warm-up half recovers the target-calibrated operating point at 0.5, 1 and 2
   per day on the target test half, without target labels. It controls the rate,
@@ -178,7 +196,8 @@ caches remain outside the repository.
 - **Limits.** These are retrospective, subject-disjoint experiments on one public
   challenge cohort with a fixed scorer grid. They are not clinical validation,
   do not establish alert-fatigue reduction, and do not include subgroup or
-  observation-sparsification analyses or the official 2019 utility scorer.
+  observation-sparsification analyses. Full MIMIC-IV/eICU cohorts were not
+  available; the eICU demo is too small for a main external validation.
 
 ## Data conventions and limits
 
@@ -240,9 +259,9 @@ computed using future information. Cache format version 2 validates shapes,
 lengths, onset metadata and finite valid scores.
 
 Not implemented: supervised target adaptation beyond the oracle diagnostic,
-external architecture adapters, the official 2019 challenge utility scorer,
-2012 same-task transfer, observation-sparsification and subgroup study drivers,
-and MIMIC processing.
+external architecture adapters, observation-sparsification and subgroup study
+drivers, and MIMIC/eICU processing. The 2012 cohort is used as an outcome-shift
+stress test, not as a same-task sepsis transfer.
 The oracle target-site diagnostic in `experiment_results/target_summary.json`
 is reported separately and is not a deployment method.
 The E2 A→B experiment is complete for the reference scorers, but it is not an

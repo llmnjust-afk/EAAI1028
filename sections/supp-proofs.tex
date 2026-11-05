@@ -1,0 +1,29 @@
+\section{Detailed Proofs}
+\label{sec:supp-proofs}
+
+\begin{proof}
+For each fixed $\lambda$, the relevant one-sided Hoeffding inequality is
+\begin{equation*}
+\Pr\{R(\lambda)-\widehat R_n(\lambda)>\epsilon\}
+ \le\exp(-2n\epsilon^2/L_{\max}^2).
+\end{equation*}
+Setting $\epsilon=L_{\max}\sqrt{\log(|\Lambda|/\alpha)/(2n)}$ and applying a union bound gives simultaneous upper bounds $R(\lambda)\le\widehat R_n(\lambda)+\epsilon$ for all grid policies with probability at least $1-\alpha$. On that event, any policy selected from the feasible set satisfies $R(\widehat\lambda)\le B$. If the feasible set is empty, the fallback has identically zero loss and hence satisfies the budget without a concentration argument. Thus a budget violation can occur only on the failure event of the simultaneous upper bounds, which has probability at most $\alpha$.
+\end{proof}
+
+\begin{proof}
+For a fixed $\lambda$, the random variables $L_i(\lambda)$ lie in $[0,L_{\max}]$ and are independent across subjects. The empirical-Bernstein inequality of Maurer and Pontil \citep{maurer2009empirical} with failure probability $\delta=\alpha/|\Lambda|$ gives, with probability at least $1-\delta$,
+\begin{equation*}
+R(\lambda)\le\widehat R_n(\lambda)
++\widehat\sigma_n(\lambda)\sqrt{\frac{2\log(2/\delta)}{n}}
++\frac{7L_{\max}\log(2/\delta)}{3(n-1)}.
+\end{equation*}
+Substituting $\delta=\alpha/|\Lambda|$ yields the radius in \eqref{eq:bernstein}. A union bound over the $|\Lambda|$ fixed grid points makes these inequalities simultaneous with probability at least $1-\alpha$. On that event, every policy in the feasible set of \eqref{eq:lambda-eb} satisfies $R(\lambda)\le B$; the no-alarm fallback has zero loss. Thus a budget violation can occur only on the union-bound failure event, whose probability is at most $\alpha$.
+\end{proof}
+
+\begin{proof}
+For a fixed $\lambda$, exchangeability of the $n+1$ calibration and deployment losses gives $\mathbb{E}[\widehat R_{n+1}(\lambda)]=R(\lambda)$. The CRC correction is the finite-sample version of the same identity applied to the order statistic that includes the deployment point; the selected threshold is the smallest one whose corrected empirical loss is below $B$. The standard conformal risk control argument then yields $\mathbb{E}[R(\widehat\lambda_{\mathrm{CRC}})]\le B$ for any bounded monotone loss, including the patient-blocked alarm rate. The finite grid is handled by the same selection rule; no union bound is required because the guarantee is in expectation rather than simultaneously over the grid.
+\end{proof}
+
+\begin{proof}
+Conditional on the randomisation draw, the loss is the corresponding deterministic loss; taking expectation over the draw gives the convex combination. The augmented-family statement follows by applying Proposition~\ref{prop:validity} or~\ref{prop:eb} to the enlarged fixed grid.
+\end{proof}

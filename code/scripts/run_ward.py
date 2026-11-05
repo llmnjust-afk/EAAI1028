@@ -17,6 +17,18 @@ from eaai.policy.conformal import BlockedConformalCalibrator
 from eaai.scores.api import ScoreCache
 
 
+def _clean(value):
+    if isinstance(value, dict):
+        return {key: _clean(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_clean(item) for item in value]
+    if isinstance(value, (float, np.floating)):
+        return float(value) if np.isfinite(value) else None
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    return value
+
+
 def _load(root, cohort, model, seed, min_stay):
     data = ScoreCache(Path(root)).read(cohort, model, seed)
     scores = [np.asarray(seq, dtype=float) for seq in data["scores"]]
@@ -109,9 +121,10 @@ def main() -> int:
         },
         "rows": rows,
     }
+    clean = _clean(output)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(output, indent=2, allow_nan=False) + "\n")
-    print(json.dumps(output, indent=2, allow_nan=False))
+    args.out.write_text(json.dumps(clean, indent=2, allow_nan=False) + "\n")
+    print(json.dumps(clean, indent=2, allow_nan=False))
     return 0
 
 

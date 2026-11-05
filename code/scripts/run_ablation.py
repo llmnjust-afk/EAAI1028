@@ -65,7 +65,7 @@ def main() -> int:
     parser.add_argument("--model", default="prefix_lr")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--splits", type=Path,
-                        default=Path("experiment_results/round2/splits/splits_A_s0.npz"))
+                        default=Path(__file__).resolve().parents[1] / "experiment_results/round2/splits/splits_A_s0.npz")
     parser.add_argument("--budget", type=float, default=1.0)
     parser.add_argument("--alpha", type=float, default=0.1)
     parser.add_argument("--refractory", type=int, default=4)

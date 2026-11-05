@@ -53,7 +53,7 @@ def main() -> int:
     parser.add_argument("--model", default="prefix_lr")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--splits", type=Path,
-                        default=Path("experiment_results/round2/splits/splits_A_s0.npz"))
+                        default=Path(__file__).resolve().parents[1] / "experiment_results/round2/splits/splits_A_s0.npz")
     parser.add_argument("--budgets", type=float, nargs="+",
                         default=[0.25, 0.5, 1.0, 2.0])
     parser.add_argument("--thresholds", type=int, default=200)

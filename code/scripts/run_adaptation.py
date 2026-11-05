@@ -134,10 +134,10 @@ def main() -> int:
                 "sensitivity": outcome["sensitivity"],
                 "ppv": outcome["ppv"], "nna": outcome["nna"],
                 "median_lead_time": outcome["median_lead_time"],
-                "patient_violation": outcome["patient_violation"],
-                "certified_risk": outcome["certified_risk"],
-                "status": outcome["status"],
-                "n_feasible": outcome["n_feasible"],
+                "patient_violation": outcome.get("patient_violation"),
+                "certified_risk": outcome.get("certified_risk"),
+                "status": outcome.get("status", "fixed_threshold"),
+                "n_feasible": outcome.get("n_feasible"),
                 "source_within_budget": float(
                     source_calibrator.diagnostics_["certified_risk"] <= budget)
                 if method == "source_transfer" else None,

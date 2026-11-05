@@ -31,6 +31,18 @@ def _remap(indices, eligible, n_total):
     return mapped[mapped >= 0]
 
 
+def _clean(value):
+    if isinstance(value, dict):
+        return {key: _clean(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_clean(item) for item in value]
+    if isinstance(value, (float, np.floating)):
+        return float(value) if np.isfinite(value) else None
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    return value
+
+
 def _row(value, outcome, parameter):
     return {
         "parameter": parameter, "value": value,
@@ -123,9 +135,10 @@ def main() -> int:
         "thresholds": args.thresholds,
         "n_calibration": int(calibration.size), "n_test": int(test.size),
     }, "rows": rows}
+    clean = _clean(output)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(output, indent=2, allow_nan=False) + "\n")
-    print(json.dumps(output, indent=2, allow_nan=False))
+    args.out.write_text(json.dumps(clean, indent=2, allow_nan=False) + "\n")
+    print(json.dumps(clean, indent=2, allow_nan=False))
     return 0
 
 

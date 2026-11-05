@@ -21,6 +21,20 @@ from .e2_budget import sweep
 SUBSETS = ("a", "b", "c")
 
 
+def _clean(value):
+    if isinstance(value, dict):
+        return {key: _clean(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_clean(item) for item in value]
+    if isinstance(value, (float, np.floating)):
+        return float(value) if np.isfinite(value) else None
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    return value
+
+
 def _subset(root: str | Path, subset: str) -> dict:
     batch = build_2012_tensors(root, subset=subset)
     mortality = np.asarray(batch["mortality"], dtype=float)
@@ -78,16 +92,16 @@ def run(root: str | Path, seed: int = 0,
                          procedure="blocked", min_stay_hours=24.0)
         rows.extend({"cohort": f"2012-{name} (external)", **row} for row in external)
 
-    return {
+    cohorts = {"a": {"patients": int(len(source["ids"])),
+                     "deaths": int(source["labels"][:, 0].sum())}}
+    for name in ("b", "c"):
+        target = _subset(root, name)
+        cohorts[name] = {"patients": int(len(target["ids"])),
+                         "deaths": int(target["labels"][:, 0].sum())}
+    return _clean({
         "config": {"seed": seed, "budgets": list(budgets),
                    "thresholds": thresholds, "min_stay_hours": 24.0,
                    "event": "in-hospital mortality", "detection_window_hours": 12.0},
-        "cohorts": {
-            "a": {"patients": int(len(source["ids"])),
-                  "deaths": int(source["labels"][:, 0].sum())},
-            **{name: {"patients": int(len(_subset(root, name)["ids"])),
-                      "deaths": int(_subset(root, name)["labels"][:, 0].sum())}
-               for name in ("b", "c")},
-        },
+        "cohorts": cohorts,
         "rows": rows,
-    }
+    })

@@ -286,8 +286,8 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
                          n_probability_points: int = 11) -> dict:
     """Calibrate a supplied loss matrix and evaluate a disjoint test partition.
 
-    ``procedure="timestep"`` is the deliberately invalid effective-sample-size
-    shortcut, included only as a comparator.
+    ``procedure="timestep"`` is an effective-sample-size diagnostic shortcut
+    without a patient-level guarantee, included only as a comparator.
     """
     sequences, onset, lengths = _validate_sequences(
         scores, onset, lengths, step_hours=step_hours)

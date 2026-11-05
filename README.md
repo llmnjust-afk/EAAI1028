@@ -1,25 +1,27 @@
 # Alert-Budgeted Clinical Early Warning
 
 Manuscript and reference implementation for **Alert-Budgeted Clinical
-Early Warning: Patient-Blocked Risk Calibration for Stateful Deterioration Alarm Policies**,
+Early Warning: Patient-Blocked Risk Calibration for Stateful Sepsis Alarm Policies**,
 with *Engineering Applications of Artificial Intelligence* as the intended venue.
 This is **not a submitted paper or a clinical validation**. The real-data
 comparative experiments and manuscript are complete for the documented scope;
 clinical effectiveness, alert-fatigue reduction and deployment readiness are not
 claimed.
 
-The implemented statistical procedure is a **patient-blocked finite-grid upper
-confidence bound**, using Hoeffding or empirical-Bernstein concentration. It is
-not the standard expected-risk conformal risk-control construction. Existing API
-class names retain “Conformal” for compatibility, but the guarantee requires iid
-patient blocks from the deployment population, a fixed scorer/policy family/grid,
-and a support-wide loss bound fixed independently of calibration/test data.
-Patient exchangeability alone does not justify this concentration proof.
+The primary statistical procedure is a **patient-blocked finite-grid upper
+confidence bound**, using Hoeffding or empirical-Bernstein concentration. The
+revision adds Learn-then-Test selectors with Holm correction and a randomized
+mixture of adjacent thresholds; these are sharper comparators with the same
+finite-sample guarantee. Existing API class names retain “Conformal” for
+compatibility, but the guarantee requires iid patient blocks from the deployment
+population, a fixed scorer/policy family/grid, and a support-wide loss bound
+fixed independently of calibration/test data. Patient exchangeability alone
+does not justify this concentration proof.
 
 ## Contents and implemented components
 
 ```
-main.tex                 single-column elsarticle manuscript
+main.tex                 elsarticle manuscript (3p layout)
 sections/                manuscript sections; method split into reviewable parts
 refs.bib                 bibliography
 code/eaai/policy/         causal stateful alarm and upper-confidence selectors
@@ -35,8 +37,8 @@ The risk estimand is the **unweighted mean of each patient's alarms per day**,
 not a pooled ward total divided by pooled patient-days. Neither a per-patient
 maximum nor a realised ward alarm cap follows from its population-mean bound.
 Methods share a requested budget, not necessarily identical realised alarm rates.
-The smallest certified threshold is deployed; utility-maximising selection among
-feasible thresholds is not implemented.
+The blocked selector deploys the smallest certified threshold; the LTT and
+randomized selectors are reported as coverage/utilization comparators.
 
 ## Quick start and synthetic diagnostic
 
@@ -68,9 +70,10 @@ and repeatedly partitions that cohort into calibration and test patients:
 
 Repeated partitions reuse patients. Wilson intervals on those split indicators
 are descriptive; they do not establish nominal coverage or prove the population
-risk theorem. The deliberately invalid baseline changes only the confidence
-radius's effective sample size, using **calibration-only** timestep counts.
-It is not a reproduction of a named published timestep-conformal method.
+risk theorem. The timestep shortcut changes only the confidence radius's effective sample
+size, using **calibration-only** timestep counts. It is a diagnostic baseline,
+not a reproduction of a named published timestep-conformal method; in repeated
+splits it does not violate the mean budget, but it has no patient-level guarantee.
 Previous representative results were removed because they used an unsafe finite
 fallback and an inflated timestep count from the whole cohort. Rerun the corrected
 driver rather than reusing those numbers.
@@ -105,6 +108,7 @@ The operational analyses added for the revision are:
 
 ```bash
 python3 scripts/run_coverage.py --cache-root cache --cohort A_lead6 --model prefix_lr --seed 0
+python3 scripts/run_selectors.py --cache-root cache --cohort A_lead6 --model prefix_lr
 python3 scripts/run_ablation.py --cache-root cache --cohort A_lead6 --model prefix_lr
 python3 scripts/run_adaptation.py --cache-root cache --source-cohort A_lead6 --target-cohort B_lead6
 python3 scripts/run_ward.py --cache-root cache --cohort A_lead6 --model prefix_lr
@@ -144,7 +148,7 @@ caches remain outside the repository.
   that about 10% of target labels recover the 1/day full-pool sensitivity
   ($0.497$ at 1,482 labelled patients versus $0.294$ with none); at 0.5/day the
   curve is still improving at 50%. Target labels are used, so this is a
-  diagnostic, not a deployable label-free method.
+  diagnostic; the separate rate-matching rule above is the label-free option.
 - **Partial clinical instruments.** At 1/day, partial NEWS and SIRS beat the
   blocked logistic policy on B sensitivity ($0.449$ and $0.424$ versus $0.315$)
   but at much higher realised rates ($0.586$ and $0.493$ versus $0.276$);
@@ -157,13 +161,13 @@ caches remain outside the repository.
 - **Repeated-split coverage.** Ten stratified calibration/test splits per site
   show no mean-budget violation for the blocked, Learn-then-Test or randomised
   mixture selectors. The blocked certificate uses 63--75% of the budget on A
-  and 63--88% on B; the sharper selectors use up to 91%. The timestep shortcut
+  and 63--88% on B; the sharper selectors use 65--94% across sites and budgets. The timestep shortcut
   stays below the mean budget but has a higher patient-level violation fraction
   at 1/day (0.296 versus 0.210), because it has no patient-level guarantee.
 - **Label-free adaptation.** Matching the requested rate on an unlabelled target
   warm-up half recovers the target-calibrated operating point at 0.5, 1 and 2
-  per day on this cohort, without target labels. It controls the rate, not the
-  risk, and is transductive; it does not replace a labelled certificate.
+  per day on the target test half, without target labels. It controls the rate,
+  not the risk, and is transductive; it does not replace a labelled certificate.
 - **Ward load.** A 20-bed ward simulation with five admissions/day exceeds a
   one-alarm/hour capacity in 3.8% of hours at 1 alarm/patient-day and 12.7%
   at 2; at two alarms/hour the fractions are 0.2% and 1.6%.
@@ -234,9 +238,10 @@ caches and downstream results**; changing the code cannot repair scores already
 computed using future information. Cache format version 2 validates shapes,
 lengths, onset metadata and finite valid scores.
 
-Not implemented: label-free target adaptation, external architecture adapters,
-the official 2019 challenge utility scorer, 2012 same-task transfer,
-observation-sparsification and subgroup study drivers, and MIMIC processing.
+Not implemented: supervised target adaptation beyond the oracle diagnostic,
+external architecture adapters, the official 2019 challenge utility scorer,
+2012 same-task transfer, observation-sparsification and subgroup study drivers,
+and MIMIC processing.
 The oracle target-site diagnostic in `experiment_results/target_summary.json`
 is reported separately and is not a deployment method.
 The E2 A→B experiment is complete for the reference scorers, but it is not an

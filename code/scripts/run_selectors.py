@@ -78,6 +78,12 @@ def main() -> int:
     target_scores, target_onset, target_lengths, target_eligible, target_total = _load(
         args.cache_root, args.target_cohort, args.model, args.seed, args.min_stay)
     thresholds = np.linspace(0.01, 0.99, args.thresholds)
+    utility_rows = None
+    if args.selection == "utility":
+        utility_rows = patient_utility_matrix(
+            [scores[i] for i in validation], onset[validation],
+            lengths[validation], thresholds, refractory=args.refractory,
+            escalation=args.escalation)
     rows = []
     for budget in args.budgets:
         for procedure in args.procedures:
@@ -87,7 +93,8 @@ def main() -> int:
                 refractory=args.refractory, escalation=args.escalation,
                 min_stay_hours=args.min_stay,
                 lead_window_hours=args.lead_window,
-                validation=validation, selection=args.selection)
+                validation=validation, selection=args.selection,
+                utility_rows=utility_rows)
             external = evaluate_threshold(
                 [target_scores[i] for i in range(len(target_scores))],
                 target_onset, target_lengths, internal["threshold"],
@@ -95,7 +102,8 @@ def main() -> int:
                 lead_window_hours=args.lead_window)
             internal_utility = (0.0 if not np.isfinite(internal["threshold"])
                                 else float(patient_utility_matrix(
-                                    scores, onset, lengths, [internal["threshold"]]).sum()))
+                                    [scores[i] for i in test], onset[test],
+                                    lengths[test], [internal["threshold"]]).sum()))
             external_utility = (0.0 if not np.isfinite(internal["threshold"])
                                  else float(patient_utility_matrix(
                                      target_scores, target_onset, target_lengths,

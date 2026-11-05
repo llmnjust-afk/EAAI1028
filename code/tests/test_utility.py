@@ -4,6 +4,8 @@ import pytest
 from eaai.eval.utility import (net_benefit, normalized_utility,
                                normalized_utility_rows, prediction_utility,
                                prediction_utility_rows)
+from eaai.experiments.e2_budget import patient_utility_matrix
+from eaai.policy.alarm import AlarmPolicy, run_policy
 
 
 def test_inaction_scores_zero_normalized_utility():
@@ -42,3 +44,18 @@ def test_row_utility_sums_to_total_and_normalised_rows_sum_to_score():
 def test_row_utility_rejects_bad_shapes():
     with pytest.raises(ValueError, match="equal 2-D"):
         prediction_utility_rows(np.zeros((1, 3)), np.zeros((2, 3)))
+
+
+def test_patient_utility_matrix_reproduces_normalized_utility():
+    scores = [np.full(10, 0.9), np.full(10, 0.1)]
+    onset = np.array([8, -1])
+    lengths = np.array([10, 10])
+    thresholds = np.array([0.5, 0.95])
+    rows = patient_utility_matrix(scores, onset, lengths, thresholds)
+    assert rows.shape == (2, 2)
+    labels = np.zeros((2, 10))
+    labels[0, 2:10] = 1.0
+    predictions = np.zeros((2, 10))
+    predictions[0, :] = run_policy(scores[0], AlarmPolicy(0.5, 4, 0))
+    expected = normalized_utility(labels, predictions)
+    assert rows[:, 0].sum() == pytest.approx(expected)

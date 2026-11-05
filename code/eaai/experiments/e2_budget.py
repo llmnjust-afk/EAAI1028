@@ -335,7 +335,8 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
                          min_stay_hours: float | None = None,
                          procedure: str = "blocked",
                          validation=None, selection: str = "default",
-                         n_probability_points: int = 11) -> dict:
+                         n_probability_points: int = 11,
+                         utility_rows: np.ndarray | None = None) -> dict:
     """Calibrate a supplied loss matrix and evaluate a disjoint test partition.
 
     ``procedure="timestep"`` is an effective-sample-size diagnostic shortcut
@@ -377,12 +378,15 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
             raise ValueError("validation must be disjoint from calibration and test")
         val_losses = per_day[validation]
 
-    utility_rows = None
-    if selection == "utility":
+    if selection == "utility" and utility_rows is None:
         utility_rows = patient_utility_matrix(
             [sequences[i] for i in validation], onset[validation],
             lengths[validation], thresholds, refractory=refractory,
             escalation=escalation, step_hours=step_hours)
+    if utility_rows is not None:
+        utility_rows = np.asarray(utility_rows, dtype=float)
+        if utility_rows.shape != (len(validation), thresholds.size):
+            raise ValueError("utility rows do not match the validation partition and grid")
 
     kind = "single"
     low_index = high_index = None
@@ -531,7 +535,8 @@ def evaluate_at_budget(scores, onset, lengths, calibration, test, budget: float,
                        min_stay_hours: float | None = None,
                        procedure: str = "blocked",
                        validation=None, selection: str = "default",
-                       n_probability_points: int = 11) -> dict:
+                       n_probability_points: int = 11,
+                       utility_rows: np.ndarray | None = None) -> dict:
     """Calibrate on disjoint patients and evaluate only observed follow-up.
 
     The support bound must be specified independently of calibration/test data.
@@ -552,7 +557,8 @@ def evaluate_at_budget(scores, onset, lengths, calibration, test, budget: float,
                                 min_stay_hours=min_stay_hours,
                                 procedure=procedure, validation=validation,
                                 selection=selection,
-                                n_probability_points=n_probability_points)
+                                n_probability_points=n_probability_points,
+                                utility_rows=utility_rows)
 
 
 def sweep(scores, onset, lengths, calibration, test,

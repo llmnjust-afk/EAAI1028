@@ -72,8 +72,9 @@ Repeated partitions reuse patients. Wilson intervals on those split indicators
 are descriptive; they do not establish nominal coverage or prove the population
 risk theorem. The timestep shortcut changes only the confidence radius's effective sample
 size, using **calibration-only** timestep counts. It is a diagnostic baseline,
-not a reproduction of a named published timestep-conformal method; in repeated
-splits it does not violate the mean budget, but it has no patient-level guarantee.
+not a reproduction of a named published timestep-conformal method. On the 2019
+cohort it does not violate the mean budget in repeated splits, but it has no
+patient-level guarantee.
 Previous representative results were removed because they used an unsafe finite
 fallback and an inflated timestep count from the whole cohort. Rerun the corrected
 driver rather than reusing those numbers.

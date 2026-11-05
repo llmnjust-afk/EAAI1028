@@ -1,0 +1,32 @@
+\section{Utility-Ranked Selection: Seed-Level Results}
+\label{sec:supp-ucrc}
+
+Table~\ref{tab:ucrc-seeds} reports the utility-ranked CRC (U-CRC) selector for every source seed rather than only the primary seed. The validation rate is computed on the disjoint validation partition used to rank calibration-feasible thresholds; the internal and external rates and utilities are evaluated on the held-out A test and transported B sets. At 2 per patient-day U-CRC selects the same threshold as at 1 per day for all three seeds, which is the intended refusal to spend a loose budget rather than a grid artefact. Internal utility varies from 0.613 to 0.932 at the loose budget, so the seed-0 value in the main table should not be read as a mean. U-CRC remains a deployment heuristic: the validation lower bound reduces variance-driven selection but provides no finite-sample utility guarantee.
+
+\begin{table}[H]
+\centering
+\caption{Seed-level U-CRC results. ``Val.'' is the mean alarm rate on the validation partition; ``Int.'' and ``Ext.'' are the held-out A test and transported B evaluation. Utility is the official 2019 challenge score (inactive $=0$, oracle $=1$).}
+\label{tab:ucrc-seeds}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{cccccccc}
+\toprule
+ & & \multicolumn{3}{c}{Internal A} & \multicolumn{3}{c}{External B} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Budget & Seed & Val. rate & Rate & Utility & Rate & Utility \\
+\midrule
+0.25 & 0 & 0.273 & 0.239 & 0.691 & 0.115 & 0.244 \\
+0.25 & 1 & 0.207 & 0.208 & 0.493 & 0.055 & 0.138 \\
+0.25 & 2 & 0.252 & 0.256 & 0.499 & 0.095 & 0.148 \\
+0.50 & 0 & 0.479 & 0.450 & 0.910 & 0.231 & 0.270 \\
+0.50 & 1 & 0.375 & 0.360 & 0.597 & 0.104 & 0.195 \\
+0.50 & 2 & 0.444 & 0.465 & 0.799 & 0.177 & 0.255 \\
+1.00 & 0 & 0.668 & 0.631 & 0.932 & 0.348 & 0.278 \\
+1.00 & 1 & 0.515 & 0.479 & 0.613 & 0.151 & 0.246 \\
+1.00 & 2 & 0.896 & 0.925 & 0.875 & 0.393 & 0.233 \\
+2.00 & 0 & 0.668 & 0.631 & 0.932 & 0.348 & 0.278 \\
+2.00 & 1 & 0.515 & 0.479 & 0.613 & 0.151 & 0.246 \\
+2.00 & 2 & 0.896 & 0.925 & 0.875 & 0.393 & 0.233 \\
+\bottomrule
+\end{tabular}}
+\end{table}

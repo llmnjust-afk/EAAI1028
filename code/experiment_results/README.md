@@ -2,7 +2,7 @@
 
 These JSON files are small, reviewable summaries copied from the Lab Compute
 runs. Raw 2019 records and score caches live outside the repository under
-`/data/lab/EAAI1028-data/` and are not redistributed here.
+`/data/lab/eaai/` and are not redistributed here.
 
 ## Data and labels
 
@@ -98,28 +98,28 @@ hits the threshold grid floor, so sensitivity saturates and the rate rises.
 ## Commands
 
 ```bash
-python3 scripts/run_e1.py --data-root /data/lab/EAAI1028-data/physionet2019 \
+python3 scripts/run_e1.py --data-root /data/lab/eaai/data/physionet2019 \
   --subset A --model prefix_lr --seed 0 --external B \
-  --cache-root /data/lab/EAAI1028-data/cache \
-  --results-dir /data/lab/EAAI1028-data/results/e1
+  --cache-root /data/lab/eaai/cache \
+  --results-dir /data/lab/eaai/results/e1
 
-python3 scripts/run_e2.py --cache-root /data/lab/EAAI1028-data/cache \
+python3 scripts/run_e2.py --cache-root /data/lab/eaai/cache \
   --model prefix_lr --seed 0 --cohort A_lead6 \
-  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --splits /data/lab/eaai/results/e1/splits_A_s0.npz \
   --external-cohort B_lead6 --min-stay 24 --thresholds 200 \
   --budgets 0.25 0.5 1.0 2.0 4.0 8.0 --include-timestep \
-  --out /data/lab/EAAI1028-data/results/e2
+  --out /data/lab/eaai/results/e2
 
-python3 scripts/run_e2_reuse.py --cache-root /data/lab/EAAI1028-data/cache \
+python3 scripts/run_e2_reuse.py --cache-root /data/lab/eaai/cache \
   --model prefix_lr --seed 0 --cohort A_lead6 \
-  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --splits /data/lab/eaai/results/e1/splits_A_s0.npz \
   --external-cohort B_lead6 --include-timestep \
-  --out /data/lab/EAAI1028-data/results/e2
+  --out /data/lab/eaai/results/e2
 
 python3 scripts/run_e2_target_calibration.py \
-  --cache-root /data/lab/EAAI1028-data/cache --model prefix_lr --seed 0 \
-  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
-  --out /data/lab/EAAI1028-data/results/e2_target
+  --cache-root /data/lab/eaai/cache --model prefix_lr --seed 0 \
+  --splits /data/lab/eaai/results/e1/splits_A_s0.npz \
+  --out /data/lab/eaai/results/e2_target
 ```
 
 The GRU run uses the same E1 driver with `--model gru --device cuda --epochs 20`.
@@ -153,31 +153,31 @@ Label-budget and baseline drivers:
 
 ```bash
 python3 scripts/run_e2_target_budget.py \
-  --cache-root /data/lab/EAAI1028-data/cache \
-  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --cache-root /data/lab/eaai/cache \
+  --splits /data/lab/eaai/results/e1/splits_A_s0.npz \
   --model prefix_lr --seed 0 \
-  --out /data/lab/EAAI1028-data/results/e2_target_budget
+  --out /data/lab/eaai/results/e2_target_budget
 
 python3 scripts/cache_clinical_scores.py \
-  --data-root /data/lab/EAAI1028-data/physionet2019 \
-  --cache-root /data/lab/EAAI1028-data/cache \
+  --data-root /data/lab/eaai/data/physionet2019 \
+  --cache-root /data/lab/eaai/cache \
   --subsets A B --instruments news sirs qsofa \
-  --out /data/lab/EAAI1028-data/results/clinical_cache.json
+  --out /data/lab/eaai/results/clinical_cache.json
 
 python3 scripts/run_clinical_baselines.py \
-  --cache-root /data/lab/EAAI1028-data/cache \
-  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
-  --out /data/lab/EAAI1028-data/results/clinical_baselines_s0.json
+  --cache-root /data/lab/eaai/cache \
+  --splits /data/lab/eaai/results/e1/splits_A_s0.npz \
+  --out /data/lab/eaai/results/clinical_baselines_s0.json
 
 python3 scripts/bootstrap_policy.py \
-  --cache-root /data/lab/EAAI1028-data/cache \
-  --splits /data/lab/EAAI1028-data/results/e1/splits_A_s0.npz \
+  --cache-root /data/lab/eaai/cache \
+  --splits /data/lab/eaai/results/e1/splits_A_s0.npz \
   --models prefix_lr masked_gru lightgbm --clinical none \
   --budgets 0.25 0.5 1.0 2.0 --n-boot 2000 \
-  --out /data/lab/EAAI1028-data/results/bootstrap_all_s0.json
+  --out /data/lab/eaai/results/bootstrap_all_s0.json
 ```
 
 
 ## Round 2 archived results
 
-`round2/` stores the derived JSON outputs and the three subject-split files used by the LightGBM, target label-budget, bootstrap and clinical-baseline runs. These are small, non-identifying aggregates; no raw PhysioNet records or score caches are included. The files are archived so a restarted Lab Compute session can compare against or reuse the published numbers without re-running every experiment. Raw caches remain under `/data/lab/EAAI1028-data/cache` and are intentionally not committed.
+`round2/` stores the derived JSON outputs and the three subject-split files used by the LightGBM, target label-budget, bootstrap and clinical-baseline runs. These are small, non-identifying aggregates; no raw PhysioNet records or score caches are included. The files are archived so a restarted Lab Compute session can compare against or reuse the published numbers without re-running every experiment. Raw caches remain under `/data/lab/eaai/cache` and are intentionally not committed.

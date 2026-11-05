@@ -1,7 +1,7 @@
 \subsection{Repeated-Split Coverage and Budget Utilisation}
 \label{sec:coverage}
 
-A single calibration/test split cannot estimate how often the certificate is violated. We therefore repeat the patient-level split ten times on each site, calibrate on half of the eligible subjects and evaluate on the other half, and record the realised mean rate, the fraction of splits above the requested budget, the no-alarm fallback rate and the patient-level violation fraction. The supplement plots budget utilisation; Table~\ref{tab:coverage} reports the 1-per-day row.
+A single calibration/test split cannot estimate how often the certificate is violated. We therefore repeat the patient-level split ten times on each site, calibrate on half of the eligible subjects and evaluate on the other half, and record the realised mean rate, the fraction of splits above the requested budget, the no-alarm fallback rate and the patient-level violation fraction. Ten splits give a coarse Monte Carlo estimate: zero exceedances is compatible with a one-sided 95\% upper bound of $0.259$ on the exceedance probability, and one exceedance in ten with $0.404$. We therefore report the counts as descriptive and do not attach a population coverage rate to them. The supplement plots budget utilisation; Table~\ref{tab:coverage} reports the 1-per-day row.
 
 
 

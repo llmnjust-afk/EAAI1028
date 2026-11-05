@@ -11,9 +11,15 @@ The upper bound must hold over the deployment population's support, not merely o
 L_{\max}=\sup_{n\in\mathbb{N},\ n\ge n_{\min}}
  \frac{24}{n\Delta}\left(1+\left\lfloor\frac{n-1}{g}\right\rfloor\right).
 \end{equation}
-The rate decreases between firing-count increments, and its peaks at $n=1+qg$ decrease as $q$ increases; hence checking $n_{\min}$ and the next such peak is sufficient. For hourly sampling, $\tau=4$, no escalation and $H_{\min}=24$, a 26-hour stay yields $L_{\max}=144/26$, exceeding the five alarms per day possible over exactly 24 hours. Escalation can increase this bound and must not be omitted from its calculation. Losses outside the declared interval are rejected, not clipped, because clipping would certify a different estimand.
+The rate decreases between firing-count increments, and its peaks at $n=1+qg$ decrease as $q$ increases; hence checking $n_{\min}$ and the next such peak is sufficient. For hourly sampling, $\tau=4$, no escalation and $H_{\min}=24$, a 26-hour stay yields $L_{\max}=144/26$, exceeding the five alarms per day possible over exactly 24 hours. Escalation can increase this bound and must not be omitted from its calculation. The implementation asserts that every realised loss lies in $[0,L_{\max}]$ and aborts if it does not; values are never clipped, because clipping would certify a different estimand.
 
-Condition on independently obtained training and validation data. The scorer, structural parameters, finite threshold grid $\Lambda$, and support bound are fixed under this conditioning. Calibration subjects are independent and identically distributed draws from the same population as future deployment subjects, although each subject's trajectory may have arbitrary internal dependence. The sample size $n$ below is the number of calibration subjects, never the number of timesteps. Exchangeability alone is not sufficient for the independent-sample concentration argument used here.
+\begin{lemma}[Threshold monotonicity]
+\label{lem:monotone}
+For the threshold policy in \cref{eq:policy}, if $\lambda_1\le\lambda_2$ then $L_i(\lambda_1)\ge L_i(\lambda_2)$ for every patient $i$.
+\end{lemma}
+Raising $\lambda$ shrinks the set of timesteps at which the score crosses the threshold, and the refractory rule returns a maximum-cardinality subset of those timesteps separated by at least $g$ steps. A maximum $g$-separated subset cannot increase when the opportunity set shrinks, so the loss is non-increasing along the grid. This is the monotonicity condition used by conformal risk control; it is a property of the policy family rather than an empirical accident. The exchange argument is recorded in the supplement. As a numerical check, the seed-0 A and B loss matrices contained no positive adjacent increment over the 200-point grid (0 of 6{,}101{,}539 comparisons).
+
+Condition on independently obtained training and validation data. The scorer, structural parameters, finite threshold grid $\Lambda$, and support bound are fixed under this conditioning. Calibration subjects are independent and identically distributed draws from the same population as future deployment subjects, although each subject's trajectory may have arbitrary internal dependence. The sample size $n$ below is the number of calibration subjects, never the number of timesteps. Exchangeability alone is not sufficient for the independent-sample concentration argument used here, and distribution shift would require the weighted or non-exchangeable extensions of conformal inference \citep{barber2023conformal}.
 
 \begin{proposition}[Budget validity]
 \label{prop:validity}
@@ -59,11 +65,11 @@ when the set is nonempty, and the exact no-alarm policy otherwise. Then
 
 The proof is given in the supplement.
 
-A sharper finite-sample alternative is conformal risk control \citep{angelopoulos2022conformal}. It replaces the high-probability radius by an expected-risk correction and is particularly convenient for stateful policies because it requires only the bounded patient loss and exchangeability, not a variance estimate.
+A sharper finite-sample alternative is conformal risk control \citep{angelopoulos2022conformal}. It replaces the high-probability radius by an expected-risk correction and is particularly convenient for stateful policies because it requires only a bounded patient loss, exchangeability and a loss that is non-increasing in the threshold, not a variance estimate. \Cref{lem:monotone} verifies the last condition for the policy family studied here; without it the correction fails and the non-monotone treatment of \cite{angelopoulos2026conformal} is required.
 
 \begin{proposition}[Expected-risk validity]
 \label{prop:crc}
-Under the fixed-scorer, finite-grid and independent-subject conditions of Proposition~\ref{prop:validity}, define
+Under the fixed-scorer, finite-grid and independent-subject conditions of Proposition~\ref{prop:validity}, and with $L_i(\lambda)$ non-increasing in $\lambda$ as guaranteed by \cref{lem:monotone}, define
 \begin{equation}
 \label{eq:crc-threshold}
 \widehat\lambda_{\mathrm{CRC}}=\min\left\{\lambda\in\Lambda:
@@ -91,4 +97,4 @@ Proposition~\ref{prop:validity} is the conservative Hoeffding certificate, while
 
 The same fixed-grid calculation can be read as a multiple-testing problem: each candidate threshold is a null hypothesis that its risk exceeds the budget, and a valid p-value turns rejection into a certificate. This is the Learn-then-Test construction \citep{angelopoulos2021learn}. A Holm step-down correction rejects at least as many hypotheses as the Bonferroni rule in Proposition~\ref{prop:validity} while retaining family-wise error control, so it is used as a less conservative comparator with the same guarantee. Recent anytime-valid variants relax the fixed-sample requirement \citep{hultberg2026anytimevalid}, and quantile versions target a tail rather than the mean \citep{farzaneh2024quantile}; neither is required for the patient-average estimand studied here, but both clarify that the guarantee is a property of the testing procedure rather than of the score model.
 
-The certificate always uses the raw empirical loss at the deployed threshold. Stateful alarm counts are not assumed to be monotone in the threshold, so isotonic regression is optional descriptive output and never substitutes for that loss in the upper bound. A finite test-cohort mean can exceed the budget even when its population expectation does not, so its exceedance frequency is an empirical diagnostic rather than the exact probability in \cref{eq:bound}. Likewise, calibration transferred across distributions is not covered without the same-population assumption.
+The certificate always uses the raw empirical loss at the deployed threshold. Threshold monotonicity follows from the nested opportunity sets above, not from an isotonic approximation; isotonic regression is optional descriptive output and never substitutes for that loss in the upper bound. If escalation were redefined to make the opportunity set non-nested, the CRC guarantee would require the non-monotone correction of \cite{angelopoulos2026conformal} or a stability argument, and we do not claim it here. A finite test-cohort mean can exceed the budget even when its population expectation does not, so its exceedance frequency is an empirical diagnostic rather than the exact probability in \cref{eq:bound}. Likewise, calibration transferred across distributions is not covered without the same-population assumption.

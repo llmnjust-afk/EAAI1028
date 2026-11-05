@@ -21,8 +21,8 @@ does not justify this concentration proof.
 ## Contents and implemented components
 
 ```
-main.tex                 elsarticle manuscript (5p, 15 pages)
-supplementary.tex        supplementary material (8 pages)
+main.tex                 elsarticle manuscript (5p, 17 pages)
+supplementary.tex        supplementary material (10 pages)
 sections/                manuscript sections; method split into reviewable parts
 refs.bib                 bibliography
 code/eaai/policy/         causal stateful alarm and upper-confidence selectors
@@ -173,20 +173,22 @@ caches remain outside the repository.
   on both sites and raises sensitivity from 0.613 to 0.706 at A and from 0.514
   to 0.619 at B, but controls expected risk rather than the probability of
   exceeding the budget; it crossed the 0.25/day request in one of ten A splits.
-- **Independent 2012 stress test.** The same scorer, policy and A-calibrated
+- **Separate-endpoint 2012 stress test.** The same scorer, policy and A-calibrated
   threshold were applied to the 2012 A/B/C mortality sets. At 1/day the realised
   rate shifts from 0.416 (A) to 0.461/0.465 (B/C) with sensitivity 0.313 versus
-  0.324/0.303. The budget travels; the operating point does not, but the sharp
-  sepsis A-to-B sensitivity loss is not universal. This is an outcome-shift
-  stress test, not a sepsis replication.
+  0.324/0.303. The requested rate is a portable reporting unit; neither the
+  certificate nor the operating point transports, and the sharp sepsis A-to-B
+  sensitivity loss is not universal. This is an outcome-shift stress test, not an
+  independent same-task cohort or a sepsis replication.
 - **Official utility and decision curve.** At 0.25/day CRC improves normalised
   2019 utility from 0.505 to 0.687 at A and 0.142 to 0.247 at B; at 1/day the
   blocked selector is better (0.932/0.278 versus 0.852/0.154) because CRC buys
   sensitivity with false alarms. Net benefit at p=0.10 agrees. A validation-ranked
   CRC variant (U-CRC) matches CRC at tight budgets and refuses the loose 2/day
-  budget: at 2/day it holds internal utility at 0.932 and external utility at
-  0.278, versus 0.562 and -0.225 for raw CRC. U-CRC is a deployment heuristic,
-  not a second risk certificate.
+  budget: at 2/day seed 0 holds internal utility at 0.932 and external utility at
+  0.278, versus 0.562 and -0.225 for raw CRC; across seeds 0--2 the internal range
+  is 0.613--0.932 and the external range is 0.233--0.278. U-CRC is a deployment
+  heuristic, not a second risk certificate.
 - **Alarm-handling queue.** With one nurse and a 15-minute mean service time,
   9.4% of alarms wait more than 10 minutes at 2 alarms/patient-day, versus 0.5%
   at a 5-minute mean; a second nurse removes most of the delay.

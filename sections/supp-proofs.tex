@@ -1,7 +1,28 @@
 \section{Detailed Proofs}
 \label{sec:supp-proofs}
 
+\paragraph{Support-bound lemma.}
+Let $n\ge n_{\min}$ be the number of observed decision steps, $g=\tau+1$ without escalation and $g=\min(\tau+1,\kappa)$ with escalation, and let $\Delta$ be the step in hours. Then
+\[
+L_{\max}=\max\left\{f(n_{\min}),f(1+g\lceil (n_{\min}-1)/g\rceil)\right\},
+\qquad
+f(n)=\frac{24}{n\Delta}\left(1+\left\lfloor\frac{n-1}{g}\right\rfloor\right).
+\]
 \begin{proof}
+Write $n=1+qg+r$ with $0\le r<g$ and $q=\lfloor(n-1)/g\rfloor$. For fixed $q$, $f(n)=24(1+q)/\{(1+qg+r)\Delta\}$ decreases in $r$, so its maximum over that block is at $r=0$. At the peaks,
+\[
+f(1+(q+1)g)-f(1+qg)
+=\frac{24}{\Delta}\left(\frac{q+2}{1+(q+1)g}-\frac{q+1}{1+qg}\right)
+=\frac{24(1-g)}{\Delta(1+qg)(1+(q+1)g)}<0
+\]
+because $g\ge2$. The maxima therefore decrease with $q$. The smallest admissible block is the one containing $n_{\min}$; if $n_{\min}$ is not itself a peak, the first admissible peak is $1+g\lceil(n_{\min}-1)/g\rceil$. Hence the maximum over $n\ge n_{\min}$ is attained at one of those two points.
+\end{proof}
+
+\begin{proof}[Proof of \cref{lem:monotone}]
+At each decision step, the event $\{s_{it}\ge\lambda_2\}$ is a subset of $\{s_{it}\ge\lambda_1\}$. The refractory rule selects the earliest maximal $g$-separated subset of the alarm-opportunity times, which has cardinality equal to the maximum size of a $g$-separated subset. Removing opportunity times cannot increase that maximum, so the number of alarms over the stay, and hence the daily rate, is non-increasing in $\lambda$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:validity}]
 For each fixed $\lambda$, the relevant one-sided Hoeffding inequality is
 \begin{equation*}
 \Pr\{R(\lambda)-\widehat R_n(\lambda)>\epsilon\}
@@ -10,7 +31,7 @@ For each fixed $\lambda$, the relevant one-sided Hoeffding inequality is
 Setting $\epsilon=L_{\max}\sqrt{\log(|\Lambda|/\alpha)/(2n)}$ and applying a union bound gives simultaneous upper bounds $R(\lambda)\le\widehat R_n(\lambda)+\epsilon$ for all grid policies with probability at least $1-\alpha$. On that event, any policy selected from the feasible set satisfies $R(\widehat\lambda)\le B$. If the feasible set is empty, the fallback has identically zero loss and hence satisfies the budget without a concentration argument. Thus a budget violation can occur only on the failure event of the simultaneous upper bounds, which has probability at most $\alpha$.
 \end{proof}
 
-\begin{proof}
+\begin{proof}[Proof of Proposition~\ref{prop:eb}]
 For a fixed $\lambda$, the random variables $L_i(\lambda)$ lie in $[0,L_{\max}]$ and are independent across subjects. The empirical-Bernstein inequality of Maurer and Pontil \citep{maurer2009empirical} with failure probability $\delta=\alpha/|\Lambda|$ gives, with probability at least $1-\delta$,
 \begin{equation*}
 R(\lambda)\le\widehat R_n(\lambda)
@@ -20,10 +41,38 @@ R(\lambda)\le\widehat R_n(\lambda)
 Substituting $\delta=\alpha/|\Lambda|$ yields the radius in \eqref{eq:bernstein}. A union bound over the $|\Lambda|$ fixed grid points makes these inequalities simultaneous with probability at least $1-\alpha$. On that event, every policy in the feasible set of \eqref{eq:lambda-eb} satisfies $R(\lambda)\le B$; the no-alarm fallback has zero loss. Thus a budget violation can occur only on the union-bound failure event, whose probability is at most $\alpha$.
 \end{proof}
 
-\begin{proof}
-For a fixed $\lambda$, exchangeability of the $n+1$ calibration and deployment losses gives $\mathbb{E}[\widehat R_{n+1}(\lambda)]=R(\lambda)$. The CRC correction is the finite-sample version of the same identity applied to the order statistic that includes the deployment point; the selected threshold is the smallest one whose corrected empirical loss is below $B$. The standard conformal risk control argument then yields $\mathbb{E}[R(\widehat\lambda_{\mathrm{CRC}})]\le B$ for any bounded monotone loss, including the patient-blocked alarm rate. The finite grid is handled by the same selection rule; no union bound is required because the guarantee is in expectation rather than simultaneously over the grid.
+\begin{proof}[Proof of Proposition~\ref{prop:crc}]
+Let $D_{1:n}$ denote the calibration losses and let $D_{n+1}$ be the deployment loss. Write
+\[
+A(D_{1:n})=\inf\left\{\lambda\in\Lambda:
+\frac{n}{n+1}\widehat R_n(\lambda)+\frac{L_{\max}}{n+1}\le B\right\},
+\]
+with the convention that the infimum of the empty set is the no-alarm policy. Define the full-sample reference
+\[
+A^*(D_{1:n+1})=\inf\left\{\lambda\in\Lambda:
+\widehat R_{n+1}(\lambda)\le B\right\},
+\qquad
+\widehat R_{n+1}(\lambda)=\frac{1}{n+1}\sum_{i=1}^{n+1}L_i(\lambda).
+\]
+The two empirical averages satisfy
+\[
+\widehat R_{n+1}(\lambda)
+=\frac{n}{n+1}\widehat R_n(\lambda)+\frac{L_{n+1}(\lambda)}{n+1}
+\le \frac{n}{n+1}\widehat R_n(\lambda)+\frac{L_{\max}}{n+1}.
+\]
+Consequently, whenever $\lambda$ is feasible for $A(D_{1:n})$ it is also feasible for $A^*(D_{1:n+1})$, so $A^*(D_{1:n+1})\le A(D_{1:n})$. Because every $L_i(\lambda)$ is non-increasing in $\lambda$ by \cref{lem:monotone},
+\[
+L_{n+1}(A(D_{1:n}))\le L_{n+1}(A^*(D_{1:n+1})).
+\]
+The full-sample selector is symmetric in the $n+1$ exchangeable losses, and $\widehat R_{n+1}(A^*)\le B$ by construction. Hence
+\[
+\mathbb E[L_{n+1}(A^*(D_{1:n+1}))]
+=\mathbb E[\widehat R_{n+1}(A^*(D_{1:n+1}))]
+\le B,
+\]
+where the equality uses exchangeability of the $n+1$ losses and the symmetry of $A^*$. Combining the last two displays proves the claim. The finite grid is fixed in advance; no union bound is needed because the statement is in expectation. If the monotonicity premise fails, the uncorrected rule can violate the target arbitrarily, and the non-monotone correction of \cite{angelopoulos2026conformal} or a stability argument is required.
 \end{proof}
 
-\begin{proof}
+\begin{proof}[Proof of Proposition~\ref{prop:mixture}]
 Conditional on the randomisation draw, the loss is the corresponding deterministic loss; taking expectation over the draw gives the convex combination. The augmented-family statement follows by applying Proposition~\ref{prop:validity} or~\ref{prop:eb} to the enlarged fixed grid.
 \end{proof}

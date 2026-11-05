@@ -21,7 +21,7 @@ z_{i,t+1}&=\begin{cases}
 \end{equation}
 The exceedance counter resets after an alarm or a non-exceedance, including a missing score. The refractory duration counts decision steps, not observations in the irregular raw record. Setting $\tau=0$ gives the memoryless threshold policy, whereas $\lambda=+\infty$ gives an exact no-alarm policy. The latter is an explicit safe fallback and is distinct from the largest finite grid threshold, which can still emit alarms.
 
-The scorer and structural parameters are selected using training and validation patients and are then fixed before risk calibration. Every candidate threshold is evaluated by replaying the entire causal policy, with state reset at each patient's admission. Within-patient alarm indicators are dependent, so counting them as independent calibration units is not justified. Dependence within a patient does not itself prevent calibration over independently sampled patient trajectories.
+The scorer is fitted on training patients; the structural parameters, threshold grid and support bound are fixed a priori and are never tuned on validation or calibration outcomes. The validation partition is reserved for the optional ranking stage and does not enter the certificate. Every candidate threshold is evaluated by replaying the entire causal policy, with state reset at each patient's admission. Within-patient alarm indicators are dependent, so counting them as independent calibration units is not justified. Dependence within a patient does not itself prevent calibration over independently sampled patient trajectories.
 
 \subsection{Risk Estimand and the Timestep Shortcut}
 

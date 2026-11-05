@@ -29,11 +29,15 @@ planned clinical experiments or reproduced every external backbone.
 | Manuscript proof had the wrong concentration tail and unsafe fallback | Bound `R-Rhat`, iid patient-block assumptions, fixed candidate family/support, and exact zero-risk fallback |
 | Draft overstated deployment guarantees, available hospitals, completed backbones, submission and compute | Distinguish population/finite-cohort/patient-tail risk; two public 2019 sites; incomplete experiments stated; false submission/GPU-hour claims removed |
 
-No monotonicity theorem is claimed for the alarm count. The selector does not
-need monotonicity, and window sensitivity has a tested refractory-policy
-counterexample to monotone improvement at lower thresholds. Hoeffding and
-empirical-Bernstein are finite-grid upper-confidence methods, not the standard
-expected-risk conformal construction; legacy class names remain for compatibility.
+Threshold monotonicity is proved for the fixed score, policy, grid and patient
+loss: raising the threshold shrinks the alarm-opportunity set, and a maximum
+refractory-separated subset cannot grow when that set shrinks. This is the
+monotonicity condition used by the CRC construction. It is not a claim that
+sensitivity or clinical utility is monotone, and window sensitivity retains a
+tested refractory-policy counterexample to monotone improvement at lower
+thresholds. Hoeffding and empirical-Bernstein remain finite-grid
+upper-confidence methods, not the standard expected-risk conformal construction;
+legacy class names remain for compatibility.
 
 The manuscript's equations, algorithm and prose now match the implemented
 smallest-certified-threshold convention. Utility-ranked selection among

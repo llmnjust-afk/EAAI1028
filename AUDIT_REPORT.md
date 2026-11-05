@@ -43,7 +43,7 @@ unsubmitted draft with author information pending.
 
 ## Local verification
 
-- `python3 -m pytest tests -q`: **124 passed** on Python 3.11.2 (31.85 seconds in the final local run).
+- `python3 -m pytest tests -q`: **164 passed** on Python 3.11.2 (25.66 seconds in the final local run).
 - Tests include exhaustive small binary state-machine trajectories, discrete
   support supremum checks with escalation and long refractory durations, strict
   loss/grid validation, safe fallback, causal GRU predictions, delta/target
@@ -75,7 +75,7 @@ unsubmitted draft with author information pending.
 ## Independent Lab verification
 
 The final Lab job completed with exit status zero after `compileall`, the full
-test suite (**124 passed in 28.20 seconds**), fresh three-seed reference
+test suite (**162 passed in 26.96 seconds**), fresh three-seed reference
 verification, and the official set-A network QC. All seeds matched at the same
 numeric tolerances as the local comparison. The official-data counts, tensor
 shape and both SHA-256 source hashes match the local QC record above.

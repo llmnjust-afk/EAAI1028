@@ -82,6 +82,34 @@ zero fallback losses. E0 JSON uses `null` when the median threshold is infinite.
 Raw loss values outside `[0,L_max]` are rejected instead of clipped. Optional
 isotonic output is diagnostic only and never replaces the raw certificate.
 
+## Automated result publication
+
+Long experiment runs can publish their artefacts without putting the token in a
+command, a URL or the git configuration. Put a workspace-scoped token in a file
+outside the repository and run:
+
+```bash
+code/scripts/run_and_publish.sh --publish \
+  --pat-file /path/to/PAT -- \
+  bash -lc 'python3 code/scripts/run_e1.py ... && python3 code/scripts/run_coverage.py ...'
+```
+
+`publish_results.py` reads the token through a temporary `GIT_ASKPASS` helper,
+stages only the requested result paths, refuses secret-bearing paths, scans the
+staged diff for the token, and pushes over an HTTPS remote. Use `--dry-run` to
+inspect what would be committed and `--no-push` to commit locally. A failed
+experiment does not publish unless the wrapper is run with a command that
+explicitly handles the failure.
+
+The operational analyses added for the revision are:
+
+```bash
+python3 scripts/run_coverage.py --cache-root cache --cohort A_lead6 --model prefix_lr --seed 0
+python3 scripts/run_ablation.py --cache-root cache --cohort A_lead6 --model prefix_lr
+python3 scripts/run_adaptation.py --cache-root cache --source-cohort A_lead6 --target-cohort B_lead6
+python3 scripts/run_ward.py --cache-root cache --cohort A_lead6 --model prefix_lr
+```
+
 ## Real-cohort status (2019 A/B)
 
 All 40,336 public 2019 records were downloaded and checksum-verified. The
@@ -93,7 +121,7 @@ caches remain outside the repository.
   $0.6761\pm0.0052$, AUPRC $0.0172\pm0.0002$. Masked GRU, three seeds:
   A-test $0.7434\pm0.0108$ / $0.0428\pm0.0048$; B external
   $0.6829\pm0.0042$ / $0.0183\pm0.0016$. A seed-0 patient bootstrap does not
-  establish a significant GRU advantage on A (AUROC difference 0.0039, 95\%
+  establish a significant GRU advantage on A (AUROC difference 0.0039, 95%
   interval $[-0.0233,0.0316]$).
 - **E2 (budgeted policies).** With A-only calibration and a 24-hour minimum
   observed stay, prefix logistic at 1 alarm/patient-day reaches A sensitivity
@@ -113,9 +141,9 @@ caches remain outside the repository.
   with Holm $p=0.066$, so it is not a decisive sensitivity advantage; the lower
   alarm-rate difference ($-0.087$ [$ -0.105$, $ -0.069$]) has Holm $p=0.036$.
 - **Target label budget.** An oracle-style nested calibration curve on B shows
-  that about 10\% of target labels recover the 1/day full-pool sensitivity
+  that about 10% of target labels recover the 1/day full-pool sensitivity
   ($0.497$ at 1,482 labelled patients versus $0.294$ with none); at 0.5/day the
-  curve is still improving at 50\%. Target labels are used, so this is a
+  curve is still improving at 50%. Target labels are used, so this is a
   diagnostic, not a deployable label-free method.
 - **Partial clinical instruments.** At 1/day, partial NEWS and SIRS beat the
   blocked logistic policy on B sensitivity ($0.449$ and $0.424$ versus $0.315$)
@@ -126,11 +154,26 @@ caches remain outside the repository.
   but also raises the realised rate from 0.270 to 0.616. Target labels are used
   for threshold selection, so this is an oracle-style reference estimate, not a deployable label-free
   procedure. The GRU and target-budget diagnostics use the archived seed files in `code/experiment_results/round2/`; the target-budget curve is logistic-only.
+- **Repeated-split coverage.** Ten stratified calibration/test splits per site
+  show no mean-budget violation for the blocked, Learn-then-Test or randomised
+  mixture selectors. The blocked certificate uses 63--75% of the budget on A
+  and 63--88% on B; the sharper selectors use up to 91%. The timestep shortcut
+  stays below the mean budget but has a higher patient-level violation fraction
+  at 1/day (0.296 versus 0.210), because it has no patient-level guarantee.
+- **Label-free adaptation.** Matching the requested rate on an unlabelled target
+  warm-up half recovers the target-calibrated operating point at 0.5, 1 and 2
+  per day on this cohort, without target labels. It controls the rate, not the
+  risk, and is transductive; it does not replace a labelled certificate.
+- **Ward load.** A 20-bed ward simulation with five admissions/day exceeds a
+  one-alarm/hour capacity in 3.8% of hours at 1 alarm/patient-day and 12.7%
+  at 2; at two alarms/hour the fractions are 0.2% and 1.6%.
+- **Clinical baselines.** Partial NEWS, SIRS and qSOFA were regenerated after
+  fixing the pre-observation backfill; steps before the first observed component
+  now receive zero points rather than a value copied from the future.
 - **Limits.** These are retrospective, subject-disjoint experiments on one public
   challenge cohort with a fixed scorer grid. They are not clinical validation,
-  do not establish alert fatigue reduction, and do not include label-free
-  target adaptation, subgroup/sparsification analyses or the official 2019
-  utility scorer.
+  do not establish alert-fatigue reduction, and do not include subgroup or
+  observation-sparsification analyses or the official 2019 utility scorer.
 
 ## Data conventions and limits
 

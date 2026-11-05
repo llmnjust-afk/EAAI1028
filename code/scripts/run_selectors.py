@@ -54,7 +54,7 @@ def main() -> int:
     parser.add_argument("--budgets", type=float, nargs="+",
                         default=[0.25, 0.5, 1.0, 2.0])
     parser.add_argument("--procedures", nargs="+",
-                        default=["blocked", "plugin", "ltt_hoeffding_holm",
+                        default=["blocked", "crc", "plugin", "ltt_hoeffding_holm",
                                  "ltt_bernstein_holm", "randomized"])
     parser.add_argument("--thresholds", type=int, default=200)
     parser.add_argument("--alpha", type=float, default=0.1)

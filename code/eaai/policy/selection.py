@@ -215,6 +215,48 @@ class LTTSelector:
 
 
 @dataclass
+class CRCSelector:
+    """Conformal risk control over a fixed threshold grid.
+
+    Uses the finite-sample CRC rule from Angelopoulos et al. (2023):
+    ``n * R_hat / (n + 1) + L_max / (n + 1) <= budget``.  The loss must be
+    bounded by ``L_max`` and non-increasing in the deployed threshold; both
+    hold for the patient-average alarm rate on a fixed grid.
+    """
+
+    budget: float
+    alpha: float = 0.1
+    threshold_: float | None = field(default=None, init=False)
+    diagnostics_: dict = field(default_factory=dict, init=False)
+
+    def fit(self, losses, lambdas, l_max) -> "CRCSelector":
+        losses, lambdas = _as_losses(losses, lambdas, l_max, self.budget, self.alpha)
+        n = losses.shape[0]
+        mean = losses.mean(axis=0)
+        bound = n * mean / (n + 1.0) + l_max / (n + 1.0)
+        feasible = np.flatnonzero(bound <= self.budget)
+        index = int(feasible[0]) if feasible.size else -1
+        self.threshold_ = float(lambdas[index]) if feasible.size else float("inf")
+        self.diagnostics_ = {
+            "index": index,
+            "feasible_indices": feasible.tolist(),
+            "empirical_risk": float(mean[index]) if feasible.size else 0.0,
+            "certified_risk": float(bound[index]) if feasible.size else 0.0,
+            "slack": (float(bound[index] - mean[index]) if feasible.size else 0.0),
+            "status": "grid_feasible" if feasible.size else "no_alarm_fallback",
+            "n_feasible": int(feasible.size),
+            "n_patients": int(n),
+            "feasible": bool(feasible.size),
+            "budget": float(self.budget),
+            "alpha": float(self.alpha),
+            "l_max": float(l_max),
+            "slack_kind": "crc",
+            "procedure": "crc",
+        }
+        return self
+
+
+@dataclass
 class RandomizedMixtureSelector:
     """Randomized mixture of adjacent thresholds.
 

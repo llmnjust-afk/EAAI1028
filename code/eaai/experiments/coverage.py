@@ -88,7 +88,7 @@ def _row(outcome: dict, budget: float, procedure: str, split: int,
 
 
 def coverage_study(scores, onset, lengths, thresholds, budgets,
-                   procedures=("blocked", "timestep", "plugin",
+                   procedures=("blocked", "crc", "timestep", "plugin",
                                "ltt_hoeffding_holm", "randomized"),
                    alpha: float = 0.1, n_splits: int = 20,
                    fractions: SplitFractions | None = None,

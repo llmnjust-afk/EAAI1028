@@ -13,7 +13,8 @@ import numpy as np
 from ..policy.alarm import HOURS_PER_DAY, AlarmPolicy, max_alarms_per_day, run_policy
 from ..policy.conformal import BlockedConformalCalibrator, TimestepConformalCalibrator
 from ..policy.selection import (
-    LTTSelector, PluginSelector, RandomizedMixtureSelector, select_by_validation)
+    CRCSelector, LTTSelector, PluginSelector, RandomizedMixtureSelector,
+    select_by_validation)
 
 
 def _validate_sequences(scores, onset, lengths, step_hours=1.0):
@@ -339,6 +340,9 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
     elif procedure in ("plugin", "global"):
         calibrator = PluginSelector(budget=budget, alpha=alpha)
         calibrator.fit(per_day[calibration], thresholds, l_max)
+    elif procedure == "crc":
+        calibrator = CRCSelector(budget=budget, alpha=alpha)
+        calibrator.fit(per_day[calibration], thresholds, l_max)
     elif procedure.startswith("ltt_"):
         parts = procedure.split("_")
         kind_slack = parts[1]
@@ -364,7 +368,7 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
     else:
         raise ValueError(
             "procedure must be blocked, blocked_hoeffding, blocked_bernstein, "
-            "plugin, global, ltt_{hoeffding|bernstein}_{holm|bonferroni}, "
+            "plugin, global, crc, ltt_{hoeffding|bernstein}_{holm|bonferroni}, "
             "randomized, randomized_hoeffding or timestep")
 
     if selection == "validation" and kind == "mixture":

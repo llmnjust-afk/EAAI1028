@@ -1,6 +1,7 @@
 import numpy as np
 
 from eaai.policy.selection import (
+    CRCSelector,
     LTTSelector,
     PluginSelector,
     RandomizedMixtureSelector,
@@ -105,3 +106,17 @@ def test_ltt_bernstein_rejects_when_the_bound_at_delta_half_is_below_budget():
     selector = LTTSelector(budget=0.5, alpha=0.1, slack="bernstein").fit(
         losses, [0.1], 1.0)
     assert selector.diagnostics_["feasible"]
+
+
+def test_crc_uses_the_finite_sample_slack():
+    losses = _losses([0.0, 0.49], n=100)
+    selector = CRCSelector(budget=0.49).fit(losses, [0.1, 0.2], l_max=1.0)
+    assert selector.diagnostics_["feasible_indices"] == [0]
+    assert selector.threshold_ == 0.1
+    assert selector.diagnostics_["certified_risk"] <= 0.49
+
+
+def test_crc_falls_back_when_the_bound_exceeds_the_budget():
+    selector = CRCSelector(budget=0.01).fit(_losses([0.0], n=10), [0.1], 1.0)
+    assert selector.diagnostics_["status"] == "no_alarm_fallback"
+    assert np.isinf(selector.threshold_)

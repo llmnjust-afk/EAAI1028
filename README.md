@@ -274,8 +274,8 @@ stress test, not as a same-task sepsis transfer.
 The oracle target-site diagnostic in `experiment_results/target_summary.json`
 is reported separately and is not a deployment method.
 The E2 A→B experiment is complete for the reference scorers, but it is not an
-A→C study and does not establish clinical superiority. No measured 45-GPU-hour
-result, deployment claim or submission status is claimed.
+A→C study and does not establish clinical superiority. No GPU-hour or energy
+measurement, deployment claim or submission status is claimed.
 
 Corrected synthetic outputs for seeds 0, 1 and 2 are under `code/audit_results/`.
 They remain finite-cohort diagnostics, including cases where certification is

@@ -1,4 +1,4 @@
-# Second correctness audit — 28 October 2026
+# Second correctness audit — 28 October 2026, updated 5 November 2026
 
 This audit follows repository commit `8e8378a`. It covers the supplied reference
 code and consistency of the draft manuscript, not a claim to have completed all
@@ -86,11 +86,11 @@ numeric tolerances as the local comparison. The official-data counts, tensor
 shape and both SHA-256 source hashes match the local QC record above.
 
 Lab versions were Python 3.10.12, NumPy 2.2.6, pandas 2.3.3, SciPy 1.15.3,
-scikit-learn 1.7.2 and PyTorch 2.11.0+cu128. LightGBM was absent on Lab as well,
-so its optional backend is not claimed tested. CUDA-enabled PyTorch being
-installed does not imply a GPU training experiment: the supplied GRU reference
-still executes on CPU. The completed checks concern reference correctness and
-data ingestion, not clinical comparative effectiveness.
+scikit-learn 1.7.2 and PyTorch 2.11.0+cu128; LightGBM 4.7.0 was later installed
+for the three-seed baseline. The GRU seed files record `device: cuda` on an
+RTX 4090, but no GPU-hour or energy measurement was recorded, so compute
+efficiency is not claimed. The completed checks concern reference correctness,
+data ingestion and reproducibility, not clinical comparative effectiveness.
 
 ## Scope limits
 

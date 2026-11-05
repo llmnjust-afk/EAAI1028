@@ -516,6 +516,7 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
         outcomes["validation_index"] = validation_index
     if selection == "utility" and validation_report is not None:
         outcomes["validation_utility"] = validation_report.get("validation_utility")
+        outcomes["validation_utility_total"] = validation_report.get("validation_utility_total")
         outcomes["validation_utility_lcb"] = validation_report.get("validation_utility_lcb")
         outcomes["validation_risk"] = validation_report.get("validation_risk")
         outcomes["validation_index"] = validation_index

@@ -10,7 +10,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from eaai.experiments.e2_budget import (evaluate_at_budget, evaluate_threshold)
+from eaai.experiments.e2_budget import (evaluate_at_budget, evaluate_threshold,
+                                        patient_utility_matrix)
 from eaai.scores.api import ScoreCache
 
 
@@ -92,6 +93,13 @@ def main() -> int:
                 target_onset, target_lengths, internal["threshold"],
                 refractory=args.refractory, escalation=args.escalation,
                 lead_window_hours=args.lead_window)
+            internal_utility = (0.0 if not np.isfinite(internal["threshold"])
+                                else float(patient_utility_matrix(
+                                    scores, onset, lengths, [internal["threshold"]]).sum()))
+            external_utility = (0.0 if not np.isfinite(internal["threshold"])
+                                 else float(patient_utility_matrix(
+                                     target_scores, target_onset, target_lengths,
+                                     [internal["threshold"]]).sum()))
             rows.append({
                 "budget": float(budget), "procedure": procedure,
                 "threshold": internal["threshold"],
@@ -99,12 +107,15 @@ def main() -> int:
                 "internal_sensitivity": internal["sensitivity"],
                 "internal_patient_violation": internal["patient_violation"],
                 "internal_ppv": internal["ppv"], "internal_nna": internal["nna"],
+                "internal_utility": internal_utility,
                 "certified_risk": internal["certified_risk"],
                 "status": internal["status"], "n_feasible": internal["n_feasible"],
                 "external_rate": external["alarm_rate"],
                 "external_sensitivity": external["sensitivity"],
                 "external_ppv": external["ppv"], "external_nna": external["nna"],
+                "external_utility": external_utility,
                 "validation_utility": internal.get("validation_utility"),
+                "validation_utility_total": internal.get("validation_utility_total"),
                 "validation_utility_lcb": internal.get("validation_utility_lcb"),
                 "validation_risk": internal.get("validation_risk"),
             })

@@ -1,0 +1,32 @@
+{
+  "A:news": {
+    "patients": 20336,
+    "cache": "cache/A_lead6__news__s0.npz",
+    "finite_fraction": 0.11564862102394065
+  },
+  "A:sirs": {
+    "patients": 20336,
+    "cache": "cache/A_lead6__sirs__s0.npz",
+    "finite_fraction": 0.11564862102394065
+  },
+  "A:qsofa": {
+    "patients": 20336,
+    "cache": "cache/A_lead6__qsofa__s0.npz",
+    "finite_fraction": 0.11564862102394065
+  },
+  "B:news": {
+    "patients": 20000,
+    "cache": "cache/B_lead6__news__s0.npz",
+    "finite_fraction": 0.1133921130952381
+  },
+  "B:sirs": {
+    "patients": 20000,
+    "cache": "cache/B_lead6__sirs__s0.npz",
+    "finite_fraction": 0.1133921130952381
+  },
+  "B:qsofa": {
+    "patients": 20000,
+    "cache": "cache/B_lead6__qsofa__s0.npz",
+    "finite_fraction": 0.1133921130952381
+  }
+}

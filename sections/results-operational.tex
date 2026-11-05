@@ -1,0 +1,74 @@
+\subsection{Repeated-Split Coverage and Budget Utilisation}
+\label{sec:coverage}
+
+A single calibration/test split cannot estimate how often the certificate is violated. We therefore repeat the patient-level split ten times on each site, calibrate on half of the eligible subjects and evaluate on the other half, and record the realised mean rate, the fraction of splits above the requested budget, the no-alarm fallback rate and the patient-level violation fraction. Figure~\ref{fig:revision}(a) plots budget utilisation; Table~\ref{tab:coverage} reports the 1-per-day row.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\linewidth]{figures/revision.pdf}
+\caption{Operational summary. (a) Realised mean alarm rate divided by the requested budget over ten repeated patient splits on site A; the dashed line is exact utilisation. (b) Percentage of hours in which a simulated 20-bed ward with five admissions per day exceeds its alarm-handling capacity, using the calibrated traces from site A.}
+\label{fig:revision}
+\end{figure}
+
+\begin{table}[tb]
+\centering
+\caption{Repeated-split coverage at the 1-per-patient-day budget, ten stratified splits per site. ``Rate'' is the mean realised alarms per patient-day, ``Util.'' is rate divided by 1.0, ``Viol.'' is the fraction of splits whose mean rate exceeded the budget, and ``Patient viol.'' is the mean fraction of test patients above the per-patient budget. LTT is the empirical-Bernstein Learn-then-Test selector with Holm correction.}
+\label{tab:coverage}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{3}{c}{Site A} & \multicolumn{3}{c}{Site B} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Procedure & Rate & Util. & Patient viol. & Rate & Util. & Patient viol. \\
+\midrule
+Blocked (EB) & $0.634$ & $0.63$ & $0.210$ & $0.630$ & $0.63$ & $0.215$ \\
+Timestep & $0.931$ & $0.93$ & $0.296$ & $0.935$ & $0.93$ & $0.308$ \\
+Plugin & $0.931$ & $0.93$ & $0.296$ & $0.935$ & $0.93$ & $0.308$ \\
+LTT (EB, Holm) & $0.872$ & $0.87$ & $0.279$ & $0.935$ & $0.93$ & $0.308$ \\
+Randomised mixture & $0.878$ & $0.88$ & $0.284$ & $0.896$ & $0.90$ & $0.302$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three findings follow. First, no certified selector exceeded the mean budget in any of the ten splits on either site; the plug-in rule exceeded it in one of ten splits at the 0.25-per-day budget, where its empirical rate was $0.221$ against a request of $0.25$ on average but crossed the line in a single partition. Second, the timestep shortcut also stayed below the mean budget in all splits. The data therefore do not support the stronger claim that the shortcut always violates the mean-rate constraint; its deficiency is that it has no patient-level guarantee, and at 1 per day its patient-violation fraction is $0.296$ versus $0.210$ for the blocked certificate. It behaves like the plug-in rule because its effective sample size is large, so it selects the most aggressive empirical threshold. Third, budget utilisation is the main engineering cost of the certificate. The blocked selector uses 63--75\% of the budget on site A and 63--88\% on site B across the four budgets. The empirical-Bernstein LTT and the randomised mixture raise utilisation to 69--91\% without a mean violation in these splits, at the price of a higher patient-level violation fraction. The plug-in rule reaches 89--93\% at the three tighter budgets (69\% at 2 per day, where the grid binds) but has no finite-sample guarantee. This is the trade that the original single-split table could not show: the certificate is conservative, and the conservatism can be reduced by a sharper selector or by randomisation, not by pretending that the point estimate is a certificate.
+
+\subsection{Operational Alarm Metrics}
+\label{sec:operational}
+
+Sensitivity and mean rate do not specify how many alarms a clinician sees for each detected event. We therefore report positive predictive value (PPV), the number needed to alert (NNA), and alarms per detected event, all computed from the same replay as the policy outcomes. On the primary A split at 1 per day, the blocked logistic policy emits $0.631$ alarms per patient-day with PPV $0.060$ and NNA $16.7$; the plug-in policy emits $0.905$ alarms per day with PPV $0.050$ and NNA $20.0$. On the external B evaluation the corresponding blocked values are PPV $0.037$ and NNA $27.2$, and the plug-in values are PPV $0.032$ and NNA $31.4$. At the tighter 0.25-per-day budget the blocked policy has PPV $0.099$ and NNA $10.1$ at A, because the same number of true alarms is divided by far fewer false alarms. The absolute PPV is low because the event prevalence is low and a patient can generate many hourly alarms; the useful engineering statement is the monotone trade: a tighter budget raises PPV and lowers NNA, while a looser budget buys sensitivity with more false alarms per detected event. These metrics also explain why the same sensitivity can correspond to very different clinical workloads across sites.
+
+\subsection{Label-Free Target Adaptation}
+\label{sec:adaptation}
+
+The source-threshold audit shows that a threshold trained on A is too quiet on B. A target site that can observe unlabelled traces can still match its requested rate without waiting for outcome labels: it chooses the most aggressive threshold whose empirical alarm rate on a warm-up half of the target subjects is at most the budget, then deploys that threshold on the held-out half. Table~\ref{tab:adaptation} compares this rate-matched rule with source transfer and with an oracle that uses target labels.
+
+\begin{table}[tb]
+\centering
+\caption{Target adaptation on site B, seed 0. The target cohort is split into disjoint warm-up and test halves. ``Source'' applies the A-calibrated threshold; ``rate-matched'' uses no target labels and matches the requested rate on the warm-up half; ``oracle'' recalibrates on target labels. Sensitivity and rate are evaluated on the target test half.}
+\label{tab:adaptation}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{Source} & \multicolumn{2}{c}{Rate-matched} & \multicolumn{2}{c}{Oracle} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Budget & Sens. & Rate & Sens. & Rate & Sens. & Rate \\
+\midrule
+0.25 & $0.194$ & $0.094$ & $0.322$ & $0.237$ & $0.261$ & $0.171$ \\
+0.50 & $0.261$ & $0.171$ & $0.414$ & $0.356$ & $0.414$ & $0.356$ \\
+1.00 & $0.414$ & $0.356$ & $0.620$ & $0.950$ & $0.620$ & $0.950$ \\
+2.00 & $0.620$ & $0.950$ & $0.809$ & $1.792$ & $0.809$ & $1.792$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On this cohort the label-free rule recovers the oracle operating point at 0.5, 1 and 2 per day: its threshold coincides with the target-calibrated threshold on the fixed grid. At 1 per day it raises target sensitivity from $0.414$ to $0.620$ and the realised rate from $0.356$ to $0.950$, still below the request. At 0.25 per day it selects a more aggressive threshold than the certified oracle, raising sensitivity from $0.194$ to $0.322$ at a rate of $0.237$ rather than the oracle's $0.261$ at $0.171$. This is a positive engineering result, but it must be read narrowly. The rule is transductive: it uses a warm-up sample from the deployment site, and it controls the alarm rate rather than the risk. If the target case mix changes the relationship between score and event risk, a rate-matched threshold can meet the budget while detecting fewer events. The oracle agreement here is a property of this cohort and this grid, not a general guarantee. The finite-sample certificate still requires labelled target calibration patients; rate matching is a deployment heuristic that can be audited with the operational metrics above.
+
+\subsection{Ward-Level Alarm Load}
+\label{sec:ward}
+
+Per-patient rates are difficult to translate into staffing. We replay the calibrated traces on a synthetic 20-bed ward with Poisson arrivals, finite beds and a fixed hourly alarm-handling capacity. At five admissions per day and a capacity of one alarm per hour, the blocked policy exceeds capacity in $0.2\%$ of hours at 0.25 alarms per patient-day, $3.8\%$ at 1 per day and $12.7\%$ at 2 per day. At a capacity of two alarms per hour the corresponding fractions are $0.0\%$, $0.2\%$ and $1.6\%$ (Figure~\ref{fig:revision}(b)). The peak hourly demand rises from two to three alarms, and the 95th percentile from one to two. At ten admissions per day the ward reaches $84\%$ bed occupancy and refuses $13.6\%$ of admissions at the 2-per-day operating point, so the load estimate is conditional on the arrival and capacity assumptions rather than a property of the policy alone. The simulation is a translation device, not a validation: it shows that a budget difference of a factor of two is operationally visible at the nursing-station level, and that a ward with one alarm per hour of spare capacity is stressed even at 1 alarm per patient-day.
+
+\subsection{Ablations}
+\label{sec:ablation}
+
+One-at-a-time ablations on the primary A split identify which design choices are first-order. The refractory window is one: moving from $\tau=2$ to $\tau=12$ raises sensitivity from $0.518$ to $0.726$ but also raises the patient-violation fraction from $0.167$ to $0.327$ at the 1-per-day budget. The escalation tier is a strong de-alarming control: $\kappa=1$ lowers the realised rate from $0.631$ to $0.472$ and sensitivity from $0.607$ to $0.286$. The lead window changes sensitivity modestly ($0.560$ at 6 hours, $0.607$ at 12, $0.631$ at 24) without changing the threshold. The risk level is second-order on this split: $\alpha=0.05,0.1,0.2$ selects the same threshold, with certified risk changing from $0.844$ to $0.823$. Grid resolution is first-order at the coarse end: 20 thresholds produce a rate of $0.082$ and sensitivity $0.179$, 50 and 100 thresholds produce about $0.44$ and $0.51$, and 200 thresholds recover $0.631$ and $0.607$. The minimum-stay restriction changes both eligibility and the selected threshold: at 6, 12 and 48 hours the sensitivities are $0.627$, $0.655$ and $0.609$ at rates $0.832$, $0.825$ and $0.747$. These results do not justify a universal tuning rule, but they show that the reported operating point depends on declared structural choices, which is why those choices are fixed before calibration and reported with the certificate.

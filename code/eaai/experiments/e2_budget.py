@@ -307,6 +307,8 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
     if per_day.max() > l_max + 1e-9:
         raise AssertionError("per-patient loss exceeds L_max; declare the minimum stay")
 
+    if selection not in ("default", "validation"):
+        raise ValueError("selection must be 'default' or 'validation'")
     validation_index = None
     validation_report = None
     val_losses = None
@@ -357,7 +359,7 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
         if calibrator.diagnostics_["feasible"]:
             kind = "mixture"
             low_index = int(calibrator.diagnostics_["index"])
-            high_index = low_index + 1
+            high_index = int(calibrator.diagnostics_["index_high"])
             p_low = float(calibrator.diagnostics_["probability_low"])
     else:
         raise ValueError(
@@ -365,6 +367,8 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
             "plugin, global, ltt_{hoeffding|bernstein}_{holm|bonferroni}, "
             "randomized, randomized_hoeffding or timestep")
 
+    if selection == "validation" and kind == "mixture":
+        raise ValueError("validation selection is not defined for randomised mixtures")
     if (selection == "validation" and val_losses is not None
             and kind == "single" and calibrator.diagnostics_.get("feasible")):
         validation_report = select_by_validation(

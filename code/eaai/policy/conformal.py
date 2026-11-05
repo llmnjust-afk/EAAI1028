@@ -131,6 +131,7 @@ class BlockedConformalCalibrator:
             "min_grid_upper_bound": float(np.min(certified)),
             "n_patients": int(losses.shape[0]),
             "n_feasible": int(feasible.size),
+            "feasible_indices": feasible.tolist(),
             "feasible": bool(feasible.size),
             "n_clipped": 0,
             "budget": float(self.budget),

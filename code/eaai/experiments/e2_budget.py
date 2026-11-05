@@ -12,6 +12,8 @@ import numpy as np
 
 from ..policy.alarm import HOURS_PER_DAY, AlarmPolicy, max_alarms_per_day, run_policy
 from ..policy.conformal import BlockedConformalCalibrator, TimestepConformalCalibrator
+from ..policy.selection import (
+    LTTSelector, PluginSelector, RandomizedMixtureSelector, select_by_validation)
 
 
 def _validate_sequences(scores, onset, lengths, step_hours=1.0):
@@ -124,19 +126,32 @@ def _policy_outcomes(scores: list[np.ndarray], onset: np.ndarray,
                      lengths: np.ndarray, threshold: float,
                      refractory: int, escalation: int,
                      lead_window_hours: float, step_hours: float) -> dict:
+    """Per-patient policy outcomes and clinically interpretable alarm metrics.
+
+    ``ppv`` is the fraction of emitted alarms that fall inside an eligible
+    event's pre-onset detection window.  Alarms on patients without an
+    observable event are false alarms.  ``nna`` (number needed to alert) is the
+    reciprocal of PPV when at least one event is detected.
+    """
     horizon = int(np.floor(lead_window_hours / step_hours))
     detected, leads, rates = [], [], []
+    n_alarms = 0
+    n_true_alarms = 0
+    patient_days = 0.0
 
     for i, seq in enumerate(scores):
         fired = run_policy(seq[:lengths[i]], AlarmPolicy(threshold, refractory, escalation))
         hours = lengths[i] * step_hours
         rates.append(float(np.count_nonzero(fired)) * HOURS_PER_DAY / hours)
+        n_alarms += int(np.count_nonzero(fired))
+        patient_days += hours / HOURS_PER_DAY
 
         t_event = int(onset[i])
         if t_event <= 0 or t_event >= lengths[i]:
             continue
         start = max(t_event - horizon, 0)
         window = fired[start:t_event]
+        n_true_alarms += int(np.count_nonzero(window))
         hit = np.flatnonzero(window)
         if hit.size:
             detected.append(True)
@@ -144,12 +159,107 @@ def _policy_outcomes(scores: list[np.ndarray], onset: np.ndarray,
         else:
             detected.append(False)
 
+    n_events = len(detected)
+    detected_count = int(sum(detected))
+    ppv = float(n_true_alarms / n_alarms) if n_alarms else float("nan")
     return {
         "alarm_rate": float(np.mean(rates)),
         "sensitivity": float(np.mean(detected)) if detected else float("nan"),
         "median_lead_time": float(np.median(leads)) if leads else float("nan"),
-        "detected": int(sum(detected)),
-        "n_events": len(detected),
+        "detected": detected_count,
+        "n_events": n_events,
+        "n_alarms": int(n_alarms),
+        "n_true_alarms": int(n_true_alarms),
+        "patients": int(len(scores)),
+        "patient_days": float(patient_days),
+        "alarm_rate_pooled": float(n_alarms / patient_days) if patient_days else float("nan"),
+        "ppv": ppv,
+        "nna": float(1.0 / ppv) if np.isfinite(ppv) and ppv > 0 else float("nan"),
+        "alarms_per_detected_event": (float(n_alarms / detected_count)
+                                      if detected_count else float("nan")),
+    }
+
+
+def _mixture_outcomes(scores: list[np.ndarray], onset: np.ndarray,
+                      lengths: np.ndarray, low: float, high: float, p_low: float,
+                      refractory: int, escalation: int,
+                      lead_window_hours: float, step_hours: float) -> dict:
+    """Expected outcomes when each patient draws the low threshold with ``p_low``.
+
+    Randomising the threshold once per patient makes the alarm rate linear in
+    ``p_low`` and the detection probability a two-point mixture.  The lead-time
+    median is computed with the induced two-point weights, which is exact for
+    this randomisation scheme.
+    """
+    low_out = _policy_outcomes(scores, onset, lengths, low, refractory, escalation,
+                               lead_window_hours, step_hours)
+    high_out = _policy_outcomes(scores, onset, lengths, high, refractory, escalation,
+                                lead_window_hours, step_hours)
+    p = float(p_low)
+    q = 1.0 - p
+
+    def mix(a, b):
+        return float(p * a + q * b) if np.isfinite(a) and np.isfinite(b) else float("nan")
+
+    # Detection probabilities and lead-time values per patient for the two
+    # deterministic thresholds, used to build the mixture distribution.
+    horizon = int(np.floor(lead_window_hours / step_hours))
+    leads = []
+    weights = []
+    for i, seq in enumerate(scores):
+        t_event = int(onset[i])
+        if t_event <= 0 or t_event >= lengths[i]:
+            continue
+        for threshold, weight in ((low, p), (high, q)):
+            if weight <= 0:
+                continue
+            fired = run_policy(seq[:lengths[i]], AlarmPolicy(threshold, refractory, escalation))
+            start = max(t_event - horizon, 0)
+            hit = np.flatnonzero(fired[start:t_event])
+            if hit.size:
+                leads.append((t_event - (start + hit[0])) * step_hours)
+                weights.append(weight)
+            else:
+                leads.append(np.nan)
+                weights.append(weight)
+    if leads:
+        leads_arr = np.asarray(leads, dtype=float)
+        weights_arr = np.asarray(weights, dtype=float)
+        valid = np.isfinite(leads_arr)
+        if valid.any():
+            order = np.argsort(leads_arr[valid])
+            values = leads_arr[valid][order]
+            w = weights_arr[valid][order]
+            cumulative = np.cumsum(w) / w.sum()
+            median_lead = float(values[np.searchsorted(cumulative, 0.5)])
+        else:
+            median_lead = float("nan")
+    else:
+        median_lead = float("nan")
+
+    n_alarms = mix(low_out["n_alarms"], high_out["n_alarms"])
+    n_true = mix(low_out["n_true_alarms"], high_out["n_true_alarms"])
+    ppv = float(n_true / n_alarms) if n_alarms else float("nan")
+    detected = mix(low_out["detected"], high_out["detected"])
+    return {
+        "alarm_rate": mix(low_out["alarm_rate"], high_out["alarm_rate"]),
+        "sensitivity": mix(low_out["sensitivity"], high_out["sensitivity"]),
+        "median_lead_time": median_lead,
+        "detected": detected,
+        "n_events": low_out["n_events"],
+        "n_alarms": n_alarms,
+        "n_true_alarms": n_true,
+        "patients": low_out["patients"],
+        "patient_days": low_out["patient_days"],
+        "alarm_rate_pooled": mix(low_out["alarm_rate_pooled"], high_out["alarm_rate_pooled"]),
+        "ppv": ppv,
+        "nna": float(1.0 / ppv) if np.isfinite(ppv) and ppv > 0 else float("nan"),
+        "alarms_per_detected_event": (float(n_alarms / detected)
+                                      if detected else float("nan")),
+        "mixed": True,
+        "threshold_low": float(low),
+        "threshold_high": float(high),
+        "probability_low": p,
     }
 
 
@@ -159,7 +269,9 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
                          lead_window_hours: float = 12.0, step_hours: float = 1.0,
                          slack: str = "bernstein",
                          min_stay_hours: float | None = None,
-                         procedure: str = "blocked") -> dict:
+                         procedure: str = "blocked",
+                         validation=None, selection: str = "default",
+                         n_probability_points: int = 11) -> dict:
     """Calibrate a supplied loss matrix and evaluate a disjoint test partition.
 
     ``procedure="timestep"`` is the deliberately invalid effective-sample-size
@@ -183,57 +295,131 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
     if per_day.max() > l_max + 1e-9:
         raise AssertionError("per-patient loss exceeds L_max; declare the minimum stay")
 
+    validation_index = None
+    validation_report = None
+    val_losses = None
+    if validation is not None:
+        validation = np.asarray(validation, dtype=int)
+        if (validation.ndim != 1 or not validation.size or
+                np.any(validation < 0) or np.any(validation >= len(sequences)) or
+                np.unique(validation).size != validation.size):
+            raise ValueError("validation indices must be nonempty, unique and in range")
+        if (np.intersect1d(validation, calibration).size or
+                np.intersect1d(validation, test).size):
+            raise ValueError("validation must be disjoint from calibration and test")
+        val_losses = per_day[validation]
+
+    kind = "single"
+    low_index = high_index = None
+    p_low = 1.0
     if procedure == "timestep":
         calibrator = TimestepConformalCalibrator(budget=budget, alpha=alpha)
         calibrator.fit(per_day[calibration], thresholds,
                        n_steps=int(lengths[calibration].sum()), l_max=l_max)
-        feasible = calibrator.diagnostics_["index"] >= 0
-    elif procedure == "blocked":
-        calibrator = BlockedConformalCalibrator(budget=budget, alpha=alpha, slack=slack)
+    elif procedure in ("blocked", "blocked_hoeffding", "blocked_bernstein"):
+        kind_slack = ("hoeffding" if procedure == "blocked_hoeffding"
+                      else "bernstein" if procedure == "blocked_bernstein" else slack)
+        calibrator = BlockedConformalCalibrator(budget=budget, alpha=alpha,
+                                                 slack=kind_slack)
         calibrator.fit(per_day[calibration], thresholds, l_max)
-        feasible = calibrator.feasible_
-    elif procedure == "global":
-        calibrator = BlockedConformalCalibrator(budget=budget, alpha=alpha, slack=slack)
-        empirical = per_day[calibration].mean(axis=0)
-        admissible = np.flatnonzero(empirical <= budget)
-        index = int(admissible[0]) if admissible.size else -1
-        calibrator.threshold_ = float(thresholds[index]) if admissible.size else float("inf")
-        calibrator.feasible_ = bool(admissible.size)
-        calibrator.diagnostics_ = {
-            "index": index,
-            "empirical_risk": float(empirical[index]) if admissible.size else 0.0,
-            "certified_risk": float(empirical[index]) if admissible.size else 0.0,
-            "status": "grid_feasible" if admissible.size else "no_alarm_fallback",
-            "n_patients": int(calibration.size),
-            "n_feasible": int(admissible.size),
-            "feasible": bool(admissible.size),
-            "budget": float(budget),
-            "alpha": float(alpha),
-            "l_max": float(l_max),
-            "slack_kind": "none",
-        }
-        feasible = calibrator.feasible_
+    elif procedure in ("plugin", "global"):
+        calibrator = PluginSelector(budget=budget, alpha=alpha)
+        calibrator.fit(per_day[calibration], thresholds, l_max)
+    elif procedure.startswith("ltt_"):
+        parts = procedure.split("_")
+        kind_slack = parts[1]
+        correction = parts[2] if len(parts) > 2 else "holm"
+        if kind_slack not in ("hoeffding", "bernstein"):
+            raise ValueError("LTT slack must be hoeffding or bernstein")
+        if correction not in ("holm", "bonferroni"):
+            raise ValueError("LTT correction must be holm or bonferroni")
+        calibrator = LTTSelector(budget=budget, alpha=alpha, slack=kind_slack,
+                                 correction=correction)
+        calibrator.fit(per_day[calibration], thresholds, l_max)
+    elif procedure.startswith("randomized"):
+        kind_slack = "hoeffding" if procedure.endswith("hoeffding") else slack
+        calibrator = RandomizedMixtureSelector(
+            budget=budget, alpha=alpha, slack=kind_slack,
+            n_probability_points=n_probability_points)
+        calibrator.fit(per_day[calibration], thresholds, l_max)
+        if calibrator.diagnostics_["feasible"]:
+            kind = "mixture"
+            low_index = int(calibrator.diagnostics_["index"])
+            high_index = low_index + 1
+            p_low = float(calibrator.diagnostics_["probability_low"])
     else:
-        raise ValueError("procedure must be 'blocked', 'global' or 'timestep'")
+        raise ValueError(
+            "procedure must be blocked, blocked_hoeffding, blocked_bernstein, "
+            "plugin, global, ltt_{hoeffding|bernstein}_{holm|bonferroni}, "
+            "randomized, randomized_hoeffding or timestep")
+
+    if (selection == "validation" and val_losses is not None
+            and kind == "single" and calibrator.diagnostics_.get("feasible")):
+        validation_report = select_by_validation(
+            calibrator, val_losses, thresholds, budget=budget,
+            validation_scores=[sequences[i] for i in validation],
+            validation_onset=onset[validation],
+            validation_lengths=lengths[validation],
+            refractory=refractory, escalation=escalation,
+            lead_window_hours=lead_window_hours)
+        validation_index = int(validation_report["index"])
+        if validation_index >= 0:
+            calibrator.diagnostics_["index"] = validation_index
+            calibrator.diagnostics_["empirical_risk"] = float(
+                per_day[calibration, validation_index].mean())
+            calibrator.threshold_ = float(thresholds[validation_index])
+            calibrator.diagnostics_["status"] = "validation_selected"
+
     raw_threshold = calibrator.threshold_
     if raw_threshold is None:
         raise RuntimeError("calibrator did not produce a threshold")
-    threshold = float(raw_threshold)
-    outcomes = _policy_outcomes([sequences[i] for i in test], onset[test], lengths[test],
-                                threshold, refractory, escalation,
-                                lead_window_hours, step_hours)
-    test_losses = (per_day[test, calibrator.diagnostics_["index"]]
-                   if feasible else np.zeros(test.size))
+    index = int(calibrator.diagnostics_.get("index", -1))
+    feasible = bool(calibrator.diagnostics_.get("feasible", index >= 0))
+    if kind == "mixture" and feasible:
+        threshold = float(calibrator.diagnostics_["threshold_low"])
+        outcomes = _mixture_outcomes(
+            [sequences[i] for i in test], onset[test], lengths[test],
+            low=float(calibrator.diagnostics_["threshold_low"]),
+            high=float(calibrator.diagnostics_["threshold_high"]),
+            p_low=float(calibrator.diagnostics_["probability_low"]),
+            refractory=refractory, escalation=escalation,
+            lead_window_hours=lead_window_hours, step_hours=step_hours)
+        test_losses = (p_low * per_day[test, low_index]
+                       + (1.0 - p_low) * per_day[test, high_index])
+    else:
+        threshold = float(raw_threshold)
+        outcomes = _policy_outcomes(
+            [sequences[i] for i in test], onset[test], lengths[test],
+            threshold, refractory, escalation,
+            lead_window_hours, step_hours)
+        test_losses = (per_day[test, index] if feasible else np.zeros(test.size))
+
     outcomes.update({
         "budget": float(budget),
         "threshold": threshold,
         "patient_violation": float(np.mean(test_losses > budget)),
         "certified_risk": calibrator.diagnostics_["certified_risk"],
-        "status": calibrator.diagnostics_["status"],
+        "status": calibrator.diagnostics_.get("status", "grid_feasible"),
         "procedure": procedure,
-        "n_feasible": int(calibrator.diagnostics_.get("n_feasible", 0)),
+        "selection": selection,
+        "n_feasible": int(calibrator.diagnostics_.get("n_feasible", 1 if feasible else 0)),
         "l_max": l_max,
+        "index": index,
+        "empirical_risk": float(calibrator.diagnostics_.get("empirical_risk", 0.0)),
+        "slack": float(calibrator.diagnostics_.get("slack", 0.0)),
     })
+    if kind == "mixture" and feasible:
+        outcomes.update({
+            "threshold_low": float(calibrator.diagnostics_["threshold_low"]),
+            "threshold_high": float(calibrator.diagnostics_["threshold_high"]),
+            "probability_low": float(calibrator.diagnostics_["probability_low"]),
+        })
+    if validation is not None and selection == "validation":
+        outcomes["validation_sensitivity"] = (None if validation_report is None
+                                              else validation_report.get("validation_sensitivity"))
+        outcomes["validation_risk"] = (None if validation_report is None
+                                       else validation_report.get("validation_risk"))
+        outcomes["validation_index"] = validation_index
     return outcomes
 
 
@@ -243,7 +429,9 @@ def evaluate_at_budget(scores, onset, lengths, calibration, test, budget: float,
                        lead_window_hours: float = 12.0, step_hours: float = 1.0,
                        slack: str = "bernstein",
                        min_stay_hours: float | None = None,
-                       procedure: str = "blocked") -> dict:
+                       procedure: str = "blocked",
+                       validation=None, selection: str = "default",
+                       n_probability_points: int = 11) -> dict:
     """Calibrate on disjoint patients and evaluate only observed follow-up.
 
     The support bound must be specified independently of calibration/test data.
@@ -262,7 +450,9 @@ def evaluate_at_budget(scores, onset, lengths, calibration, test, budget: float,
                                 lead_window_hours=lead_window_hours,
                                 step_hours=step_hours, slack=slack,
                                 min_stay_hours=min_stay_hours,
-                                procedure=procedure)
+                                procedure=procedure, validation=validation,
+                                selection=selection,
+                                n_probability_points=n_probability_points)
 
 
 def sweep(scores, onset, lengths, calibration, test,

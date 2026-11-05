@@ -62,3 +62,10 @@ def test_infinite_clinical_measurements_are_missing_not_extreme_scores():
     assert np.isnan(score_cohort(frame(HR=np.inf), "news")[0])
     raw = pd.DataFrame({"HR": [130., np.inf]})
     assert score_cohort(raw, "news").tolist() == [2., 2.]
+
+
+def test_unobserved_prefix_is_not_backfilled_from_the_future():
+    from eaai.data.cohort import _finalize_clinical_score
+
+    out = _finalize_clinical_score([np.nan, np.nan, 3.0, np.nan, 4.0])
+    assert out.tolist() == [0.0, 0.0, 3.0, 0.0, 4.0]

@@ -88,3 +88,55 @@ def test_global_threshold_uses_only_point_estimate():
     assert row["procedure"] == "global"
     assert row["status"] in ("grid_feasible", "no_alarm_fallback")
     assert row["certified_risk"] <= 1.0 + 1e-9
+
+
+def test_plugin_and_ltt_procedures_are_labeled_and_bounded():
+    cohort, calibration, test = _fixture()
+    thresholds = np.linspace(0.05, 0.95, 40)
+    for procedure in ("plugin", "ltt_hoeffding_holm", "ltt_bernstein_bonferroni"):
+        row = evaluate_at_budget(
+            cohort["scores"], cohort["onset"], cohort["lengths"],
+            calibration, test, budget=1.0, thresholds=thresholds,
+            procedure=procedure)
+        assert row["procedure"] == procedure
+        assert row["status"] in ("grid_feasible", "no_alarm_fallback")
+        assert 0.0 <= row["patient_violation"] <= 1.0
+
+
+def test_operational_metrics_are_consistent():
+    cohort, calibration, test = _fixture()
+    row = evaluate_at_budget(
+        cohort["scores"], cohort["onset"], cohort["lengths"],
+        calibration, test, budget=1.0,
+        thresholds=np.linspace(0.05, 0.95, 40))
+    assert row["n_alarms"] >= row["n_true_alarms"] >= 0
+    if row["n_alarms"]:
+        assert np.isclose(row["ppv"], row["n_true_alarms"] / row["n_alarms"])
+        if row["n_true_alarms"]:
+            assert np.isclose(row["nna"], row["n_alarms"] / row["n_true_alarms"])
+    assert row["alarm_rate_pooled"] == row["n_alarms"] / row["patient_days"]
+
+
+def test_validation_partition_must_be_disjoint():
+    cohort, calibration, test = _fixture()
+    try:
+        evaluate_at_budget(
+            cohort["scores"], cohort["onset"], cohort["lengths"],
+            calibration, test, budget=1.0,
+            thresholds=np.linspace(0.05, 0.95, 40),
+            validation=calibration[:20], selection="validation")
+    except ValueError as exc:
+        assert "disjoint" in str(exc)
+    else:
+        raise AssertionError("expected ValueError")
+
+
+def test_mixture_outcomes_are_linear_in_the_mixing_probability():
+    scores = [np.array([0.9, 0.9, 0.9, 0.2, 0.2, 0.2])]
+    onset = np.array([5])
+    lengths = np.array([6])
+    low = _policy_outcomes(scores, onset, lengths, 0.5, 1, 0, 4.0, 1.0)
+    high = _policy_outcomes(scores, onset, lengths, 0.95, 1, 0, 4.0, 1.0)
+    mixed = _policy_outcomes(scores, onset, lengths, 0.5, 1, 0, 4.0, 1.0)
+    assert np.isclose(mixed["alarm_rate"], low["alarm_rate"])
+    assert high["alarm_rate"] <= low["alarm_rate"]

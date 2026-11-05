@@ -77,6 +77,19 @@ def split_summary(batch: dict, labels: np.ndarray, index: np.ndarray) -> dict:
     }
 
 
+def _finalize_clinical_score(scored) -> np.ndarray:
+    """Map unobserved hours to the no-score value without using future data.
+
+    Clinical instruments are undefined before the first observation.  Earlier
+    versions copied the first finite value backwards, which leaked future
+    information into the alarm policy.  Unobserved hours are now explicit zeros;
+    the policy already treats a zero score as "no evidence for an alarm".
+    """
+    scored = np.array(scored, dtype=float, copy=True)
+    scored[~np.isfinite(scored)] = 0.0
+    return scored
+
+
 def clinical_score_batch_multi(root, subset: str = "A",
                                instruments=("news", "sirs", "qsofa"),
                                limit: int | None = None,
@@ -127,11 +140,7 @@ def clinical_score_batch_multi(root, subset: str = "A",
             scored = np.asarray(score_cohort(hourly, name), dtype=float)
             if scored.shape != (record.length,):
                 raise ValueError("clinical score length does not match harmonised record")
-            finite = np.flatnonzero(np.isfinite(scored))
-            if finite.size:
-                scored[:finite[0]] = scored[finite[0]]
-            scored[~np.isfinite(scored)] = 0.0
-            scores[name].append(scored)
+            scores[name].append(_finalize_clinical_score(scored))
         ids.append(pid)
         lengths.append(record.length)
         onset.append(-1 if record.onset_index is None else record.onset_index)

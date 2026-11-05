@@ -31,7 +31,8 @@ def main() -> int:
     ward = json.loads(args.ward.read_text())["rows"]
     fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.0), constrained_layout=True)
 
-    styles = {"blocked": ("o", "-"), "ltt_bernstein_holm": ("s", "--"),
+    styles = {"blocked": ("o", "-"), "crc": ("P", "-"),
+              "ltt_bernstein_holm": ("s", "--"),
               "randomized": ("^", "-."), "plugin": ("D", ":"),
               "timestep": ("v", (0, (3, 1, 1, 1)))}
     for procedure, (marker, linestyle) in styles.items():

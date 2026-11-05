@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eaai.experiments.ward import simulate_ward
+from eaai.experiments.ward import simulate_alarm_queue, simulate_ward
 
 
 def _traces(rate_per_hour=0.2, n=10, length=72):
@@ -37,3 +37,24 @@ def test_higher_alarm_rate_increases_ward_demand():
 def test_ward_rejects_empty_traces():
     with pytest.raises(ValueError):
         simulate_ward([], np.array([], dtype=int))
+
+
+def test_alarm_queue_reports_response_fractions():
+    fired, lengths = _traces(rate_per_hour=0.3)
+    result = simulate_alarm_queue(
+        fired, lengths, arrival_rate=5.0, horizon_days=14,
+        n_beds=20, n_nurses=2, mean_service_min=5.0, warmup_days=2, seed=3)
+    assert result["n_alarms"] > 0
+    assert 0.0 <= result["nurse_utilization"] <= 1.0
+    assert 0.0 <= result["fraction_wait_over_5min"] <= 1.0
+    assert result["p95_response_min"] >= result["mean_wait_min"] >= 0.0
+
+
+def test_alarm_queue_without_alarms_is_empty():
+    fired = [np.zeros(48, dtype=bool)]
+    result = simulate_alarm_queue(
+        fired, np.array([48]), arrival_rate=1.0, horizon_days=4,
+        n_beds=4, n_nurses=1, mean_service_min=5.0, warmup_days=1, seed=4)
+    assert result["n_alarms"] == 0
+    assert result["mean_wait_min"] == 0.0
+    assert result["fraction_wait_over_10min"] == 0.0

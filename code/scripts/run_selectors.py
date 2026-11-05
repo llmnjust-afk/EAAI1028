@@ -58,6 +58,8 @@ def main() -> int:
                                  "ltt_bernstein_holm", "randomized"])
     parser.add_argument("--thresholds", type=int, default=200)
     parser.add_argument("--alpha", type=float, default=0.1)
+    parser.add_argument("--selection", choices=("default", "validation", "utility"),
+                        default="default")
     parser.add_argument("--refractory", type=int, default=4)
     parser.add_argument("--escalation", type=int, default=0)
     parser.add_argument("--min-stay", type=float, default=24.0)
@@ -70,6 +72,7 @@ def main() -> int:
         args.cache_root, args.source_cohort, args.model, args.seed, args.min_stay)
     split = np.load(args.splits)
     calibration = _remap(split["calibration"], eligible, n_total)
+    validation = _remap(split["validation"], eligible, n_total) if "validation" in split else None
     test = _remap(split["test"], eligible, n_total)
     target_scores, target_onset, target_lengths, target_eligible, target_total = _load(
         args.cache_root, args.target_cohort, args.model, args.seed, args.min_stay)
@@ -82,7 +85,8 @@ def main() -> int:
                 thresholds=thresholds, procedure=procedure, alpha=args.alpha,
                 refractory=args.refractory, escalation=args.escalation,
                 min_stay_hours=args.min_stay,
-                lead_window_hours=args.lead_window)
+                lead_window_hours=args.lead_window,
+                validation=validation, selection=args.selection)
             external = evaluate_threshold(
                 [target_scores[i] for i in range(len(target_scores))],
                 target_onset, target_lengths, internal["threshold"],
@@ -100,12 +104,15 @@ def main() -> int:
                 "external_rate": external["alarm_rate"],
                 "external_sensitivity": external["sensitivity"],
                 "external_ppv": external["ppv"], "external_nna": external["nna"],
+                "validation_utility": internal.get("validation_utility"),
+                "validation_utility_lcb": internal.get("validation_utility_lcb"),
+                "validation_risk": internal.get("validation_risk"),
             })
     output = {"config": {
         "source_cohort": args.source_cohort, "target_cohort": args.target_cohort,
         "model": args.model, "seed": args.seed, "alpha": args.alpha,
         "budgets": [float(b) for b in args.budgets],
-        "procedures": list(args.procedures),
+        "procedures": list(args.procedures), "selection": args.selection,
         "n_calibration": int(calibration.size), "n_test": int(test.size),
         "n_target": len(target_scores),
     }, "rows": rows}

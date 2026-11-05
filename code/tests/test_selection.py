@@ -1,10 +1,12 @@
 import numpy as np
+import pytest
 
 from eaai.policy.selection import (
     CRCSelector,
     LTTSelector,
     PluginSelector,
     RandomizedMixtureSelector,
+    select_by_utility,
     select_by_validation,
 )
 
@@ -120,3 +122,25 @@ def test_crc_falls_back_when_the_bound_exceeds_the_budget():
     selector = CRCSelector(budget=0.01).fit(_losses([0.0], n=10), [0.1], 1.0)
     assert selector.diagnostics_["status"] == "no_alarm_fallback"
     assert np.isinf(selector.threshold_)
+
+
+def test_utility_selection_chooses_the_best_rate_certified_candidate():
+    losses = _losses([0.0, 0.0, 0.0])
+    calibrator = PluginSelector(budget=0.1).fit(losses, [0.1, 0.2, 0.3], 1.0)
+    utility = np.array([[0.0, 0.2, 0.1],
+                        [0.0, 0.4, 0.1],
+                        [0.0, 0.3, 0.1]])
+    report = select_by_utility(calibrator, np.zeros((3, 3)),
+                               [0.1, 0.2, 0.3], 0.1, utility)
+    assert report["index"] == 1
+    assert report["status"] == "utility_selected"
+    assert report["validation_utility"] == pytest.approx(0.3)
+
+
+def test_utility_selection_falls_back_when_no_candidate_is_certified():
+    losses = _losses([1.0, 1.0])
+    calibrator = PluginSelector(budget=0.1).fit(losses, [0.1, 0.2], 1.0)
+    report = select_by_utility(calibrator, np.zeros((2, 2)),
+                               [0.1, 0.2], 0.1, np.zeros((2, 2)))
+    assert report["index"] == -1
+    assert report["status"] == "no_alarm_fallback"

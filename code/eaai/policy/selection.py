@@ -413,3 +413,58 @@ def select_by_validation(calibrator, validation_losses: np.ndarray,
         "validation_risk": float(risks[chosen]),
         "n_feasible": len(indices),
     }
+
+
+def select_by_utility(calibrator, validation_losses: np.ndarray,
+                      thresholds: np.ndarray, budget: float,
+                      utility_rows: np.ndarray,
+                      z: float = 1.2815515655446004) -> dict:
+    """Choose a rate-certified threshold by validation utility.
+
+    The calibration step supplies a set of thresholds whose patient-blocked
+    alarm-rate certificate is at most ``budget``.  This function ranks only
+    those candidates on a disjoint validation partition.  Utilities are
+    normalised per-patient contributions, so the standard error is computed
+    across patients rather than timesteps.  The one-sided normal lower bound
+    reduces the chance that a high-variance validation spike is selected; the
+    rate certificate itself is unchanged.
+    """
+    indices = list(calibrator.diagnostics_.get("feasible_indices", []))
+    thresholds = np.asarray(thresholds, dtype=float)
+    validation_losses = np.asarray(validation_losses, dtype=float)
+    utility_rows = np.asarray(utility_rows, dtype=float)
+    if validation_losses.ndim != 2 or validation_losses.shape[1] != thresholds.size:
+        raise ValueError("validation losses must match the threshold grid")
+    if utility_rows.shape != validation_losses.shape:
+        raise ValueError("utility rows must match validation losses")
+    if not np.isfinite(utility_rows).all():
+        raise ValueError("validation utilities must be finite")
+    if not np.isfinite(z) or z < 0:
+        raise ValueError("z must be finite and nonnegative")
+    if not indices:
+        return {"index": -1, "threshold": float("inf"),
+                "status": "no_alarm_fallback", "validation_utility": None,
+                "validation_utility_lcb": None, "validation_risk": None,
+                "n_feasible": 0}
+
+    n = utility_rows.shape[0]
+    means = utility_rows[:, indices].mean(axis=0)
+    if n > 1:
+        se = utility_rows[:, indices].std(axis=0, ddof=1) / np.sqrt(n)
+    else:
+        se = np.zeros_like(means)
+    lcb = means - z * se
+    risks = validation_losses[:, indices].mean(axis=0)
+    # Highest lower bound; ties prefer the lower validation alarm rate.
+    order = sorted(range(len(indices)),
+                   key=lambda j: (-lcb[j], risks[j]))
+    chosen = order[0]
+    return {
+        "index": int(indices[chosen]),
+        "threshold": float(thresholds[indices[chosen]]),
+        "status": "utility_selected",
+        "validation_utility": float(means[chosen]),
+        "validation_utility_lcb": float(lcb[chosen]),
+        "validation_risk": float(risks[chosen]),
+        "n_feasible": len(indices),
+    }

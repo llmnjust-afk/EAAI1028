@@ -14,7 +14,8 @@ from ..policy.alarm import HOURS_PER_DAY, AlarmPolicy, max_alarms_per_day, run_p
 from ..policy.conformal import BlockedConformalCalibrator, TimestepConformalCalibrator
 from ..policy.selection import (
     CRCSelector, LTTSelector, PluginSelector, RandomizedMixtureSelector,
-    select_by_validation)
+    select_by_utility, select_by_validation)
+from ..eval.utility import prediction_utility_rows
 
 
 def _validate_sequences(scores, onset, lengths, step_hours=1.0):
@@ -122,6 +123,56 @@ def patient_policy_outcomes(scores, onset, lengths, threshold: float,
             leads[i] = float((t_event - (start + hit[0])) * step_hours)
     return {"alarm_rate": rates, "detected": detected, "lead_time": leads,
             "event": np.isfinite(detected)}
+
+def patient_utility_matrix(scores, onset, lengths, thresholds: np.ndarray,
+                           refractory: int = 4, escalation: int = 0,
+                           lead_hours: int = 6, step_hours: float = 1.0) -> np.ndarray:
+    """Per-patient normalised utility at every candidate threshold.
+
+    The challenge labels are reconstructed from the event onset using the same
+    six-hour lead as the 2019 cohort.  Utility is additive over patients, which
+    lets the selector use a patient-blocked standard error without treating
+    hourly rows as independent observations.
+    """
+    sequences, onset, lengths = _validate_sequences(
+        scores, onset, lengths, step_hours=step_hours)
+    thresholds = np.asarray(thresholds, dtype=float)
+    if (thresholds.ndim != 1 or not thresholds.size or
+            not np.isfinite(thresholds).all() or
+            not np.all(np.diff(thresholds) > 0)):
+        raise ValueError("threshold grid must be nonempty, finite and strictly increasing")
+    n = len(sequences)
+    width = max((seq.size for seq in sequences), default=0)
+    labels = np.zeros((n, width), dtype=float)
+    for i, event in enumerate(onset):
+        event = int(event)
+        if 0 <= event < lengths[i]:
+            labels[i, max(0, event - int(lead_hours)):lengths[i]] = 1.0
+
+    predictions = np.zeros((n, width, thresholds.size), dtype=bool)
+    for i, seq in enumerate(sequences):
+        for k, threshold in enumerate(thresholds):
+            fired = run_policy(seq[:lengths[i]],
+                               AlarmPolicy(float(threshold), refractory, escalation))
+            predictions[i, :lengths[i], k] = fired
+
+    zeros = np.zeros_like(labels)
+    inactive = prediction_utility_rows(labels, zeros)
+    optimal = zeros.copy()
+    for i, event in enumerate(onset):
+        event = int(event)
+        if 0 <= event < lengths[i]:
+            optimal[i, max(0, event - int(lead_hours))] = 1.0
+    oracle = prediction_utility_rows(labels, optimal)
+    denominator = float(oracle.sum() - inactive.sum())
+    if denominator <= 0:
+        raise ValueError("optimal utility must exceed inactive utility")
+    rows = np.empty((n, thresholds.size), dtype=float)
+    for k in range(thresholds.size):
+        rows[:, k] = (prediction_utility_rows(labels, predictions[:, :, k])
+                      - inactive) / denominator
+    return rows
+
 
 def evaluate_threshold(scores, onset, lengths, threshold: float,
                        refractory: int = 4, escalation: int = 0,
@@ -308,8 +359,10 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
     if per_day.max() > l_max + 1e-9:
         raise AssertionError("per-patient loss exceeds L_max; declare the minimum stay")
 
-    if selection not in ("default", "validation"):
-        raise ValueError("selection must be 'default' or 'validation'")
+    if selection not in ("default", "validation", "utility"):
+        raise ValueError("selection must be 'default', 'validation' or 'utility'")
+    if selection == "utility" and validation is None:
+        raise ValueError("utility selection requires a disjoint validation partition")
     validation_index = None
     validation_report = None
     val_losses = None
@@ -323,6 +376,13 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
                 np.intersect1d(validation, test).size):
             raise ValueError("validation must be disjoint from calibration and test")
         val_losses = per_day[validation]
+
+    utility_rows = None
+    if selection == "utility":
+        utility_rows = patient_utility_matrix(
+            [sequences[i] for i in validation], onset[validation],
+            lengths[validation], thresholds, refractory=refractory,
+            escalation=escalation, step_hours=step_hours)
 
     kind = "single"
     low_index = high_index = None
@@ -371,8 +431,8 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
             "plugin, global, crc, ltt_{hoeffding|bernstein}_{holm|bonferroni}, "
             "randomized, randomized_hoeffding or timestep")
 
-    if selection == "validation" and kind == "mixture":
-        raise ValueError("validation selection is not defined for randomised mixtures")
+    if selection in ("validation", "utility") and kind == "mixture":
+        raise ValueError("validation/utility selection is not defined for randomised mixtures")
     if (selection == "validation" and val_losses is not None
             and kind == "single" and calibrator.diagnostics_.get("feasible")):
         validation_report = select_by_validation(
@@ -389,6 +449,20 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
                 per_day[calibration, validation_index].mean())
             calibrator.threshold_ = float(thresholds[validation_index])
             calibrator.diagnostics_["status"] = "validation_selected"
+    if (selection == "utility" and val_losses is not None
+            and kind == "single" and calibrator.diagnostics_.get("feasible")):
+        validation_report = select_by_utility(
+            calibrator, val_losses, thresholds, budget=budget,
+            utility_rows=utility_rows)
+        validation_index = int(validation_report["index"])
+        if validation_index >= 0:
+            calibrator.diagnostics_["index"] = validation_index
+            calibrator.diagnostics_["empirical_risk"] = float(
+                per_day[calibration, validation_index].mean())
+            calibrator.threshold_ = float(thresholds[validation_index])
+            calibrator.diagnostics_["status"] = "utility_selected"
+            calibrator.diagnostics_["n_feasible"] = int(
+                validation_report["n_feasible"])
 
     raw_threshold = calibrator.threshold_
     if raw_threshold is None:
@@ -439,6 +513,11 @@ def evaluate_from_losses(scores, onset, lengths, calibration, test, per_day,
                                               else validation_report.get("validation_sensitivity"))
         outcomes["validation_risk"] = (None if validation_report is None
                                        else validation_report.get("validation_risk"))
+        outcomes["validation_index"] = validation_index
+    if selection == "utility" and validation_report is not None:
+        outcomes["validation_utility"] = validation_report.get("validation_utility")
+        outcomes["validation_utility_lcb"] = validation_report.get("validation_utility_lcb")
+        outcomes["validation_risk"] = validation_report.get("validation_risk")
         outcomes["validation_index"] = validation_index
     return outcomes
 

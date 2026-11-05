@@ -12,11 +12,15 @@ from __future__ import annotations
 import numpy as np
 
 
-def prediction_utility(labels, predictions, dt_early: float = -12.0,
-                       dt_optimal: float = -6.0, dt_late: float = 3.0,
-                       max_u_tp: float = 1.0, min_u_fn: float = -2.0,
-                       u_fp: float = -0.05, u_tn: float = 0.0) -> float:
-    """Return the summed challenge utility for binary predictions."""
+def prediction_utility_rows(labels, predictions, dt_early: float = -12.0,
+                          dt_optimal: float = -6.0, dt_late: float = 3.0,
+                          max_u_tp: float = 1.0, min_u_fn: float = -2.0,
+                          u_fp: float = -0.05, u_tn: float = 0.0) -> np.ndarray:
+    """Return each patient's summed challenge utility.
+
+    ``prediction_utility`` returns the total; this row-wise form is used when
+    utilities are combined with patient-blocked confidence bounds.
+    """
     labels = np.asarray(labels, dtype=float)
     predictions = np.asarray(predictions, dtype=float)
     if labels.shape != predictions.shape or labels.ndim != 2:
@@ -33,17 +37,15 @@ def prediction_utility(labels, predictions, dt_early: float = -12.0,
     m3 = min_u_fn / (dt_late - dt_optimal)
     b3 = -m3 * dt_optimal
 
-    total = 0.0
-    for label_row, pred_row in zip(labels, predictions):
+    rows = np.zeros(labels.shape[0], dtype=float)
+    for i, (label_row, pred_row) in enumerate(zip(labels, predictions)):
         if np.any(label_row):
-            septic = True
             t_sepsis = float(np.argmax(label_row) - dt_optimal)
         else:
-            septic = False
             t_sepsis = float("inf")
         n = label_row.size
         u = np.zeros(n, dtype=float)
-        if septic:
+        if np.isfinite(t_sepsis):
             upper = min(n, int(np.floor(t_sepsis + dt_late)) + 1)
             t = np.arange(upper, dtype=float)
             pred = pred_row[:upper].astype(bool)
@@ -59,8 +61,33 @@ def prediction_utility(labels, predictions, dt_early: float = -12.0,
                                            m3 * (t - t_sepsis) + b3, 0.0))))
         else:
             u = np.where(pred_row.astype(bool), u_fp, u_tn)
-        total += float(u.sum())
-    return total
+        rows[i] = float(u.sum())
+    return rows
+
+
+def prediction_utility(labels, predictions, **kwargs) -> float:
+    """Return the summed challenge utility for binary predictions."""
+    return float(prediction_utility_rows(labels, predictions, **kwargs).sum())
+
+
+def normalized_utility_rows(labels, predictions, **kwargs) -> np.ndarray:
+    """Return patient-level contributions to the normalised utility."""
+    labels = np.asarray(labels, dtype=float)
+    predictions = np.asarray(predictions, dtype=float)
+    if labels.shape != predictions.shape or labels.ndim != 2:
+        raise ValueError("labels and predictions must be equal 2-D arrays")
+    no_predictions = np.zeros_like(predictions)
+    optimal = np.zeros_like(predictions)
+    for i, label_row in enumerate(labels):
+        if np.any(label_row):
+            optimal[i, int(np.argmax(label_row))] = 1.0
+    denominator = (prediction_utility(labels, optimal, **kwargs)
+                   - prediction_utility(labels, no_predictions, **kwargs))
+    if denominator <= 0:
+        raise ValueError("optimal utility must exceed inactive utility")
+    return ((prediction_utility_rows(labels, predictions, **kwargs)
+             - prediction_utility_rows(labels, no_predictions, **kwargs))
+            / denominator)
 
 
 def normalized_utility(labels, predictions, **kwargs) -> float:

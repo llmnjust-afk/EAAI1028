@@ -29,9 +29,11 @@ class RateMatch:
 def rate_matching_threshold(scores, lengths, thresholds, target_rate: float,
                             refractory: int = 4, escalation: int = 0,
                             step_hours: float = 1.0) -> RateMatch:
-    """Pick the highest threshold whose empirical rate is at most ``target_rate``.
+    """Pick the most aggressive threshold whose empirical rate meets the target.
 
-    The loss matrix is the same patient-level alarm-rate matrix used by the
+    Thresholds are ordered from most to least alarm-producing, so the first
+    eligible index is the lowest threshold that still respects the rate.  The
+    loss matrix is the same patient-level alarm-rate matrix used by the
     calibration experiments, so the returned rate is directly comparable with
     the budget reported elsewhere.
     """
@@ -45,7 +47,7 @@ def rate_matching_threshold(scores, lengths, thresholds, target_rate: float,
                                 step_hours=step_hours)
     mean = per_day.mean(axis=0)
     eligible = np.flatnonzero(mean <= target_rate)
-    index = int(eligible[-1]) if eligible.size else 0
+    index = int(eligible[0]) if eligible.size else 0
     return RateMatch(index=index, threshold=float(thresholds[index]),
                      achieved_rate=float(mean[index]), target_rate=float(target_rate),
                      within_budget=bool(mean[index] <= target_rate))

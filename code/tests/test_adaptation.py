@@ -30,3 +30,11 @@ def test_rate_matching_rejects_nonpositive_targets():
     scores, lengths = _cohort()
     with pytest.raises(ValueError):
         rate_matching_threshold(scores, lengths, [0.5], target_rate=0.0)
+
+
+def test_rate_matching_uses_the_most_aggressive_threshold_under_the_target():
+    scores = [np.full(48, 0.9) for _ in range(8)]
+    lengths = np.full(8, 48, dtype=int)
+    result = rate_matching_threshold(scores, lengths, [0.5, 0.95], target_rate=12.0)
+    assert result.index == 0
+    assert result.within_budget

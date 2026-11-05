@@ -43,7 +43,7 @@ unsubmitted draft with author information pending.
 
 ## Local verification
 
-- `python3 -m pytest tests -q`: **164 passed** on Python 3.11.2 (25.66 seconds in the final local run).
+- `python3 -m pytest tests -q`: **164 passed** on Python 3.11.2 (about 25 seconds in the final local run).
 - Tests include exhaustive small binary state-machine trajectories, discrete
   support supremum checks with escalation and long refractory durations, strict
   loss/grid validation, safe fallback, causal GRU predictions, delta/target

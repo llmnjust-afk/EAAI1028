@@ -114,6 +114,9 @@ python3 scripts/run_selectors.py --cache-root cache --cohort A_lead6 --model pre
 python3 scripts/run_ablation.py --cache-root cache --cohort A_lead6 --model prefix_lr
 python3 scripts/run_adaptation.py --cache-root cache --source-cohort A_lead6 --target-cohort B_lead6
 python3 scripts/run_ward.py --cache-root cache --cohort A_lead6 --model prefix_lr
+python3 scripts/run_utility.py --data-root ../data/physionet2019 --cache-root cache --source-cohort A_lead6 --target-cohort B_lead6
+python3 scripts/run_external2012.py --data-root ../data/physionet2012 --cache-root cache
+python3 scripts/run_ward_queue.py --cache-root cache --cohort A_lead6 --model prefix_lr
 ```
 
 ## Real-cohort status (2019 A/B)

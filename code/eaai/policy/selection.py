@@ -97,14 +97,17 @@ def _eb_pvalues(losses: np.ndarray, budget: float, l_max: float) -> np.ndarray:
                 + 7.0 * l_max * log_term / (3.0 * (n - 1)))
 
     p = np.ones_like(mean)
-    # Candidates already above the budget cannot reject H0.
+    # ``bound`` decreases with delta.  The p-value is the smallest delta whose
+    # bound is at most the budget.  Search the crossing directly; do not stop
+    # at 0.5, because a bound that is already below budget at 0.5 corresponds
+    # to a p-value below 0.5 and may still reject after multiplicity control.
     for j in np.flatnonzero(mean < budget):
         lo, hi = 1e-12, 0.5
-        if bound(lo)[j] > budget:
-            p[j] = 0.0
+        if bound(lo)[j] <= budget:
+            p[j] = lo
             continue
-        if bound(hi)[j] <= budget:
-            p[j] = hi
+        if bound(hi)[j] > budget:
+            p[j] = 1.0
             continue
         for _ in range(80):
             mid = 0.5 * (lo + hi)

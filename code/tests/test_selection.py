@@ -98,3 +98,10 @@ def test_validation_selection_rejects_overlapping_inputs():
         assert "match the threshold grid" in str(exc)
     else:
         raise AssertionError("expected ValueError")
+
+
+def test_ltt_bernstein_rejects_when_the_bound_at_delta_half_is_below_budget():
+    losses = np.zeros((100, 1))
+    selector = LTTSelector(budget=0.5, alpha=0.1, slack="bernstein").fit(
+        losses, [0.1], 1.0)
+    assert selector.diagnostics_["feasible"]

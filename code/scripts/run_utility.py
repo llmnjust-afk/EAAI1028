@@ -102,7 +102,7 @@ def main() -> int:
                     ("external", target_scores, np.arange(len(target_scores)), True)):
                 pred = _predictions(seqs, idx, threshold, args.refractory,
                                     args.escalation)
-                labels = external_labels if target else internal_labels
+                labels = external_labels[idx] if target else internal_labels[idx]
                 labels = labels[:pred.shape[0], :pred.shape[1]]
                 utility = normalized_utility(labels, pred)
                 sens, spec, prevalence = _patient_metrics(labels, pred)

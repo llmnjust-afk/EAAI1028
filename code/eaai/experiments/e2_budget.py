@@ -122,6 +122,18 @@ def patient_policy_outcomes(scores, onset, lengths, threshold: float,
     return {"alarm_rate": rates, "detected": detected, "lead_time": leads,
             "event": np.isfinite(detected)}
 
+def evaluate_threshold(scores, onset, lengths, threshold: float,
+                       refractory: int = 4, escalation: int = 0,
+                       lead_window_hours: float = 12.0,
+                       step_hours: float = 1.0) -> dict:
+    """Evaluate a fixed threshold without fitting on a calibration partition."""
+    sequences, onset, lengths = _validate_sequences(
+        scores, onset, lengths, step_hours=step_hours)
+    return _policy_outcomes([sequences[i] for i in range(len(sequences))],
+                            onset, lengths, threshold, refractory, escalation,
+                            lead_window_hours, step_hours)
+
+
 def _policy_outcomes(scores: list[np.ndarray], onset: np.ndarray,
                      lengths: np.ndarray, threshold: float,
                      refractory: int, escalation: int,

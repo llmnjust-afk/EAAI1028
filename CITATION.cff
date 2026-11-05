@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this code or the accompanying results, please cite the manuscript."
+title: "Alert-Budgeted Clinical Early Warning: Patient-Blocked Risk Calibration for Stateful Sepsis Alarm Policies"
+authors:
+  - name: "EAAI1028 Authors"
+year: 2026
+version: 0.1.0
+license: MIT
+type: software

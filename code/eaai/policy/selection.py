@@ -419,15 +419,16 @@ def select_by_utility(calibrator, validation_losses: np.ndarray,
                       thresholds: np.ndarray, budget: float,
                       utility_rows: np.ndarray,
                       z: float = 1.2815515655446004) -> dict:
-    """Choose a rate-certified threshold by validation utility.
+    """Choose a calibration-feasible threshold by validation utility.
 
     The calibration step supplies a set of thresholds whose patient-blocked
-    alarm-rate certificate is at most ``budget``.  This function ranks only
+    alarm-rate criterion is at most ``budget``.  This function ranks only
     those candidates on a disjoint validation partition.  Utilities are
     normalised per-patient contributions, so the standard error is computed
     across patients rather than timesteps.  The one-sided normal lower bound
-    reduces the chance that a high-variance validation spike is selected; the
-    rate certificate itself is unchanged.
+    reduces the chance that a high-variance validation spike is selected.  The
+    risk interpretation remains that of the calibrator; this stage does not add
+    a finite-sample utility guarantee or a second risk certificate.
     """
     indices = list(calibrator.diagnostics_.get("feasible_indices", []))
     thresholds = np.asarray(thresholds, dtype=float)

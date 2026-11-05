@@ -1,6 +1,20 @@
 \subsection{Operating Points and Lead-Time Evaluation}
 
-The reference selector deploys the smallest finite threshold whose raw risk upper bound meets the requested budget. This is a deterministic operating-point convention rather than a guarantee of optimal detection. A separate utility objective can select among the uniformly certified candidates without invalidating the risk bound; \cref{sec:utility} reports the official 2019 utility and a patient-level decision curve for the deployed selectors. Neither a lower threshold nor a higher budget is assumed to improve every operational metric of a stateful policy.
+The reference selector deploys the smallest finite threshold whose raw risk upper bound meets the requested budget. This is a deterministic operating-point convention rather than a guarantee of optimal detection. \Cref{sec:utility-selector} adds an optional validation-utility stage for settings in which the clinical cost of a false alarm makes the smallest feasible threshold a poor operating point. Neither a lower threshold nor a higher budget is assumed to improve every operational metric of a stateful policy.
+
+\subsection{Utility-Ranked Risk Calibration}
+\label{sec:utility-selector}
+
+An alarm budget constrains volume but does not encode the relative cost of a missed event and a false alarm. Let $U_i(\lambda)$ be patient $i$'s contribution to the normalised 2019 utility at threshold $\lambda$, and let $\mathcal V$ be a validation partition disjoint from both calibration and test. For a calibration procedure that returns a feasible set $\mathcal F_B$ at budget $B$, define
+\begin{equation}
+\label{eq:utility-select}
+\widehat\lambda_U=\arg\max_{\lambda\in\mathcal F_B}
+\left[\bar U_{\mathcal V}(\lambda)-z_{1-\delta}
+\frac{s_{\mathcal V}(\lambda)}{\sqrt{|\mathcal V|}}\right],
+\end{equation}
+where $\bar U_{\mathcal V}$ and $s_{\mathcal V}$ are the validation mean and standard deviation of the patient-level contributions, and $z_{1-\delta}$ is the one-sided normal quantile at level $\delta=0.10$. Ties are broken toward the lower validation alarm rate; if $\mathcal F_B$ is empty the selector returns the exact no-alarm fallback. The lower bound discourages a threshold whose apparent utility is driven by a few high-variance patients. It is not a finite-sample utility guarantee.
+
+The risk interpretation depends on how $\mathcal F_B$ was constructed. With the blocked empirical-Bernstein certificate, every candidate in $\mathcal F_B$ is simultaneously certified on the calibration sample, so validation ranking cannot invalidate the high-probability risk statement. With CRC, the expected-risk guarantee is attached to the CRC selection rule itself; the utility-ranked threshold is a deployment variant, not a second certificate. We therefore report the CRC row and the utility-ranked CRC (U-CRC) row separately, and include the validation alarm rate so that a reader can see whether the utility stage consumed more of the budget than intended. This distinction is deliberate: a data-dependent choice among CRC candidates should not be presented as inheriting the CRC guarantee.
 
 For an event observed during follow-up, define the detection window $\mathcal W_i=[\max(0,t_i^\star-W),t_i^\star)$. An event is detected if at least one alarm falls in that window, and its lead time is
 \begin{equation}

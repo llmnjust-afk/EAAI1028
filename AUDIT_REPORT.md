@@ -36,14 +36,15 @@ empirical-Bernstein are finite-grid upper-confidence methods, not the standard
 expected-risk conformal construction; legacy class names remain for compatibility.
 
 The manuscript's equations, algorithm and prose now match the implemented
-smallest-certified-threshold convention. Utility-maximising selection among
-feasible thresholds is not claimed to be implemented. Long formulas are split
+smallest-certified-threshold convention. Utility-ranked selection among
+feasible thresholds is implemented as a validation heuristic and is not claimed
+as a second risk certificate. Long formulas are split
 to fit the text block, and the first-page footer identifies the file as an
 unsubmitted draft with author information pending.
 
 ## Local verification
 
-- `python3 -m pytest tests -q`: **172 passed** on Python 3.11.2 (26.45 seconds in the final local run).
+- `python3 -m pytest tests -q`: **177 passed** on Python 3.11.2 (29.58 seconds in the final local run).
 - Tests include exhaustive small binary state-machine trajectories, discrete
   support supremum checks with escalation and long refractory durations, strict
   loss/grid validation, safe fallback, causal GRU predictions, delta/target
@@ -75,7 +76,7 @@ unsubmitted draft with author information pending.
 ## Independent Lab verification
 
 The final Lab job completed with exit status zero after `compileall`, the full
-test suite (**172 passed in 7.52 seconds**), fresh three-seed reference
+test suite (**177 passed in 7.35 seconds**), fresh three-seed reference
 verification, and the official set-A network QC. All seeds matched at the same
 numeric tolerances as the local comparison. The official-data counts, tensor
 shape and both SHA-256 source hashes match the local QC record above.

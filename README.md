@@ -180,9 +180,13 @@ caches remain outside the repository.
   sepsis A-to-B sensitivity loss is not universal. This is an outcome-shift
   stress test, not a sepsis replication.
 - **Official utility and decision curve.** At 0.25/day CRC improves normalised
-  2019 utility from 0.502 to 0.687 at A and 0.144 to 0.247 at B; at 1/day the
-  blocked selector is better (0.926/0.284 versus 0.852/0.154) because CRC buys
-  sensitivity with false alarms. Net benefit at p=0.10 agrees.
+  2019 utility from 0.505 to 0.687 at A and 0.142 to 0.247 at B; at 1/day the
+  blocked selector is better (0.932/0.278 versus 0.852/0.154) because CRC buys
+  sensitivity with false alarms. Net benefit at p=0.10 agrees. A validation-ranked
+  CRC variant (U-CRC) matches CRC at tight budgets and refuses the loose 2/day
+  budget: at 2/day it holds internal utility at 0.932 and external utility at
+  0.278, versus 0.562 and -0.225 for raw CRC. U-CRC is a deployment heuristic,
+  not a second risk certificate.
 - **Alarm-handling queue.** With one nurse and a 15-minute mean service time,
   9.4% of alarms wait more than 10 minutes at 2 alarms/patient-day, versus 0.5%
   at a 5-minute mean; a second nurse removes most of the delay.

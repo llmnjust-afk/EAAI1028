@@ -15,16 +15,45 @@ Sensitivity under a rate budget does not encode the clinical cost of a false ala
 \cmidrule(lr){3-4}\cmidrule(lr){5-6}
 Budget & Policy & Utility & NB$_{0.10}$ & Utility & NB$_{0.10}$ \\
 \midrule
-0.25 & Blocked & $0.502$ & $0.0206$ & $0.144$ & $0.0053$ \\
+0.25 & Blocked & $0.505$ & $0.0206$ & $0.142$ & $0.0053$ \\
 0.25 & CRC & $0.687$ & $0.0244$ & $0.247$ & $0.0074$ \\
 0.25 & LTT & $0.550$ & $0.0229$ & $0.185$ & $0.0060$ \\
-1.00 & Blocked & $0.926$ & $0.0236$ & $0.284$ & $0.0053$ \\
+1.00 & Blocked & $0.932$ & $0.0236$ & $0.278$ & $0.0053$ \\
 1.00 & CRC & $0.852$ & $0.0203$ & $0.154$ & $0.0007$ \\
-1.00 & LTT & $0.926$ & $0.0236$ & $0.284$ & $0.0053$ \\
+1.00 & LTT & $0.932$ & $0.0236$ & $0.278$ & $0.0053$ \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
-The official utility is not monotone in the requested budget. At 0.25 per day, CRC raises normalised utility from $0.502$ to $0.687$ at A and from $0.144$ to $0.247$ at B, because the blocked certificate leaves so much budget unused that the extra true alarms dominate the false-alarm cost. At 1 per day the ordering reverses: the blocked selector reaches $0.926$ at A and $0.284$ at B, whereas CRC falls to $0.852$ and $0.154$. CRC is optimising sensitivity subject to a rate constraint, not utility, and at the looser budget its additional alarms are mostly false. The decision curve tells the same story at $p_t=0.10$: CRC is better at 0.25 ($0.0244$ versus $0.0206$ at A; $0.0074$ versus $0.0053$ at B) and worse at 1.0 ($0.0203$ versus $0.0236$ at A; $0.0007$ versus $0.0053$ at B). At $p_t=0.20$ every policy has negative net benefit at B, so the clinical case for alarm-based screening weakens when the decision threshold is high.
+The official utility is not monotone in the requested budget. At 0.25 per day, CRC raises normalised utility from $0.505$ to $0.687$ at A and from $0.142$ to $0.247$ at B, because the blocked certificate leaves so much budget unused that the extra true alarms dominate the false-alarm cost. At 1 per day the ordering reverses: the blocked selector reaches $0.932$ at A and $0.278$ at B, whereas CRC falls to $0.852$ and $0.154$. CRC is optimising sensitivity subject to a rate constraint, not utility, and at the looser budget its additional alarms are mostly false. The decision curve tells the same story at $p_t=0.10$: CRC is better at 0.25 ($0.0244$ versus $0.0206$ at A; $0.0074$ versus $0.0053$ at B) and worse at 1.0 ($0.0203$ versus $0.0236$ at A; $0.0007$ versus $0.0053$ at B). At $p_t=0.20$ every policy has negative net benefit at B, so the clinical case for alarm-based screening weakens when the decision threshold is high.
 
-This tension is an engineering result, not a defect of either selector. A hospital that wants the greatest chance of catching an event under a hard alarm budget should use CRC at tight budgets; a hospital that wants to maximise the official utility at a looser budget should use the blocked selector or select among certified thresholds by utility. The certificate constrains the alarm rate, but it does not choose the point on the utility curve. Reporting both quantities prevents a sensitivity gain from being presented as a clinical improvement when it is purchased with false alarms that the utility penalises.
+This tension is an engineering result, not a defect of either selector. A hospital that wants the greatest chance of catching an event under a hard alarm budget should use CRC at tight budgets; a hospital that wants to maximise the official utility at a looser budget needs a utility-aware operating point rather than the smallest feasible threshold. The certificate constrains the alarm rate, but it does not choose the point on the utility curve. Reporting both quantities prevents a sensitivity gain from being presented as a clinical improvement when it is purchased with false alarms that the utility penalises; \cref{sec:ucrc-results} turns this observation into a selector.
+
+\subsection{Utility-Ranked Selection}
+\label{sec:ucrc-results}
+
+The utility reversal in \cref{tab:utility} is not a reason to abandon calibration; it is a reason to separate the rate constraint from the operating-point objective. We therefore rank the CRC-feasible thresholds by validation utility using \cref{eq:utility-select}. Table~\ref{tab:utility-selector} reports the resulting U-CRC selector alongside the raw CRC and blocked rules. At 0.25 and 0.5 per day, U-CRC selects the same threshold as CRC and changes utility only in the third decimal. At 1 and 2 per day, it declines to spend the full budget: the 2-per-day request selects the same 0.0248 threshold as the 1-per-day request, with an internal rate of 0.631 rather than 1.355 and an external rate of 0.348 rather than 0.932. Internal utility rises from 0.562 to 0.932 and external utility from $-0.225$ to 0.278.
+
+\begin{table}[tb]
+\centering
+\caption{Official 2019 utility for the blocked, raw CRC and utility-ranked CRC selectors on the primary seed. Internal A is the held-out test partition; external B is the transported evaluation. U-CRC ranks the CRC-feasible thresholds by a one-sided validation utility bound (\cref{eq:utility-select}); it is a deployment variant of CRC, not a second risk certificate.}
+\label{tab:utility-selector}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{3}{c}{Internal A utility} & \multicolumn{3}{c}{External B utility} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Budget & Blocked & CRC & U-CRC & Blocked & CRC & U-CRC \\
+\midrule
+0.25 & $0.505$ & $0.687$ & $0.691$ & $0.142$ & $0.247$ & $0.244$ \\
+0.50 & $0.778$ & $0.904$ & $0.910$ & $0.266$ & $0.273$ & $0.270$ \\
+1.00 & $0.932$ & $0.852$ & $0.932$ & $0.278$ & $0.154$ & $0.278$ \\
+2.00 & $0.562$ & $0.562$ & $0.932$ & $-0.225$ & $-0.225$ & $0.278$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The loose-budget row is the main engineering result. A budget is an upper bound, not a target: when CRC treats 2 alarms per patient-day as a mandate, the additional alarms are overwhelmingly false and the official utility falls below the 0.25-per-day operating point. U-CRC detects this with validation utility and stops raising the alarm load even though the calibration certificate would permit it. The same pattern appears at 1 per day, where U-CRC recovers most of the blocked selector's utility while retaining the sharper CRC candidate set at tighter budgets. The result is not a universal dominance claim: on the primary seed U-CRC and blocked are identical at 1 per day, and across seeds the 1-per-day difference ranges from a tie to a 0.028 loss. The stable part is the tight-budget gain and the refusal to over-alarm at 2 per day.
+
+Two caveats follow from the construction. First, the validation lower bound reduces variance-driven selection but does not provide a finite-sample utility guarantee; utility is an evaluation objective, not a certificate. Second, at 0.25 per day the primary seed's validation rate is 0.273 while the test rate is 0.239, so the validation partition is a diagnostic rather than a second budget guarantee. The raw CRC row has the same validation rate at that threshold, so the discrepancy is sampling variation in the validation split, not a side effect of utility ranking. A deployment that requires a high-probability budget statement should retain the blocked selector; a deployment that treats the budget as a workload ceiling and cares about false-alarm cost can use U-CRC with both rates reported.

@@ -14,6 +14,7 @@
     ],
     "procedures": [
       "blocked",
+      "crc",
       "timestep",
       "plugin",
       "ltt_hoeffding_holm",
@@ -59,24 +60,50 @@
     },
     {
       "budget": 0.25,
+      "procedure": "crc",
+      "n_splits": 10,
+      "mean_rate_violation": 0.1,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 0.20491557545998215,
+      "alarm_rate_ci": [
+        0.18772041178618856,
+        0.22477679370048992
+      ],
+      "budget_utilization_mean": 0.8196623018399286,
+      "budget_utilization_ci": [
+        0.7615527628513995,
+        0.8958383897035141
+      ],
+      "sensitivity_mean": 0.3240773286467487,
+      "sensitivity_ci": [
+        0.3135325131810193,
+        0.33602811950790856
+      ],
+      "patient_violation_mean": 0.12633240717352864,
+      "ppv_mean": 0.08406612817192474,
+      "nna_mean": 11.951726469968795,
+      "n_feasible_mean": 193.3
+    },
+    {
+      "budget": 0.25,
       "procedure": "ltt_bernstein_holm",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.1878023945597917,
       "alarm_rate_ci": [
-        0.18531018493632495,
-        0.19107267638872888
+        0.18523845438447425,
+        0.19083054466769722
       ],
       "budget_utilization_mean": 0.7512095782391668,
       "budget_utilization_ci": [
-        0.7412174863443088,
-        0.7628798489034043
+        0.7412278820146179,
+        0.7626733937584991
       ],
       "sensitivity_mean": 0.30843585237258353,
       "sensitivity_ci": [
-        0.3008655536028119,
-        0.31547012302284716
+        0.3006985940246046,
+        0.31493848857644996
       ],
       "patient_violation_mean": 0.11811063399848445,
       "ppv_mean": 0.08486149634400472,
@@ -91,18 +118,18 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.145694132409033,
       "alarm_rate_ci": [
-        0.1434315012921475,
-        0.14824584956281664
+        0.14361676143715682,
+        0.1484022876108961
       ],
       "budget_utilization_mean": 0.582776529636132,
       "budget_utilization_ci": [
-        0.5740203371719177,
-        0.5926832870024388
+        0.5733675357448665,
+        0.5925541871606218
       ],
       "sensitivity_mean": 0.26256590509666083,
       "sensitivity_ci": [
-        0.2565861159929701,
-        0.2680140597539543
+        0.2565905096660809,
+        0.2685413005272408
       ],
       "patient_violation_mean": 0.09604698156100025,
       "ppv_mean": 0.09062487786726589,
@@ -117,18 +144,18 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.22129948362079715,
       "alarm_rate_ci": [
-        0.20264057588687004,
-        0.23939283179161971
+        0.20193096691194448,
+        0.23928251233865025
       ],
       "budget_utilization_mean": 0.8851979344831886,
       "budget_utilization_ci": [
-        0.8087063083342649,
-        0.95899549932316
+        0.8085884156646809,
+        0.9606089626917843
       ],
       "sensitivity_mean": 0.3372583479789103,
       "sensitivity_ci": [
-        0.32442882249560634,
-        0.35061511423550085
+        0.32389718804920914,
+        0.3499165202108963
       ],
       "patient_violation_mean": 0.13466784541550897,
       "ppv_mean": 0.08242640618699837,
@@ -143,18 +170,18 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.1887007775603769,
       "alarm_rate_ci": [
-        0.1838345410927565,
-        0.19475990519454328
+        0.1840724779552798,
+        0.19487576361448242
       ],
       "budget_utilization_mean": 0.7548031102415076,
       "budget_utilization_ci": [
-        0.7356505851961384,
-        0.7785799261443489
+        0.7347169329039991,
+        0.7776524982157983
       ],
       "sensitivity_mean": 0.30894551845342705,
       "sensitivity_ci": [
-        0.3025979789103691,
-        0.3150268014059754
+        0.30203427065026367,
+        0.3149384885764499
       ],
       "patient_violation_mean": 0.118375852488002,
       "ppv_mean": 0.08488032050955636,
@@ -169,18 +196,18 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.1878023945597917,
       "alarm_rate_ci": [
-        0.18537307559891006,
-        0.19092521927288877
+        0.18508473732554998,
+        0.19076974765951135
       ],
       "budget_utilization_mean": 0.7512095782391668,
       "budget_utilization_ci": [
-        0.7408241388106466,
-        0.76316182319917
+        0.7400349137651123,
+        0.7631792821539037
       ],
       "sensitivity_mean": 0.30843585237258353,
       "sensitivity_ci": [
-        0.30035149384885773,
-        0.31511423550087875
+        0.30175746924428826,
+        0.3149384885764499
       ],
       "patient_violation_mean": 0.11811063399848445,
       "ppv_mean": 0.08486149634400472,
@@ -195,23 +222,49 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.3273717140722562,
       "alarm_rate_ci": [
-        0.32302746294413354,
-        0.3314010265017625
+        0.32326354192702167,
+        0.3313488298190213
       ],
       "budget_utilization_mean": 0.6547434281445124,
       "budget_utilization_ci": [
-        0.6456434190732255,
-        0.6628296292135155
+        0.6458836043670493,
+        0.6627642133447886
       ],
       "sensitivity_mean": 0.43444639718804917,
       "sensitivity_ci": [
-        0.42723637961335675,
-        0.44007469244288216
+        0.42759226713532505,
+        0.4400746924428823
       ],
       "patient_violation_mean": 0.1635261429653953,
       "ppv_mean": 0.07485627460470842,
       "nna_mean": 13.381062322617705,
       "n_feasible_mean": 195.0
+    },
+    {
+      "budget": 0.5,
+      "procedure": "crc",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 0.44849587455947565,
+      "alarm_rate_ci": [
+        0.44443462984485116,
+        0.4523844370416732
+      ],
+      "budget_utilization_mean": 0.8969917491189513,
+      "budget_utilization_ci": [
+        0.8884902832552397,
+        0.9049382936149067
+      ],
+      "sensitivity_mean": 0.513884007029877,
+      "sensitivity_ci": [
+        0.5072056239015817,
+        0.5198594024604569
+      ],
+      "patient_violation_mean": 0.21206112654710788,
+      "ppv_mean": 0.06724924444680132,
+      "nna_mean": 14.88507256127318,
+      "n_feasible_mean": 196.0
     },
     {
       "budget": 0.5,
@@ -221,18 +274,18 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.3640396819741788,
       "alarm_rate_ci": [
-        0.32713935189293347,
-        0.4032836025017597
+        0.32640778880254157,
+        0.4045692236029809
       ],
       "budget_utilization_mean": 0.7280793639483576,
       "budget_utilization_ci": [
-        0.6569407993418703,
-        0.8071950457837356
+        0.6668534502180046,
+        0.80814805674864
       ],
       "sensitivity_mean": 0.45659050966608083,
       "sensitivity_ci": [
-        0.43514499121265376,
-        0.48049209138840066
+        0.435847978910369,
+        0.48242530755711777
       ],
       "patient_violation_mean": 0.1781510482445062,
       "ppv_mean": 0.07260672686681077,
@@ -247,17 +300,17 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.3273717140722562,
       "alarm_rate_ci": [
-        0.32322612920255606,
-        0.331273009755551
+        0.3230671918377954,
+        0.33131616277637216
       ],
       "budget_utilization_mean": 0.6547434281445124,
       "budget_utilization_ci": [
-        0.6461283698593469,
-        0.6629839372242805
+        0.6463105742773781,
+        0.663182351830788
       ],
       "sensitivity_mean": 0.43444639718804917,
       "sensitivity_ci": [
-        0.4263620386643233,
+        0.42653339191564144,
         0.4402460456942004
       ],
       "patient_violation_mean": 0.1635261429653953,
@@ -268,58 +321,6 @@
     {
       "budget": 0.5,
       "procedure": "plugin",
-      "n_splits": 10,
-      "mean_rate_violation": 0.0,
-      "fallback_rate": 0.0,
-      "alarm_rate_mean": 0.44849587455947565,
-      "alarm_rate_ci": [
-        0.44409397377828735,
-        0.45256751668866074
-      ],
-      "budget_utilization_mean": 0.8969917491189513,
-      "budget_utilization_ci": [
-        0.8886036823407966,
-        0.9051688457843804
-      ],
-      "sensitivity_mean": 0.513884007029877,
-      "sensitivity_ci": [
-        0.5080799648506151,
-        0.5193321616871704
-      ],
-      "patient_violation_mean": 0.21206112654710788,
-      "ppv_mean": 0.06724924444680132,
-      "nna_mean": 14.88507256127318,
-      "n_feasible_mean": 196.0
-    },
-    {
-      "budget": 0.5,
-      "procedure": "randomized",
-      "n_splits": 10,
-      "mean_rate_violation": 0.0,
-      "fallback_rate": 0.0,
-      "alarm_rate_mean": 0.41092886927933125,
-      "alarm_rate_ci": [
-        0.4027428281796878,
-        0.41826668354873975
-      ],
-      "budget_utilization_mean": 0.8218577385586625,
-      "budget_utilization_ci": [
-        0.8056228445773125,
-        0.837511687381071
-      ],
-      "sensitivity_mean": 0.489402460456942,
-      "sensitivity_ci": [
-        0.48249472759226725,
-        0.4949586994727592
-      ],
-      "patient_violation_mean": 0.19258651174539027,
-      "ppv_mean": 0.06920024678804286,
-      "nna_mean": 14.471890853631106,
-      "n_feasible_mean": 1.0
-    },
-    {
-      "budget": 0.5,
-      "procedure": "timestep",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
@@ -344,60 +345,60 @@
       "n_feasible_mean": 196.0
     },
     {
+      "budget": 0.5,
+      "procedure": "randomized",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 0.41092886927933125,
+      "alarm_rate_ci": [
+        0.40271288011568634,
+        0.41876606776453523
+      ],
+      "budget_utilization_mean": 0.8218577385586625,
+      "budget_utilization_ci": [
+        0.8063914122497515,
+        0.8368122249141883
+      ],
+      "sensitivity_mean": 0.489402460456942,
+      "sensitivity_ci": [
+        0.4822833919156415,
+        0.49522012302284707
+      ],
+      "patient_violation_mean": 0.19258651174539027,
+      "ppv_mean": 0.06920024678804286,
+      "nna_mean": 14.471890853631106,
+      "n_feasible_mean": 1.0
+    },
+    {
+      "budget": 0.5,
+      "procedure": "timestep",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 0.44849587455947565,
+      "alarm_rate_ci": [
+        0.44393701450176654,
+        0.4524242277094161
+      ],
+      "budget_utilization_mean": 0.8969917491189513,
+      "budget_utilization_ci": [
+        0.8885174675574801,
+        0.9050625112477291
+      ],
+      "sensitivity_mean": 0.513884007029877,
+      "sensitivity_ci": [
+        0.5068453427065026,
+        0.519683655536028
+      ],
+      "patient_violation_mean": 0.21206112654710788,
+      "ppv_mean": 0.06724924444680132,
+      "nna_mean": 14.88507256127318,
+      "n_feasible_mean": 196.0
+    },
+    {
       "budget": 1.0,
       "procedure": "blocked",
-      "n_splits": 10,
-      "mean_rate_violation": 0.0,
-      "fallback_rate": 0.0,
-      "alarm_rate_mean": 0.6343461386582876,
-      "alarm_rate_ci": [
-        0.6280629185424409,
-        0.6394419738806296
-      ],
-      "budget_utilization_mean": 0.6343461386582876,
-      "budget_utilization_ci": [
-        0.6286174921069224,
-        0.6394795808517438
-      ],
-      "sensitivity_mean": 0.6130052724077328,
-      "sensitivity_ci": [
-        0.6057996485061512,
-        0.6212653778558875
-      ],
-      "patient_violation_mean": 0.2104950745137661,
-      "ppv_mean": 0.06057691905500431,
-      "nna_mean": 16.512312650302892,
-      "n_feasible_mean": 197.0
-    },
-    {
-      "budget": 1.0,
-      "procedure": "ltt_bernstein_holm",
-      "n_splits": 10,
-      "mean_rate_violation": 0.0,
-      "fallback_rate": 0.0,
-      "alarm_rate_mean": 0.872487788104026,
-      "alarm_rate_ci": [
-        0.7777274423925787,
-        0.9366392117064547
-      ],
-      "budget_utilization_mean": 0.872487788104026,
-      "budget_utilization_ci": [
-        0.7785804556710169,
-        0.9368493410487524
-      ],
-      "sensitivity_mean": 0.686115992970123,
-      "sensitivity_ci": [
-        0.6550043936731107,
-        0.7084402460456941
-      ],
-      "patient_violation_mean": 0.2786941146754231,
-      "ppv_mean": 0.05414013833217568,
-      "nna_mean": 18.553401944470036,
-      "n_feasible_mean": 197.8
-    },
-    {
-      "budget": 1.0,
-      "procedure": "ltt_hoeffding_holm",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
@@ -423,7 +424,7 @@
     },
     {
       "budget": 1.0,
-      "procedure": "plugin",
+      "procedure": "crc",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
@@ -449,24 +450,102 @@
     },
     {
       "budget": 1.0,
+      "procedure": "ltt_bernstein_holm",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 0.872487788104026,
+      "alarm_rate_ci": [
+        0.7789995657109668,
+        0.9368503832370888
+      ],
+      "budget_utilization_mean": 0.872487788104026,
+      "budget_utilization_ci": [
+        0.778821473491741,
+        0.93650416786501
+      ],
+      "sensitivity_mean": 0.686115992970123,
+      "sensitivity_ci": [
+        0.6567662565905097,
+        0.7087873462214411
+      ],
+      "patient_violation_mean": 0.2786941146754231,
+      "ppv_mean": 0.05414013833217568,
+      "nna_mean": 18.553401944470036,
+      "n_feasible_mean": 197.8
+    },
+    {
+      "budget": 1.0,
+      "procedure": "ltt_hoeffding_holm",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 0.6343461386582876,
+      "alarm_rate_ci": [
+        0.6285167498686434,
+        0.6393308444273837
+      ],
+      "budget_utilization_mean": 0.6343461386582876,
+      "budget_utilization_ci": [
+        0.6288386960415324,
+        0.6398209533419532
+      ],
+      "sensitivity_mean": 0.6130052724077328,
+      "sensitivity_ci": [
+        0.6050966608084359,
+        0.620738137082601
+      ],
+      "patient_violation_mean": 0.2104950745137661,
+      "ppv_mean": 0.06057691905500431,
+      "nna_mean": 16.512312650302892,
+      "n_feasible_mean": 197.0
+    },
+    {
+      "budget": 1.0,
+      "procedure": "plugin",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 0.93089623364771,
+      "alarm_rate_ci": [
+        0.9238084171500941,
+        0.9370745238029685
+      ],
+      "budget_utilization_mean": 0.93089623364771,
+      "budget_utilization_ci": [
+        0.9235418565898358,
+        0.9372109139650092
+      ],
+      "sensitivity_mean": 0.7063268892794377,
+      "sensitivity_ci": [
+        0.7015773286467486,
+        0.7119507908611599
+      ],
+      "patient_violation_mean": 0.29565546855266484,
+      "ppv_mean": 0.0525209550809704,
+      "nna_mean": 19.043022547639612,
+      "n_feasible_mean": 198.0
+    },
+    {
+      "budget": 1.0,
       "procedure": "randomized",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.8775913284417431,
       "alarm_rate_ci": [
-        0.865988894435528,
-        0.8904109983854738
+        0.8662663758178707,
+        0.8909109758741899
       ],
       "budget_utilization_mean": 0.8775913284417431,
       "budget_utilization_ci": [
-        0.8667339515002382,
-        0.8903073907545096
+        0.8657443604018202,
+        0.8904236118191926
       ],
       "sensitivity_mean": 0.689402460456942,
       "sensitivity_ci": [
-        0.6828800527240774,
-        0.6970123022847099
+        0.6826164323374342,
+        0.6965584358523724
       ],
       "patient_violation_mean": 0.2837585248800202,
       "ppv_mean": 0.0535963592440178,
@@ -481,18 +560,18 @@
       "fallback_rate": 0.0,
       "alarm_rate_mean": 0.93089623364771,
       "alarm_rate_ci": [
-        0.9239713797229179,
-        0.9369930753723837
+        0.924317246495291,
+        0.9371417860985051
       ],
       "budget_utilization_mean": 0.93089623364771,
       "budget_utilization_ci": [
-        0.9240710425416915,
-        0.9372173400534446
+        0.9237880142989511,
+        0.9369477902099367
       ],
       "sensitivity_mean": 0.7063268892794377,
       "sensitivity_ci": [
         0.7012302284710017,
-        0.7119507908611599
+        0.7115992970123022
       ],
       "patient_violation_mean": 0.29565546855266484,
       "ppv_mean": 0.0525209550809704,
@@ -502,84 +581,6 @@
     {
       "budget": 2.0,
       "procedure": "blocked",
-      "n_splits": 10,
-      "mean_rate_violation": 0.0,
-      "fallback_rate": 0.0,
-      "alarm_rate_mean": 1.383653588462122,
-      "alarm_rate_ci": [
-        1.3742105862332936,
-        1.3912742265404252
-      ],
-      "budget_utilization_mean": 0.691826794231061,
-      "budget_utilization_ci": [
-        0.6869028031016907,
-        0.6956158198117504
-      ],
-      "sensitivity_mean": 0.8066783831282953,
-      "sensitivity_ci": [
-        0.7989455184534272,
-        0.8135325131810193
-      ],
-      "patient_violation_mean": 0.31223793887345286,
-      "ppv_mean": 0.04303256641018089,
-      "nna_mean": 23.24609174010407,
-      "n_feasible_mean": 199.0
-    },
-    {
-      "budget": 2.0,
-      "procedure": "ltt_bernstein_holm",
-      "n_splits": 10,
-      "mean_rate_violation": 0.0,
-      "fallback_rate": 0.0,
-      "alarm_rate_mean": 1.383653588462122,
-      "alarm_rate_ci": [
-        1.3740457212072947,
-        1.3912289304994445
-      ],
-      "budget_utilization_mean": 0.691826794231061,
-      "budget_utilization_ci": [
-        0.6868857056503538,
-        0.6957879191720278
-      ],
-      "sensitivity_mean": 0.8066783831282953,
-      "sensitivity_ci": [
-        0.7994683655536028,
-        0.8131810193321616
-      ],
-      "patient_violation_mean": 0.31223793887345286,
-      "ppv_mean": 0.04303256641018089,
-      "nna_mean": 23.24609174010407,
-      "n_feasible_mean": 199.0
-    },
-    {
-      "budget": 2.0,
-      "procedure": "ltt_hoeffding_holm",
-      "n_splits": 10,
-      "mean_rate_violation": 0.0,
-      "fallback_rate": 0.0,
-      "alarm_rate_mean": 1.383653588462122,
-      "alarm_rate_ci": [
-        1.3750318773453662,
-        1.3915008201014751
-      ],
-      "budget_utilization_mean": 0.691826794231061,
-      "budget_utilization_ci": [
-        0.686995213896057,
-        0.6956937597774989
-      ],
-      "sensitivity_mean": 0.8066783831282953,
-      "sensitivity_ci": [
-        0.7994683655536029,
-        0.8128295254833041
-      ],
-      "patient_violation_mean": 0.31223793887345286,
-      "ppv_mean": 0.04303256641018089,
-      "nna_mean": 23.24609174010407,
-      "n_feasible_mean": 199.0
-    },
-    {
-      "budget": 2.0,
-      "procedure": "plugin",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
@@ -605,33 +606,33 @@
     },
     {
       "budget": 2.0,
-      "procedure": "randomized",
+      "procedure": "crc",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
-      "alarm_rate_mean": 1.8279498222828447,
+      "alarm_rate_mean": 1.383653588462122,
       "alarm_rate_ci": [
-        1.8199436210330961,
-        1.8358266049635232
+        1.3751541834599403,
+        1.3912349469698988
       ],
-      "budget_utilization_mean": 0.9139749111414224,
+      "budget_utilization_mean": 0.691826794231061,
       "budget_utilization_ci": [
-        0.909635733260096,
-        0.9178578720943751
+        0.68730362899047,
+        0.6954406391264626
       ],
-      "sensitivity_mean": 0.8707908611599298,
+      "sensitivity_mean": 0.8066783831282953,
       "sensitivity_ci": [
-        0.865939367311072,
-        0.8754666080843585
+        0.7992926186291741,
+        0.8133567662565906
       ],
-      "patient_violation_mean": 0.4183000757767113,
-      "ppv_mean": 0.03703292212041544,
-      "nna_mean": 27.008510183478656,
-      "n_feasible_mean": 1.0
+      "patient_violation_mean": 0.31223793887345286,
+      "ppv_mean": 0.04303256641018089,
+      "nna_mean": 23.24609174010407,
+      "n_feasible_mean": 199.0
     },
     {
       "budget": 2.0,
-      "procedure": "timestep",
+      "procedure": "ltt_bernstein_holm",
       "n_splits": 10,
       "mean_rate_violation": 0.0,
       "fallback_rate": 0.0,
@@ -649,6 +650,110 @@
       "sensitivity_ci": [
         0.7989411247803164,
         0.8133611599297013
+      ],
+      "patient_violation_mean": 0.31223793887345286,
+      "ppv_mean": 0.04303256641018089,
+      "nna_mean": 23.24609174010407,
+      "n_feasible_mean": 199.0
+    },
+    {
+      "budget": 2.0,
+      "procedure": "ltt_hoeffding_holm",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 1.383653588462122,
+      "alarm_rate_ci": [
+        1.374517233249563,
+        1.3909831106233317
+      ],
+      "budget_utilization_mean": 0.691826794231061,
+      "budget_utilization_ci": [
+        0.6870263834199757,
+        0.6958726258608269
+      ],
+      "sensitivity_mean": 0.8066783831282953,
+      "sensitivity_ci": [
+        0.7994727592267136,
+        0.8133611599297013
+      ],
+      "patient_violation_mean": 0.31223793887345286,
+      "ppv_mean": 0.04303256641018089,
+      "nna_mean": 23.24609174010407,
+      "n_feasible_mean": 199.0
+    },
+    {
+      "budget": 2.0,
+      "procedure": "plugin",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 1.383653588462122,
+      "alarm_rate_ci": [
+        1.3743697220166171,
+        1.3913403419409662
+      ],
+      "budget_utilization_mean": 0.691826794231061,
+      "budget_utilization_ci": [
+        0.6872600141981934,
+        0.6956362124876145
+      ],
+      "sensitivity_mean": 0.8066783831282953,
+      "sensitivity_ci": [
+        0.7987697715289983,
+        0.8137082601054482
+      ],
+      "patient_violation_mean": 0.31223793887345286,
+      "ppv_mean": 0.04303256641018089,
+      "nna_mean": 23.24609174010407,
+      "n_feasible_mean": 199.0
+    },
+    {
+      "budget": 2.0,
+      "procedure": "randomized",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 1.8279498222828447,
+      "alarm_rate_ci": [
+        1.8197231602000832,
+        1.8355932571134344
+      ],
+      "budget_utilization_mean": 0.9139749111414224,
+      "budget_utilization_ci": [
+        0.9094710356090154,
+        0.9177428330488948
+      ],
+      "sensitivity_mean": 0.8707908611599298,
+      "sensitivity_ci": [
+        0.8662196836555361,
+        0.8754674868189806
+      ],
+      "patient_violation_mean": 0.4183000757767113,
+      "ppv_mean": 0.03703292212041544,
+      "nna_mean": 27.008510183478656,
+      "n_feasible_mean": 1.0
+    },
+    {
+      "budget": 2.0,
+      "procedure": "timestep",
+      "n_splits": 10,
+      "mean_rate_violation": 0.0,
+      "fallback_rate": 0.0,
+      "alarm_rate_mean": 1.383653588462122,
+      "alarm_rate_ci": [
+        1.3749983679923299,
+        1.391129794369864
+      ],
+      "budget_utilization_mean": 0.691826794231061,
+      "budget_utilization_ci": [
+        0.6872186926888305,
+        0.6956131669984115
+      ],
+      "sensitivity_mean": 0.8066783831282953,
+      "sensitivity_ci": [
+        0.7996441124780318,
+        0.8135369068541302
       ],
       "patient_violation_mean": 0.31223793887345286,
       "ppv_mean": 0.04303256641018089,
@@ -676,6 +781,28 @@
       "n_true_alarms": 339,
       "n_feasible": 193,
       "certified_risk": 0.23800123161463305,
+      "empirical_risk": 0.19376338040038318,
+      "threshold": 0.04447236180904523
+    },
+    {
+      "split": 0,
+      "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.18692663907618864,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.7477065563047546,
+      "patient_violation": 0.11770649153826723,
+      "sensitivity": 0.31985940246045697,
+      "median_lead_time": 9.0,
+      "ppv": 0.09061748195669607,
+      "nna": 11.035398230088497,
+      "n_alarms": 3741,
+      "n_true_alarms": 339,
+      "n_feasible": 193,
+      "certified_risk": 0.194438216026401,
       "empirical_risk": 0.19376338040038318,
       "threshold": 0.04447236180904523
     },
@@ -814,6 +941,28 @@
     {
       "split": 0,
       "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.44804644038371383,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.8960928807674277,
+      "patient_violation": 0.2140692093963122,
+      "sensitivity": 0.5272407732864675,
+      "median_lead_time": 9.0,
+      "ppv": 0.06957339287812904,
+      "nna": 14.37331081081081,
+      "n_alarms": 8509,
+      "n_true_alarms": 592,
+      "n_feasible": 196,
+      "certified_risk": 0.46280122747758917,
+      "empirical_risk": 0.4621602803490396,
+      "threshold": 0.029698492462311557
+    },
+    {
+      "split": 0,
+      "budget": 0.5,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -946,6 +1095,28 @@
     {
       "split": 0,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9349517121192059,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9349517121192059,
+      "patient_violation": 0.29919171507956555,
+      "sensitivity": 0.718804920913884,
+      "median_lead_time": 9.0,
+      "ppv": 0.05308301343570058,
+      "nna": 18.838418079096044,
+      "n_alarms": 16672,
+      "n_true_alarms": 885,
+      "n_feasible": 198,
+      "certified_risk": 0.939550891911168,
+      "empirical_risk": 0.9389701480487421,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 0,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -1072,6 +1243,28 @@
       "n_true_alarms": 1016,
       "n_feasible": 199,
       "certified_risk": 1.4806269835965404,
+      "empirical_risk": 1.388733348084343,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 0,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3904368975521226,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6952184487760613,
+      "patient_violation": 0.3122000505178075,
+      "sensitivity": 0.8101933216168717,
+      "median_lead_time": 10.0,
+      "ppv": 0.04259065185495703,
+      "nna": 23.47933070866142,
+      "n_alarms": 23855,
+      "n_true_alarms": 1016,
+      "n_feasible": 199,
+      "certified_risk": 1.389257303663936,
       "empirical_risk": 1.388733348084343,
       "threshold": 0.014924623115577889
     },
@@ -1210,6 +1403,28 @@
     {
       "split": 1,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.25725111150789276,
+      "mean_rate_violation": 1,
+      "mean_excess": 0.00725111150789276,
+      "budget_utilization": 1.029004446031571,
+      "patient_violation": 0.1506693609497348,
+      "sensitivity": 0.35676625659050965,
+      "median_lead_time": 9.0,
+      "ppv": 0.07589641434262948,
+      "nna": 13.175853018372704,
+      "n_alarms": 5020,
+      "n_true_alarms": 381,
+      "n_feasible": 194,
+      "certified_risk": 0.23645028002766363,
+      "empirical_risk": 0.23578074962503276,
+      "threshold": 0.03954773869346734
+    },
+    {
+      "split": 1,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -1338,6 +1553,28 @@
       "certified_risk": 0.3779130010019549,
       "empirical_risk": 0.32433816216861927,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 1,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.4578967287859242,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9157934575718484,
+      "patient_violation": 0.2157110381409447,
+      "sensitivity": 0.507908611599297,
+      "median_lead_time": 9.0,
+      "ppv": 0.06440795559666974,
+      "nna": 15.526032315978458,
+      "n_alarms": 8648,
+      "n_true_alarms": 557,
+      "n_feasible": 196,
+      "certified_risk": 0.45295342652194487,
+      "empirical_risk": 0.4523112358271678,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 1,
@@ -1474,6 +1711,28 @@
     {
       "split": 1,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9363968355913055,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9363968355913055,
+      "patient_violation": 0.29742359181611516,
+      "sensitivity": 0.6994727592267135,
+      "median_lead_time": 10.0,
+      "ppv": 0.05221869573028325,
+      "nna": 19.150229357798164,
+      "n_alarms": 16699,
+      "n_true_alarms": 872,
+      "n_feasible": 198,
+      "certified_risk": 0.9381061333692414,
+      "empirical_risk": 0.9375252070647722,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 1,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -1600,6 +1859,28 @@
       "n_true_alarms": 1000,
       "n_feasible": 199,
       "certified_risk": 1.482594760247977,
+      "empirical_risk": 1.3902813459165715,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 1,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.388888704216253,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6944443521081265,
+      "patient_violation": 0.31409446830007576,
+      "sensitivity": 0.7820738137082601,
+      "median_lead_time": 10.0,
+      "ppv": 0.04199563245422476,
+      "nna": 23.812,
+      "n_alarms": 23812,
+      "n_true_alarms": 1000,
+      "n_feasible": 199,
+      "certified_risk": 1.390805106041893,
       "empirical_risk": 1.3902813459165715,
       "threshold": 0.014924623115577889
     },
@@ -1738,6 +2019,28 @@
     {
       "split": 2,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.1879433194362356,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.7517732777449424,
+      "patient_violation": 0.11896943672644607,
+      "sensitivity": 0.30579964850615116,
+      "median_lead_time": 9.0,
+      "ppv": 0.08366013071895424,
+      "nna": 11.953125,
+      "n_alarms": 3825,
+      "n_true_alarms": 320,
+      "n_feasible": 193,
+      "certified_risk": 0.19342179240381885,
+      "empirical_risk": 0.1927468284252789,
+      "threshold": 0.04447236180904523
+    },
+    {
+      "split": 2,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -1866,6 +2169,28 @@
       "certified_risk": 0.39104979468435225,
       "empirical_risk": 0.33649076938382627,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 2,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.4483144750852587,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.8966289501705174,
+      "patient_violation": 0.20964890123768629,
+      "sensitivity": 0.5149384885764499,
+      "median_lead_time": 9.0,
+      "ppv": 0.06777687201583789,
+      "nna": 14.754295532646049,
+      "n_alarms": 8587,
+      "n_true_alarms": 582,
+      "n_feasible": 196,
+      "certified_risk": 0.46253326046157606,
+      "empirical_risk": 0.46189227949453476,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 2,
@@ -2002,6 +2327,28 @@
     {
       "split": 2,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9333528507624899,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9333528507624899,
+      "patient_violation": 0.2983076534478404,
+      "sensitivity": 0.6994727592267135,
+      "median_lead_time": 10.0,
+      "ppv": 0.051695319961795605,
+      "nna": 19.344110854503466,
+      "n_alarms": 16752,
+      "n_true_alarms": 866,
+      "n_feasible": 198,
+      "certified_risk": 0.9411493495150193,
+      "empirical_risk": 0.9405688075035347,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 2,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -2128,6 +2475,28 @@
       "n_true_alarms": 1005,
       "n_feasible": 199,
       "certified_risk": 1.4820194290387256,
+      "empirical_risk": 1.3899049527824998,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 2,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3892651448867128,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6946325724433564,
+      "patient_violation": 0.31573629704470824,
+      "sensitivity": 0.7996485061511424,
+      "median_lead_time": 10.0,
+      "ppv": 0.04191167271362442,
+      "nna": 23.859701492537315,
+      "n_alarms": 23979,
+      "n_true_alarms": 1005,
+      "n_feasible": 199,
+      "certified_risk": 1.390428760432207,
       "empirical_risk": 1.3899049527824998,
       "threshold": 0.014924623115577889
     },
@@ -2266,6 +2635,28 @@
     {
       "split": 3,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.1889503467843222,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.7558013871372888,
+      "patient_violation": 0.11833796413235666,
+      "sensitivity": 0.3163444639718805,
+      "median_lead_time": 9.0,
+      "ppv": 0.08283283283283284,
+      "nna": 12.07250755287009,
+      "n_alarms": 3996,
+      "n_true_alarms": 331,
+      "n_feasible": 193,
+      "certified_risk": 0.19241501935556773,
+      "empirical_risk": 0.19173992824316644,
+      "threshold": 0.04447236180904523
+    },
+    {
+      "split": 3,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -2394,6 +2785,28 @@
       "certified_risk": 0.38807036711388165,
       "empirical_risk": 0.3337023928324506,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 3,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.4542130881628234,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9084261763256468,
+      "patient_violation": 0.2157110381409447,
+      "sensitivity": 0.5149384885764499,
+      "median_lead_time": 9.0,
+      "ppv": 0.06420145190562614,
+      "nna": 15.575971731448762,
+      "n_alarms": 8816,
+      "n_true_alarms": 566,
+      "n_feasible": 196,
+      "certified_risk": 0.4566361369327682,
+      "empirical_risk": 0.4559944112853975,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 3,
@@ -2530,6 +2943,28 @@
     {
       "split": 3,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9443678452980556,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9443678452980556,
+      "patient_violation": 0.29767618085375097,
+      "sensitivity": 0.7223198594024605,
+      "median_lead_time": 10.0,
+      "ppv": 0.052091878589007386,
+      "nna": 19.196850393700785,
+      "n_alarms": 17066,
+      "n_true_alarms": 889,
+      "n_feasible": 198,
+      "certified_risk": 0.9301371365437276,
+      "empirical_risk": 0.9295552039257308,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 3,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -2656,6 +3091,28 @@
       "n_true_alarms": 1040,
       "n_feasible": 199,
       "certified_risk": 1.475974949465787,
+      "empirical_risk": 1.3842119001421018,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 3,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3949589165284553,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6974794582642276,
+      "patient_violation": 0.3163677696387977,
+      "sensitivity": 0.81195079086116,
+      "median_lead_time": 10.0,
+      "ppv": 0.04295390715347761,
+      "nna": 23.28076923076923,
+      "n_alarms": 24212,
+      "n_true_alarms": 1040,
+      "n_feasible": 199,
+      "certified_risk": 1.3847364266115867,
       "empirical_risk": 1.3842119001421018,
       "threshold": 0.014924623115577889
     },
@@ -2794,6 +3251,28 @@
     {
       "split": 4,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.18217708035872834,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.7287083214349134,
+      "patient_violation": 0.11606466279363475,
+      "sensitivity": 0.3093145869947276,
+      "median_lead_time": 9.0,
+      "ppv": 0.08794247787610619,
+      "nna": 11.371069182389938,
+      "n_alarms": 3616,
+      "n_true_alarms": 318,
+      "n_feasible": 193,
+      "certified_risk": 0.1991865753603469,
+      "empirical_risk": 0.1985123393503581,
+      "threshold": 0.04447236180904523
+    },
+    {
+      "split": 4,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -2922,6 +3401,28 @@
       "certified_risk": 0.4041268406684078,
       "empirical_risk": 0.34880312237395017,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 4,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.4377948409658729,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.8755896819317458,
+      "patient_violation": 0.20699671634251074,
+      "sensitivity": 0.5219683655536028,
+      "median_lead_time": 9.0,
+      "ppv": 0.07099661344944364,
+      "nna": 14.085178875638842,
+      "n_alarms": 8268,
+      "n_true_alarms": 587,
+      "n_feasible": 196,
+      "certified_risk": 0.4730502381076985,
+      "empirical_risk": 0.47241058520956064,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 4,
@@ -3058,6 +3559,28 @@
     {
       "split": 4,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9144938953144717,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9144938953144717,
+      "patient_violation": 0.29085627683758525,
+      "sensitivity": 0.7082601054481547,
+      "median_lead_time": 10.0,
+      "ppv": 0.0538149649834132,
+      "nna": 18.582191780821915,
+      "n_alarms": 16278,
+      "n_true_alarms": 876,
+      "n_feasible": 198,
+      "certified_risk": 0.9600035426005504,
+      "empirical_risk": 0.9594253814696171,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 4,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -3184,6 +3707,28 @@
       "n_true_alarms": 1033,
       "n_feasible": 199,
       "certified_risk": 1.513399855158138,
+      "empirical_risk": 1.420941575249016,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 4,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3582246026648963,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6791123013324482,
+      "patient_violation": 0.3077797423591816,
+      "sensitivity": 0.8154657293497364,
+      "median_lead_time": 10.0,
+      "ppv": 0.044388105878308694,
+      "nna": 22.528557599225557,
+      "n_alarms": 23272,
+      "n_true_alarms": 1033,
+      "n_feasible": 199,
+      "certified_risk": 1.4214614641332601,
       "empirical_risk": 1.420941575249016,
       "threshold": 0.014924623115577889
     },
@@ -3322,6 +3867,28 @@
     {
       "split": 5,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.18924295819129663,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.7569718327651865,
+      "patient_violation": 0.11909573124526396,
+      "sensitivity": 0.3216168717047452,
+      "median_lead_time": 9.0,
+      "ppv": 0.0867320598864223,
+      "nna": 11.529761904761905,
+      "n_alarms": 3874,
+      "n_true_alarms": 336,
+      "n_feasible": 193,
+      "certified_risk": 0.19212248184036262,
+      "empirical_risk": 0.1914473537867421,
+      "threshold": 0.04447236180904523
+    },
+    {
+      "split": 5,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -3450,6 +4017,28 @@
       "certified_risk": 0.3909714719734236,
       "empirical_risk": 0.3364087437752313,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 5,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.45045612498396803,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9009122499679361,
+      "patient_violation": 0.21533215458449104,
+      "sensitivity": 0.5219683655536028,
+      "median_lead_time": 9.0,
+      "ppv": 0.06713286713286713,
+      "nna": 14.895833333333334,
+      "n_alarms": 8580,
+      "n_true_alarms": 576,
+      "n_feasible": 196,
+      "certified_risk": 0.4603921513835476,
+      "empirical_risk": 0.45975090004031266,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 5,
@@ -3586,6 +4175,28 @@
     {
       "split": 5,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9304283368894377,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9304283368894377,
+      "patient_violation": 0.2935084617327608,
+      "sensitivity": 0.6959578207381371,
+      "median_lead_time": 10.0,
+      "ppv": 0.05247285886610374,
+      "nna": 19.057471264367816,
+      "n_alarms": 16580,
+      "n_true_alarms": 870,
+      "n_feasible": 198,
+      "certified_risk": 0.9440731248744659,
+      "empirical_risk": 0.9434929520731543,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 5,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -3712,6 +4323,28 @@
       "n_true_alarms": 1027,
       "n_feasible": 199,
       "certified_risk": 1.4890743170366565,
+      "empirical_risk": 1.3970329208875951,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 5,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3821362765583165,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6910681382791583,
+      "patient_violation": 0.3133367011871685,
+      "sensitivity": 0.8084358523725835,
+      "median_lead_time": 10.0,
+      "ppv": 0.0434966752784719,
+      "nna": 22.990262901655306,
+      "n_alarms": 23611,
+      "n_true_alarms": 1027,
+      "n_feasible": 199,
+      "certified_risk": 1.3975558285413292,
       "empirical_risk": 1.3970329208875951,
       "threshold": 0.014924623115577889
     },
@@ -3850,6 +4483,28 @@
     {
       "split": 6,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.24562531815249836,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9825012726099934,
+      "patient_violation": 0.14359686789593332,
+      "sensitivity": 0.3321616871704745,
+      "median_lead_time": 9.0,
+      "ppv": 0.07495276086500105,
+      "nna": 13.341736694677872,
+      "n_alarms": 4763,
+      "n_true_alarms": 357,
+      "n_feasible": 194,
+      "certified_risk": 0.24807313757665508,
+      "empirical_risk": 0.24740507489186092,
+      "threshold": 0.03954773869346734
+    },
+    {
+      "split": 6,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -3978,6 +4633,28 @@
       "certified_risk": 0.38564303407024936,
       "empirical_risk": 0.3317889101066491,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 6,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.4521513131819461,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9043026263638922,
+      "patient_violation": 0.2093963122000505,
+      "sensitivity": 0.4973637961335677,
+      "median_lead_time": 9.0,
+      "ppv": 0.06499822085161902,
+      "nna": 15.385036496350367,
+      "n_alarms": 8431,
+      "n_true_alarms": 548,
+      "n_feasible": 196,
+      "certified_risk": 0.45869739126339726,
+      "empirical_risk": 0.4580559259082769,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 6,
@@ -4114,6 +4791,28 @@
     {
       "split": 6,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9334973219495476,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9334973219495476,
+      "patient_violation": 0.29451881788330386,
+      "sensitivity": 0.7082601054481547,
+      "median_lead_time": 9.0,
+      "ppv": 0.05226289821526466,
+      "nna": 19.134032634032636,
+      "n_alarms": 16417,
+      "n_true_alarms": 858,
+      "n_feasible": 198,
+      "certified_risk": 0.9410049148105832,
+      "empirical_risk": 0.9404243545600907,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 6,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -4240,6 +4939,28 @@
       "n_true_alarms": 1034,
       "n_feasible": 199,
       "certified_risk": 1.4831017109294367,
+      "empirical_risk": 1.3910243619895406,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 6,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3881455943044252,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6940727971522126,
+      "patient_violation": 0.3100530436979035,
+      "sensitivity": 0.8154657293497364,
+      "median_lead_time": 10.0,
+      "ppv": 0.0439625850340136,
+      "nna": 22.74661508704062,
+      "n_alarms": 23520,
+      "n_true_alarms": 1034,
+      "n_feasible": 199,
+      "certified_risk": 1.3915480282997013,
       "empirical_risk": 1.3910243619895406,
       "threshold": 0.014924623115577889
     },
@@ -4378,6 +5099,28 @@
     {
       "split": 7,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.24433908932740928,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9773563573096371,
+      "patient_violation": 0.148269765092195,
+      "sensitivity": 0.35676625659050965,
+      "median_lead_time": 9.0,
+      "ppv": 0.07843538808109769,
+      "nna": 12.749347258485638,
+      "n_alarms": 4883,
+      "n_true_alarms": 383,
+      "n_feasible": 194,
+      "certified_risk": 0.24935904159648528,
+      "empirical_risk": 0.24869114129381262,
+      "threshold": 0.03954773869346734
+    },
+    {
+      "split": 7,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -4506,6 +5249,28 @@
       "certified_risk": 0.3890432655570941,
       "empirical_risk": 0.3344437741282565,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 7,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.4551448221626734,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9102896443253468,
+      "patient_violation": 0.21533215458449104,
+      "sensitivity": 0.5114235500878734,
+      "median_lead_time": 9.0,
+      "ppv": 0.06657436252451829,
+      "nna": 15.020797227036395,
+      "n_alarms": 8667,
+      "n_true_alarms": 577,
+      "n_feasible": 196,
+      "certified_risk": 0.4557046382192814,
+      "empirical_risk": 0.4550627949435847,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 7,
@@ -4642,6 +5407,28 @@
     {
       "split": 7,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9434047776093284,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9434047776093284,
+      "patient_violation": 0.3007072493053801,
+      "sensitivity": 0.7100175746924429,
+      "median_lead_time": 9.5,
+      "ppv": 0.05173128144421427,
+      "nna": 19.33066361556064,
+      "n_alarms": 16895,
+      "n_true_alarms": 874,
+      "n_feasible": 198,
+      "certified_risk": 0.9310999610335455,
+      "empirical_risk": 0.9305181499996489,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 7,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -4768,6 +5555,28 @@
       "n_true_alarms": 1018,
       "n_feasible": 199,
       "certified_risk": 1.4727666689304848,
+      "empirical_risk": 1.3811438429229923,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 7,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3980273612263763,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6990136806131881,
+      "patient_violation": 0.3169992422328871,
+      "sensitivity": 0.8084358523725835,
+      "median_lead_time": 10.0,
+      "ppv": 0.04233904508401264,
+      "nna": 23.6188605108055,
+      "n_alarms": 24044,
+      "n_true_alarms": 1018,
+      "n_feasible": 199,
+      "certified_risk": 1.3816687567734391,
       "empirical_risk": 1.3811438429229923,
       "threshold": 0.014924623115577889
     },
@@ -4906,6 +5715,28 @@
     {
       "split": 8,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.18220733777681777,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.7288293511072711,
+      "patient_violation": 0.11417024501136651,
+      "sensitivity": 0.3216168717047452,
+      "median_lead_time": 9.0,
+      "ppv": 0.09218106995884774,
+      "nna": 10.848214285714285,
+      "n_alarms": 3645,
+      "n_true_alarms": 336,
+      "n_feasible": 193,
+      "certified_risk": 0.19915632558301966,
+      "empirical_risk": 0.19848208575313225,
+      "threshold": 0.04447236180904523
+    },
+    {
+      "split": 8,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -5034,6 +5865,28 @@
       "certified_risk": 0.4017126124420228,
       "empirical_risk": 0.3466844467309585,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 8,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.4362761983299595,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.872552396659919,
+      "patient_violation": 0.20548118211669614,
+      "sensitivity": 0.4973637961335677,
+      "median_lead_time": 9.0,
+      "ppv": 0.06882835101253616,
+      "nna": 14.528896672504379,
+      "n_alarms": 8296,
+      "n_true_alarms": 571,
+      "n_feasible": 196,
+      "certified_risk": 0.47456849724799693,
+      "empirical_risk": 0.473929036073453,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 8,
@@ -5170,6 +6023,28 @@
     {
       "split": 8,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9088451367212227,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9088451367212227,
+      "patient_violation": 0.28858297549886336,
+      "sensitivity": 0.6977152899824253,
+      "median_lead_time": 10.0,
+      "ppv": 0.05338100228071257,
+      "nna": 18.733256351039262,
+      "n_alarms": 16223,
+      "n_true_alarms": 866,
+      "n_feasible": 198,
+      "certified_risk": 0.9656508747396096,
+      "empirical_risk": 0.9650734267457062,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 8,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -5296,6 +6171,28 @@
       "n_true_alarms": 1002,
       "n_feasible": 199,
       "certified_risk": 1.5145171473406207,
+      "empirical_risk": 1.4220974169100382,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 8,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3570686150274056,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6785343075137028,
+      "patient_violation": 0.3031068451629199,
+      "sensitivity": 0.7926186291739895,
+      "median_lead_time": 10.0,
+      "ppv": 0.043057883202268915,
+      "nna": 23.224550898203596,
+      "n_alarms": 23271,
+      "n_true_alarms": 1002,
+      "n_feasible": 199,
+      "certified_risk": 1.4226171598546786,
       "empirical_risk": 1.4220974169100382,
       "threshold": 0.014924623115577889
     },
@@ -5434,6 +6331,28 @@
     {
       "split": 9,
       "budget": 0.25,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.18449255398843184,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.7379702159537274,
+      "patient_violation": 0.11644354635008841,
+      "sensitivity": 0.30052724077328646,
+      "median_lead_time": 9.0,
+      "ppv": 0.08741066520065971,
+      "nna": 11.440251572327043,
+      "n_alarms": 3638,
+      "n_true_alarms": 318,
+      "n_feasible": 193,
+      "certified_risk": 0.19687168644620645,
+      "empirical_risk": 0.19619715811535465,
+      "threshold": 0.04447236180904523
+    },
+    {
+      "split": 9,
+      "budget": 0.25,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -5562,6 +6481,28 @@
       "certified_risk": 0.3921389143598996,
       "empirical_risk": 0.3376350111194649,
       "threshold": 0.03462311557788945
+    },
+    {
+      "split": 9,
+      "budget": 0.5,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.44466471355261655,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.8893294271052331,
+      "patient_violation": 0.21293255872695124,
+      "sensitivity": 0.523725834797891,
+      "median_lead_time": 9.0,
+      "ppv": 0.06800235710076606,
+      "nna": 14.705372616984402,
+      "n_alarms": 8485,
+      "n_true_alarms": 577,
+      "n_feasible": 196,
+      "certified_risk": 0.4661821003372646,
+      "empirical_risk": 0.4655415801405069,
+      "threshold": 0.029698492462311557
     },
     {
       "split": 9,
@@ -5698,6 +6639,28 @@
     {
       "split": 9,
       "budget": 1.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 0.9292236242220342,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.9292236242220342,
+      "patient_violation": 0.2957817630714827,
+      "sensitivity": 0.70298769771529,
+      "median_lead_time": 9.0,
+      "ppv": 0.05245763730320875,
+      "nna": 19.063001145475372,
+      "n_alarms": 16642,
+      "n_true_alarms": 873,
+      "n_feasible": 198,
+      "certified_risk": 0.9452775333214989,
+      "empirical_risk": 0.9446975126111643,
+      "threshold": 0.01984924623115578
+    },
+    {
+      "split": 9,
+      "budget": 1.0,
       "procedure": "timestep",
       "status": "grid_feasible",
       "fallback": 0,
@@ -5824,6 +6787,28 @@
       "n_true_alarms": 1041,
       "n_feasible": 199,
       "certified_risk": 1.4821674215047875,
+      "empirical_risk": 1.389786340992976,
+      "threshold": 0.014924623115577889
+    },
+    {
+      "split": 9,
+      "budget": 2.0,
+      "procedure": "crc",
+      "status": "grid_feasible",
+      "fallback": 0,
+      "alarm_rate": 1.3893837716562558,
+      "mean_rate_violation": 0,
+      "mean_excess": 0.0,
+      "budget_utilization": 0.6946918858281279,
+      "patient_violation": 0.3127052285930791,
+      "sensitivity": 0.8224956063268892,
+      "median_lead_time": 10.0,
+      "ppv": 0.04362950544844929,
+      "nna": 22.920268972142168,
+      "n_alarms": 23860,
+      "n_true_alarms": 1041,
+      "n_feasible": 199,
+      "certified_risk": 1.3903101636189192,
       "empirical_risk": 1.389786340992976,
       "threshold": 0.014924623115577889
     },

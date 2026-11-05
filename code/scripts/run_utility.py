@@ -108,6 +108,7 @@ def main() -> int:
                 if labels.shape[1] < pred.shape[1]:
                     labels = np.pad(labels, ((0, 0),
                                              (0, pred.shape[1] - labels.shape[1])))
+                utility = normalized_utility(labels, pred)
                 sens, spec, prevalence = _patient_metrics(labels, pred)
                 rows.append({
                     "budget": float(budget), "procedure": procedure,

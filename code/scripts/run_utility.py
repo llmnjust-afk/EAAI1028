@@ -103,8 +103,11 @@ def main() -> int:
                 pred = _predictions(seqs, idx, threshold, args.refractory,
                                     args.escalation)
                 labels = external_labels[idx] if target else internal_labels[idx]
-                labels = labels[:pred.shape[0], :pred.shape[1]]
-                utility = normalized_utility(labels, pred)
+                labels = np.nan_to_num(labels[:pred.shape[0], :pred.shape[1]],
+                                       nan=0.0).astype(int)
+                if labels.shape[1] < pred.shape[1]:
+                    labels = np.pad(labels, ((0, 0),
+                                             (0, pred.shape[1] - labels.shape[1])))
                 sens, spec, prevalence = _patient_metrics(labels, pred)
                 rows.append({
                     "budget": float(budget), "procedure": procedure,

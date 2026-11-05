@@ -23,7 +23,7 @@ def _load(cache_root, cohort, model, seed, min_stay):
     onset = np.asarray(data["onset"], dtype=int)
     lengths = np.asarray(data["lengths"], dtype=int)
     keep = np.flatnonzero(lengths >= min_stay)
-    return scores, onset, lengths, keep, lengths.size
+    return [scores[i] for i in keep], onset[keep], lengths[keep], keep, lengths.size
 
 
 def _remap(indices, eligible, n_total):
